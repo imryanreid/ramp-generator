@@ -38,26 +38,73 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Known gaps / deliberate omissions
 
-- **No `og:image`.** Links unfurl as a text-only card. Considered and skipped
-  for now; generating one from the app's own palette output would be a nice
-  touch later.
-- **No `llms.txt`.** Considered and skipped — the JSON-LD block and the on-page
-  machine-readable palette already cover the agent-consumption goal.
+- **`og:title`, `twitter:title` and the JSON-LD `name` still say "Ramp
+  Generator"** while the tab title says "Color Ramp & Semantics Generator".
+  Flagged, not actioned — decide on one name and apply it in `index.html`.
+- **At AAA the status fills darken substantially.** Pairing labels to them means
+  the resolver moves the fill when a label can't reach 7:1 from either end of
+  the ramp; on `?b=3d7dff&c=AAA` the status fills drop 2–3 steps in light and
+  rise 2 in dark. Correct, but it changes what an already-shared AAA link
+  renders. AA is barely affected (one step on `bg-success`/`bg-info`).
+- **`text-secondary` and `text-tertiary` converge at AAA.** Only the darkest
+  steps clear 7:1, so a three-level text hierarchy has nowhere to spread out.
+  Reported through the collision warning rather than faked.
+- **Achromatic brands collapse the derived accents.** A near-grey input leaves
+  derivation no hue to rotate, so `bg-brand`/`bg-accent`/`bg-tertiary` land
+  together. Also surfaced as a collision warning.
+- **PDF export is hidden**, not removed — see the 2026-08-01 log entry.
 - **Fonts total ~118 KB** for the Latin subsets of three families (Geist, Inter,
   JetBrains Mono). Self-hosted, so no third-party round trip, but if load time
   ever matters more than the type choices, dropping to two families is the lever.
-- **There is no working formatter.** oxfmt (0.2.0, inherited from the Figma
-  scaffold) **corrupts the code**: it strips the separators inside single-line
-  TypeScript type literals, turning `{ title: string; description: string }`
-  into `{ title: string description: string }`. Running it produced six syntax
-  errors across `App.tsx` and `semantics.ts` and broke the build. The `format`
-  script now fails loudly instead of running it. Prettier is the obvious
-  replacement — declined earlier on style grounds, but that was before this was
-  a correctness problem.
+- **Prettier is the formatter.** oxfmt (0.2.0, inherited from the Figma
+  scaffold) **corrupted the code** — it stripped the separators inside
+  single-line TypeScript type literals, turning
+  `{ title: string; description: string }` into
+  `{ title: string description: string }`, producing six syntax errors and
+  breaking the build. It is gone; `pnpm format` runs Prettier, and the
+  reformat commit is listed in `.git-blame-ignore-revs`.
 
 ---
 
 ## Session log
+
+### 2026-08-01 — Agent-consumption audit fixes
+
+An audit of the live site fetched the way an agent actually reads it — plain
+`curl`/`WebFetch`, no JS execution — found the warm path (a shared `?b=` link)
+in good shape and the cold path broken. Everything below is verified live with
+a no-JavaScript fetch, not in a browser; a browser is the one client that
+already worked, so it proves nothing here.
+
+- **The bare homepage now serves a palette.** It was a static asset, so a
+  no-JS fetch returned 5 KB whose entire visible text was the page title. An
+  agent told "use ramps.studio" has no link to follow, so that URL is exactly
+  where it lands. `middleware.ts` now routes **every** `/` through
+  `api/render`; only parameterized URLs get their `<head>` rewritten, so the
+  homepage keeps `index, follow` and its own canonical.
+- **`llms.txt` is discoverable.** Nothing pointed at it — reachable only by
+  guessing the well-known path. `robots.txt` names it, and so does the text
+  block on every page. It was also missing `a2` and `f` entirely.
+- **Every fill has a label token.** `bg-tertiary`, `bg-success`, `bg-warning`,
+  `bg-error` and `bg-info` had no paired foreground; white on them fails AA in
+  six of twelve fill/mode combinations, and the right answer inverts between
+  modes. Added `text-on-*` for all five, each in whichever scope its background
+  ships in — including `basic`, where the gap was worst.
+- **Measured contrast ratios are emitted** per paired token, in both the JSON
+  (`contrast: { against, light, dark }`) and the text block. That forced the
+  blanket compliance note to name its own exceptions when the resolver's
+  last-resort stage falls short.
+- **`step` now carries both modes.** It described only the light placement,
+  which is wrong whenever the resolver moves the two independently.
+- **`[Background]` and `[Text]` no longer appear twice** in the text block —
+  the inverse tokens are declared last but belong to those categories, so
+  anything parsing it into a dict keyed by group lost the first of each pair.
+  Rows are grouped by category rather than emitted in declaration order.
+- **Four explanatory notes** for output that is correct but reads as a mistake:
+  the brand never appearing verbatim (nearest step named), `bg-surface-raised`
+  matching `bg-surface` in light, `text-disabled` sitting below the minimum
+  under WCAG's disabled-control exemption, and a default brand having been
+  chosen when no `b` was given.
 
 ### 2026-08-01 — Second accent picker; format-aware inputs; PDF hidden
 
@@ -69,11 +116,11 @@ to it. Every absolute URL in the codebase must match — see the note in
   no longer leaves hex fields underneath it. `normalizeHex` now accepts any CSS
   notation, so a field showing `oklch(...)` takes one back, as well as a pasted
   hex, `rgb()` or `hsl()`.
-  **Known rough edge:** two accent fields side by side can't show a full
-  `oklch(...)` string — it truncates. The swatch still conveys the colour and
-  the field is editable, and hex fits fine, but it's not ideal. Widening the
-  accent block further, stacking the two fields, or showing an abbreviated form
-  are the options.
+  **Resolved:** two accent fields side by side used to truncate a full
+  `oklch(...)` string. The field now shows a compact value at rest
+  (`62% 0.205 262.4` — the Format control above already says which notation
+  that is) and the full CSS string on focus. `parseColorInput` accepts the
+  compact form back, so typing what the field displays works.
 - **PDF export is hidden**, not removed. The print stylesheet works and is
   committed; `onPrint` is still wired through `ExportPanel`. Re-adding the
   choice card is a few lines once the output has had design attention.
