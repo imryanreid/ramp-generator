@@ -56,7 +56,7 @@ the JSON-LD `url` and `urlTemplate`), `src/lib/site.ts` (`SITE_URL`, which build
 every share link), `public/sitemap.xml`, and `public/robots.txt`. If the primary
 domain ever flips in Vercel, change all of them together.
 
-**1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=`, `?c=` are a public API. They're
+**1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=`, `?c=`, `?xr=`, `?xt=` are a public API. They're
 documented in `README.md`, in the JSON-LD block in `index.html`, and in the
 on-page legend in `App.tsx`. Changing a param name or a scheme id breaks every
 link anyone has shared. If you change one, update all four places.
@@ -74,6 +74,18 @@ only, then action fills (never page surfaces), then best-effort with an honest
 badge. Candidates are scored by combined travel from the authored steps — that
 scoring is load-bearing. Ranking on the background alone lets a tie flip a brand
 button from light to dark text, which looks like a bug even though it passes.
+
+## Exclusions
+
+Ramp and token checkboxes filter the *output*, never the computation.
+`resolveTokens` always resolves the full set — contrast pairing depends on it,
+and the UI needs it to render dimmed rows — and `selectedRamps` / `selectedTokens`
+filter afterwards. Never move that filtering earlier: excluding `bg-canvas` would
+otherwise break the contrast math for every token measured against it.
+
+One consequence worth remembering: `toFigma` aliases tokens into ramp groups, so
+a token whose ramp is excluded would produce a dangling variable reference that
+Figma rejects on import. Those tokens fall back to literal colors instead.
 
 ## Ask before
 

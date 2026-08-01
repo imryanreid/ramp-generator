@@ -53,6 +53,32 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — Per-row export selection
+
+- **Checkboxes on all 45 rows** (8 ramps + 37 tokens), plus mixed-state toggles
+  on each section header. Unchecking dims the row and drops it from every export
+  and the agent block; it does *not* stop the row being generated.
+- **Filtering happens after resolution, never before.** Contrast pairing needs
+  the full set — `text-primary` is measured against `bg-canvas` even when
+  `bg-canvas` is unchecked — so `resolveTokens` still returns everything and
+  `selectedRamps` / `selectedTokens` filter downstream. Moving that earlier
+  would silently break the AA/AAA math.
+- **New `xr=` / `xt=` params**, dot-separated names. Names not a bitmask: a
+  bitmask would make the token table's declaration order a permanent public
+  contract. Dots not commas: `URLSearchParams` percent-encodes a comma.
+  Verified round-trip, and malformed input (including a `<script>` payload)
+  degrades to `{}`.
+- **Figma alias trap, handled**: `toFigma` aliases tokens into ramp groups, so a
+  token whose ramp was unchecked would emit a dangling variable reference that
+  Figma rejects on import. Those now fall back to a literal color. Verified
+  headlessly — `bg-tertiary` goes from `{Ramps.Cyan.600}` to `#007fa5`, and no
+  alias in the output points at a missing group.
+- **Exporters now take an options object** rather than four positional args.
+- **README gained a "Forking this" section** listing the four things wired to
+  this deployment — canonical URL, `SITE_URL`, sitemap/robots, footer
+  attribution. The canonical tag is the one that bites: left unchanged, a fork
+  tells Google its content is a duplicate of ramps.studio.
+
 ### 2026-08-01 — Contrast enforcement, agent prompt export, Phosphor icons
 
 - **WCAG AA/AAA toggle** on the controls row, wired through to a new `c=` share

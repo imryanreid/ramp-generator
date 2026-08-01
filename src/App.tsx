@@ -22,7 +22,7 @@ import ExportPanel from "./components/ExportPanel"
 import SchemeSelect from "./components/SchemeSelect"
 import { buildPalette, deriveAccentHex, type DsMode, type Scheme, type Palette } from "./lib/recommend"
 import { readInitialShareState, encodeShareState, shareUrl, type ShareState } from "./lib/share"
-import { toCss, toJson, type Compliance } from "./lib/semantics"
+import { toCss, toJson, allRamps, type Compliance, type ExportOptions } from "./lib/semantics"
 import { useCopy } from "./lib/clipboard"
 import { cn } from "./lib/utils"
 import { DownloadSimple, Sun, Moon, LinkSimple, Check, X, CaretRight } from "@phosphor-icons/react"
@@ -57,6 +57,8 @@ const DEFAULT_STATE: ShareState = {
   mode: "full",
   scheme: "complementary",
   compliance: "AA",
+  excludedRamps: [],
+  excludedTokens: [],
 }
 
 export default function App() {
@@ -71,8 +73,34 @@ export default function App() {
   const [compliance, setCompliance] = useState<Compliance>(
     initial.compliance ?? DEFAULT_STATE.compliance,
   )
+  // Deselected rows. Kept as Sets for cheap lookups while rendering ~45 rows;
+  // serialized to sorted arrays for the URL so the link is stable.
+  const [excludedRamps, setExcludedRamps] = useState<Set<string>>(
+    () => new Set(initial.excludedRamps ?? DEFAULT_STATE.excludedRamps),
+  )
+  const [excludedTokens, setExcludedTokens] = useState<Set<string>>(
+    () => new Set(initial.excludedTokens ?? DEFAULT_STATE.excludedTokens),
+  )
   const [exportOpen, setExportOpen] = useState(false)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
+
+  const toggle = (set: Set<string>, key: string) => {
+    const next = new Set(set)
+    next.has(key) ? next.delete(key) : next.add(key)
+    return next
+  }
+
+  const shareState: ShareState = {
+    brand,
+    accentOverride,
+    mode,
+    scheme,
+    compliance,
+    excludedRamps: [...excludedRamps],
+    excludedTokens: [...excludedTokens],
+  }
+
+  const exportOptions: ExportOptions = { mode, compliance, excludedRamps, excludedTokens }
 
   const autoAccent = useMemo(() => deriveAccentHex(brand, scheme), [brand, scheme])
   const palette = useMemo(
@@ -88,17 +116,19 @@ export default function App() {
     accentOverride === DEFAULT_STATE.accentOverride &&
     mode === DEFAULT_STATE.mode &&
     scheme === DEFAULT_STATE.scheme &&
-    compliance === DEFAULT_STATE.compliance
+    compliance === DEFAULT_STATE.compliance &&
+    excludedRamps.size === 0 &&
+    excludedTokens.size === 0
 
   // Keep the address bar in sync so a copy/paste of the URL also reproduces state.
   useEffect(() => {
     try {
-      const qs = encodeShareState({ brand, accentOverride, mode, scheme, compliance })
-      window.history.replaceState(null, "", isDefault ? "/" : `?${qs}`)
+      window.history.replaceState(null, "", isDefault ? "/" : `?${encodeShareState(shareState)}`)
     } catch {
       // Ignore — some browsers disallow history writes in restricted contexts.
     }
-  }, [brand, accentOverride, mode, scheme, compliance, isDefault])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
+  }, [brand, accentOverride, mode, scheme, compliance, excludedRamps, excludedTokens, isDefault])
 
   // Apply + persist the page theme by toggling `.dark` on <html>.
   useEffect(() => {
@@ -121,12 +151,9 @@ export default function App() {
       return
     }
     document.title = `Ramp Generator — brand ${brand} · ${scheme} · ${mode} · ${compliance}`
-    setMeta(
-      "name",
-      "description",
-      describePalette({ brand, accentOverride, mode, scheme, compliance }),
-    )
-  }, [brand, accentOverride, mode, scheme, compliance, isDefault])
+    setMeta("name", "description", describePalette(shareState))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
+  }, [brand, accentOverride, mode, scheme, compliance, excludedRamps, excludedTokens, isDefault])
 
   return (
     <MotionConfig reducedMotion="user">
@@ -136,9 +163,8 @@ export default function App() {
             <ExportModal key="export" onClose={() => setExportOpen(false)}>
               <ExportPanel
                 palette={palette}
-                mode={mode}
-                compliance={compliance}
-                shareHref={shareUrl({ brand, accentOverride, mode, scheme, compliance })}
+                options={exportOptions}
+                shareHref={shareUrl(shareState)}
               />
             </ExportModal>
           )}
@@ -164,7 +190,7 @@ export default function App() {
             {/* Top-right action stack — theme, share, export (icon-only). */}
             <div className="flex items-center gap-2">
               <ThemeToggle theme={theme} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
-              <ShareButton state={{ brand, accentOverride, mode, scheme, compliance }} />
+              <ShareButton state={shareState} />
               <IconButton
                 onClick={() => setExportOpen(true)}
                 title="Export tokens"
@@ -207,16 +233,44 @@ export default function App() {
 
         {/* Output — new section */}
         <main className="min-w-0">
-          <RampGroup title="Brand" ramps={palette.primaries} />
-          <RampGroup title="Accents" ramps={palette.accents} />
-          <RampGroup title="Neutral" ramps={[palette.neutral]} />
-          <RampGroup title="Status" ramps={palette.status} />
-          <SemanticTokens palette={palette} mode={mode} compliance={compliance} />
-          <AgentData
+          {(
+            [
+              ["Brand", palette.primaries],
+              ["Accents", palette.accents],
+              ["Neutral", [palette.neutral]],
+              ["Status", palette.status],
+            ] as const
+          ).map(([title, ramps]) => (
+            <RampGroup
+              key={title}
+              title={title}
+              ramps={ramps}
+              excluded={excludedRamps}
+              onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
+              onSetMany={(names, off) =>
+                setExcludedRamps((prev) => {
+                  const next = new Set(prev)
+                  names.forEach((n) => (off ? next.add(n) : next.delete(n)))
+                  return next
+                })
+              }
+            />
+          ))}
+          <SemanticTokens
             palette={palette}
             mode={mode}
-            state={{ brand, accentOverride, mode, scheme, compliance }}
+            compliance={compliance}
+            excluded={excludedTokens}
+            onToggle={(name) => setExcludedTokens((prev) => toggle(prev, name))}
+            onSetMany={(names, off) =>
+              setExcludedTokens((prev) => {
+                const next = new Set(prev)
+                names.forEach((n) => (off ? next.add(n) : next.delete(n)))
+                return next
+              })
+            }
           />
+          <AgentData palette={palette} options={exportOptions} state={shareState} />
           <Attribution />
         </main>
         </div>
@@ -249,14 +303,15 @@ function describePalette(s: ShareState): string {
  */
 function AgentData({
   palette,
-  mode,
+  options,
   state,
 }: {
   palette: Palette
-  mode: DsMode
+  options: ExportOptions
   state: ShareState
 }) {
   const { compliance } = state
+  const omitted = state.excludedRamps.length + state.excludedTokens.length
   const legend = [
     "# Ramp Generator — machine-readable palette",
     "# Deterministically derived from the URL query string:",
@@ -264,17 +319,23 @@ function AgentData({
     "#   m = scope: full | basic",
     "#   s = derivation: complementary | analogous | triadic | split | monochromatic",
     "#   c = contrast target: AA (4.5:1) | AAA (7:1)",
+    "#   xr / xt = dot-separated ramp / token names the author deselected",
     `# This palette: b=${state.brand.replace("#", "")}` +
       `${state.accentOverride ? ` a=${state.accentOverride.replace("#", "")}` : ""}` +
       ` m=${state.mode} s=${state.scheme} c=${state.compliance}`,
     "# Ramps are 50–950 OKLCH steps; semantic tokens are listed for :root (light) and .dark.",
     `# Token steps are auto-adjusted so paired foregrounds meet WCAG ${state.compliance}.`,
+    ...(omitted
+      ? [
+          `# ${omitted} row(s) were deselected by the author and are omitted below;`,
+          "# treat what follows as the complete intended palette.",
+        ]
+      : []),
   ].join("\n")
 
   const [format, setFormat] = useState<"css" | "json">("json")
   const { copied, copy } = useCopy(1400)
-  const code =
-    format === "css" ? toCss(palette, mode, compliance) : toJson(palette, mode, compliance)
+  const code = format === "css" ? toCss(palette, options) : toJson(palette, options)
   const formats: { id: "css" | "json"; label: string }[] = [
     { id: "json", label: "JSON" },
     { id: "css", label: "CSS" },

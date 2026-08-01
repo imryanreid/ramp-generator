@@ -18,6 +18,7 @@ import {
 import type { Palette } from "../lib/recommend"
 import { cn } from "../lib/utils"
 import CopyButton from "./CopyButton"
+import RowToggle from "./RowToggle"
 import { Square, TextT, Selection, Target } from "@phosphor-icons/react"
 
 type ValueView = "hex" | "ramp"
@@ -26,10 +27,16 @@ export default function SemanticTokens({
   palette,
   mode,
   compliance,
+  excluded,
+  onToggle,
+  onSetMany,
 }: {
   palette: Palette
   mode: DsMode
   compliance: Compliance
+  excluded: ReadonlySet<string>
+  onToggle: (name: string) => void
+  onSetMany: (names: string[], off: boolean) => void
 }) {
   const tokens = resolveTokens(palette, mode, compliance)
   const target = CONTRAST_TARGET[compliance]
@@ -61,7 +68,8 @@ export default function SemanticTokens({
               <th className="py-2 pr-4 font-medium">Role</th>
               <th className="py-2 pr-4 font-medium">Light</th>
               <th className="py-2 pr-4 font-medium">Dark</th>
-              <th className="py-2 font-medium">{compliance}</th>
+              <th className="py-2 pr-4 font-medium">{compliance}</th>
+              <th className="py-2 text-right font-medium">Export</th>
             </tr>
           </thead>
           <tbody>
@@ -73,6 +81,9 @@ export default function SemanticTokens({
                 view={view}
                 rampNames={rampNames}
                 target={target}
+                excluded={excluded}
+                onToggle={onToggle}
+                onSetMany={onSetMany}
               />
             ))}
           </tbody>
@@ -123,13 +134,21 @@ function GroupBlock({
   view,
   rampNames,
   target,
+  excluded,
+  onToggle,
+  onSetMany,
 }: {
   category: string
   rows: ResolvedToken[]
   view: ValueView
   rampNames: Record<string, string>
   target: number
+  excluded: ReadonlySet<string>
+  onToggle: (name: string) => void
+  onSetMany: (names: string[], off: boolean) => void
 }) {
+  const names = rows.map((r) => r.token)
+  const on = names.filter((n) => !excluded.has(n)).length
   return (
     <>
       <tr>
@@ -139,9 +158,25 @@ function GroupBlock({
             {category}
           </span>
         </td>
+        <td className="pt-7 pb-1.5 text-right">
+          <RowToggle
+            checked={on === names.length}
+            indeterminate={on > 0 && on < names.length}
+            onChange={() => onSetMany(names, on === names.length)}
+            label={`${on === names.length ? "Exclude" : "Include"} every ${category} token`}
+          />
+        </td>
       </tr>
       {rows.map((t) => (
-        <Row key={t.token} t={t} view={view} rampNames={rampNames} target={target} />
+        <Row
+          key={t.token}
+          t={t}
+          view={view}
+          rampNames={rampNames}
+          target={target}
+          included={!excluded.has(t.token)}
+          onToggle={() => onToggle(t.token)}
+        />
       ))}
     </>
   )
@@ -157,17 +192,23 @@ function Row({
   view,
   rampNames,
   target,
+  included,
+  onToggle,
 }: {
   t: ResolvedToken
   view: ValueView
   rampNames: Record<string, string>
   target: number
+  included: boolean
+  onToggle: () => void
 }) {
   const lightLabel = view === "ramp" ? rampRef(rampNames, t.light.ramp, t.light.step) : t.lightHex
   const darkLabel = view === "ramp" ? rampRef(rampNames, t.dark.ramp, t.dark.step) : t.darkHex
   return (
     <tr className="border-t border-line-soft">
-      <td className="py-2 pr-4">
+      {/* Only the content dims — the checkbox stays at full strength so an
+          excluded row is still obviously re-includable. */}
+      <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         <CopyCell value={t.token}>
           <span className="inline-flex items-center gap-2 font-mono text-[13px]">
             <CategoryIcon category={t.category} />
@@ -175,19 +216,28 @@ function Row({
           </span>
         </CopyCell>
       </td>
-      <td className="py-2 pr-4 text-ash">{t.role}</td>
-      <td className="py-2 pr-4">
+      <td className={cn("py-2 pr-4 text-ash transition-opacity", !included && "opacity-40")}>
+        {t.role}
+      </td>
+      <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         <CopyCell value={lightLabel}>
           <Chip hex={t.lightHex} label={lightLabel} mode="light" />
         </CopyCell>
       </td>
-      <td className="py-2 pr-4">
+      <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         <CopyCell value={darkLabel}>
           <Chip hex={t.darkHex} label={darkLabel} mode="dark" />
         </CopyCell>
       </td>
-      <td className="py-2">
+      <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         <AA light={t.lightRatio} dark={t.darkRatio} target={target} />
+      </td>
+      <td className="py-2 text-right">
+        <RowToggle
+          checked={included}
+          onChange={onToggle}
+          label={`${included ? "Exclude" : "Include"} ${t.token} in exports`}
+        />
       </td>
     </tr>
   )

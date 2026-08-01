@@ -10,14 +10,7 @@
 // ==============================================
 import { useState, type CSSProperties, type ReactNode } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import {
-  toCss,
-  toTailwind,
-  toJson,
-  toFigma,
-  type DsMode,
-  type Compliance,
-} from "../lib/semantics"
+import { toCss, toTailwind, toJson, toFigma, type ExportOptions } from "../lib/semantics"
 import type { Palette } from "../lib/recommend"
 import { cn } from "../lib/utils"
 import CopyText from "./CopyText"
@@ -67,10 +60,11 @@ function download(filename: string, mime: string, content: string) {
  * whole palette as plain text, so the agent can read it there. The code tab is
  * the fallback for agents that can't browse.
  */
-function agentPrompt(url: string, compliance: Compliance, mode: DsMode): string {
+function agentPrompt(url: string, o: ExportOptions, omitted: number): string {
+  const compliance = o.compliance ?? "AA"
   const ratio = compliance === "AAA" ? "7:1" : "4.5:1"
   const scope =
-    mode === "full"
+    (o.mode ?? "full") === "full"
       ? "the full token set, including hover/active states and subtle feedback surfaces"
       : "the core token set"
   return `Use this color palette as the design foundation for my project.
@@ -90,23 +84,28 @@ When you apply it:
   (${ratio}). Don't substitute your own colors into those pairs — it will
   quietly break the contrast guarantee.
 - Use the hex values exactly as given. The ramps are OKLCH-derived and
-  perceptually even; re-deriving them in sRGB will drift.
+  perceptually even; re-deriving them in sRGB will drift.${
+    omitted
+      ? `
+- I have deliberately left ${omitted} row(s) out of this palette. Treat what the
+  page lists as the complete set — don't add colors back in to fill gaps.`
+      : ""
+  }
 
 Set up the tokens first, then use them to style the components we build.`
 }
 
 export default function ExportPanel({
   palette,
-  mode,
-  compliance,
+  options,
   shareHref,
 }: {
   palette: Palette
-  mode: DsMode
-  compliance: Compliance
+  options: ExportOptions
   shareHref: string
 }) {
   const [stage, setStage] = useState<Stage>("choose")
+  const omitted = (options.excludedRamps?.size ?? 0) + (options.excludedTokens?.size ?? 0)
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -119,16 +118,11 @@ export default function ExportPanel({
       >
         {stage === "choose" && <Chooser onPick={setStage} />}
         {stage === "code" && (
-          <CodeExport
-            palette={palette}
-            mode={mode}
-            compliance={compliance}
-            onBack={() => setStage("choose")}
-          />
+          <CodeExport palette={palette} options={options} onBack={() => setStage("choose")} />
         )}
         {stage === "prompt" && (
           <PromptExport
-            prompt={agentPrompt(shareHref, compliance, mode)}
+            prompt={agentPrompt(shareHref, options, omitted)}
             onBack={() => setStage("choose")}
           />
         )}
@@ -238,13 +232,11 @@ function PromptExport({ prompt, onBack }: { prompt: string; onBack: () => void }
 
 function CodeExport({
   palette,
-  mode,
-  compliance,
+  options,
   onBack,
 }: {
   palette: Palette
-  mode: DsMode
-  compliance: Compliance
+  options: ExportOptions
   onBack: () => void
 }) {
   const [tab, setTab] = useState<Tab>("css")
@@ -253,12 +245,12 @@ function CodeExport({
   // The Figma tab is single-mode per file; other tabs carry both modes inline.
   const code =
     tab === "figma"
-      ? toFigma(palette, mode, colorMode, compliance)
+      ? toFigma(palette, { ...options, colorMode })
       : tab === "css"
-        ? toCss(palette, mode, compliance)
+        ? toCss(palette, options)
         : tab === "tailwind"
-          ? toTailwind(palette, mode, compliance)
-          : toJson(palette, mode, compliance)
+          ? toTailwind(palette, options)
+          : toJson(palette, options)
 
   const file =
     tab === "figma"

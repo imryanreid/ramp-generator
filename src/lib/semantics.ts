@@ -318,8 +318,30 @@ export function resolveTokens(
 
 // ---------- Exporters ----------
 
+/**
+ * What to emit. Everything is optional and defaults to "the whole palette at
+ * AA", so a bare `toCss(palette)` still works.
+ *
+ * Exclusions are applied *after* resolution, never before: `resolveTokens` needs
+ * the full set to compute contrast pairs (text-primary is measured against
+ * bg-canvas even if bg-canvas is unchecked), and the UI needs it to render the
+ * dimmed rows. Unchecking something removes it from the output, not from the math.
+ */
+export type ExportOptions = {
+  mode?: DsMode
+  compliance?: Compliance
+  /** Ramp names to leave out of the exported scales, e.g. "accent-2". */
+  excludedRamps?: ReadonlySet<string>
+  /** Semantic token names to leave out, e.g. "bg-info". */
+  excludedTokens?: ReadonlySet<string>
+  /** Figma only — that format carries one color mode per file. */
+  colorMode?: "light" | "dark"
+}
+
+const NONE: ReadonlySet<string> = new Set()
+
 /** All ramps as flat name/step pairs, in display order. */
-function allRamps(palette: Palette): Ramp[] {
+export function allRamps(palette: Palette): Ramp[] {
   return [
     ...palette.primaries,
     ...palette.accents,
@@ -328,13 +350,23 @@ function allRamps(palette: Palette): Ramp[] {
   ]
 }
 
-export function toCss(
-  palette: Palette,
-  mode: DsMode = "full",
-  compliance: Compliance = "AA",
-): string {
-  const ramps = allRamps(palette)
-  const tokens = resolveTokens(palette, mode, compliance)
+/** The ramps an export should list, honouring the checkboxes. */
+function selectedRamps(palette: Palette, o: ExportOptions): Ramp[] {
+  const excluded = o.excludedRamps ?? NONE
+  return allRamps(palette).filter((r) => !excluded.has(r.name))
+}
+
+/** The tokens an export should emit, resolved first and filtered second. */
+function selectedTokens(palette: Palette, o: ExportOptions): ResolvedToken[] {
+  const excluded = o.excludedTokens ?? NONE
+  return resolveTokens(palette, o.mode ?? "full", o.compliance ?? "AA").filter(
+    (t) => !excluded.has(t.token),
+  )
+}
+
+export function toCss(palette: Palette, o: ExportOptions = {}): string {
+  const ramps = selectedRamps(palette, o)
+  const tokens = selectedTokens(palette, o)
   const rampLines = ramps.flatMap((r) =>
     STEPS.map((s) => `  --${r.name}-${s}: ${getSwatch(r, s).hex};`),
   )
@@ -355,16 +387,12 @@ export function toCss(
   ].join("\n")
 }
 
-export function toTailwind(
-  palette: Palette,
-  mode: DsMode = "full",
-  compliance: Compliance = "AA",
-): string {
-  const ramps = allRamps(palette)
+export function toTailwind(palette: Palette, o: ExportOptions = {}): string {
+  const ramps = selectedRamps(palette, o)
   const rampLines = ramps.flatMap((r) =>
     STEPS.map((s) => `  --color-${r.name}-${s}: ${getSwatch(r, s).hex};`),
   )
-  const tokens = resolveTokens(palette, mode, compliance)
+  const tokens = selectedTokens(palette, o)
   const semLines = tokens.map((t) => `  --color-${t.token}: ${t.lightHex};`)
   return ["@theme {", ...rampLines, "", ...semLines, "}"].join("\n")
 }
@@ -500,18 +528,15 @@ type FigmaAliasToken = { $type: "color"; $value: string }
 const RAMPS_GROUP = "Ramps"
 const SEMANTICS_GROUP = "Semantics"
 
-export function toFigma(
-  palette: Palette,
-  mode: DsMode = "full",
-  colorMode: "light" | "dark" = "light",
-  compliance: Compliance = "AA",
-): string {
+export function toFigma(palette: Palette, o: ExportOptions = {}): string {
+  const colorMode = o.colorMode ?? "light"
   const names = rampNameMap(palette)
   const ramps: Record<string, Record<string, FigmaColorToken>> = {}
-  const semantics: Record<string, Record<string, FigmaAliasToken>> = {}
+  const semantics: Record<string, Record<string, FigmaAliasToken | FigmaColorToken>> = {}
+  const emitted = new Set(selectedRamps(palette, o).map((r) => r.name))
 
   // Ramp groups, named by color so Figma's variable groups read clearly.
-  for (const r of allRamps(palette)) {
+  for (const r of selectedRamps(palette, o)) {
     const scale: Record<string, FigmaColorToken> = {}
     for (const s of STEPS) {
       scale[String(s)] = figmaColor(getSwatch(r, s).hex)
@@ -519,26 +544,24 @@ export function toFigma(
     ramps[names[r.name]] = scale
   }
 
-  // Semantic tokens, grouped by usage type and aliased to the ramp steps above.
-  for (const t of resolveTokens(palette, mode, compliance)) {
+  // Semantic tokens, grouped by usage type. Normally these alias the ramp steps
+  // above so editing a ramp variable in Figma cascades to every token using it.
+  // When a token's ramp has been unchecked, the alias would dangle and Figma
+  // rejects the import — so those fall back to the literal color instead.
+  for (const t of selectedTokens(palette, o)) {
     const loc = colorMode === "dark" ? t.dark : t.light
     const group = names[loc.ramp] ? loc.ramp : "neutral"
-    const alias: FigmaAliasToken = {
-      $type: "color",
-      $value: `{${RAMPS_GROUP}.${names[group]}.${loc.step}}`,
-    }
-    ;(semantics[t.category] ??= {})[t.token] = alias
+    const hex = colorMode === "dark" ? t.darkHex : t.lightHex
+    ;(semantics[t.category] ??= {})[t.token] = emitted.has(group)
+      ? { $type: "color", $value: `{${RAMPS_GROUP}.${names[group]}.${loc.step}}` }
+      : figmaColor(hex)
   }
 
   return JSON.stringify({ [RAMPS_GROUP]: ramps, [SEMANTICS_GROUP]: semantics }, null, 2)
 }
 
-export function toJson(
-  palette: Palette,
-  mode: DsMode = "full",
-  compliance: Compliance = "AA",
-): string {
-  const ramps = allRamps(palette)
+export function toJson(palette: Palette, o: ExportOptions = {}): string {
+  const ramps = selectedRamps(palette, o)
   const out: Record<string, unknown> = {}
   for (const r of ramps) {
     const scale: Record<string, { $value: string; $type: string }> = {}
@@ -548,7 +571,7 @@ export function toJson(
     out[r.name] = scale
   }
   const semantic: Record<string, { $value: string; $type: string }> = {}
-  for (const t of resolveTokens(palette, mode, compliance)) {
+  for (const t of selectedTokens(palette, o)) {
     semantic[t.token] = { $value: t.lightHex, $type: "color" }
   }
   out.semantic = semantic

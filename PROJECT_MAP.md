@@ -53,9 +53,10 @@
 | --- | --- |
 | `ColorInput.tsx` | The brand and accent pickers: swatch, hex field, and the lock/reset behavior for overriding the auto-derived accent. |
 | `SchemeSelect.tsx` | The derivation dropdown (complementary, analogous, triadic, split, monochromatic) with its descriptions. |
-| `RampGroup.tsx` | Renders a titled group of ramps as rows of swatches. |
+| `RampGroup.tsx` | Renders a titled group of ramps as rows of swatches, each with an include/exclude checkbox beside its name. |
 | `SemanticTokens.tsx` | The semantic token table — token name, the ramp step it resolves to, light/dark previews, and a contrast badge whose pass threshold follows the selected WCAG level. |
 | `ExportPanel.tsx` | The contents of the export modal. Opens on a choice between taking the tokens as code and copying an agent prompt. The code branch has a tab per format (CSS variables, Tailwind v4, Figma variables, JSON) with copy and download; the Figma tab emits one W3C DTCG file per mode. |
+| `RowToggle.tsx` | The checkbox beside each ramp and token row, including the mixed-state variant used for section-level toggles. |
 | `CopyButton.tsx` | Button that copies a value and crossfades to a checkmark. |
 | `CopyText.tsx` | Inline text that copies itself when clicked. |
 

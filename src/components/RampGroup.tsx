@@ -4,38 +4,91 @@
 // Neutral, Status), each rendered as a row of
 // swatches labelled with its step number. Clicking
 // a swatch copies its hex.
+//
+// Each row carries a checkbox beside its name. An
+// unchecked ramp is still generated and still
+// copyable — it just dims and drops out of the
+// export and the agent block.
 // ==============================================
 import { readableText, type Ramp } from "../lib/color"
 import { Check } from "@phosphor-icons/react"
+import { cn } from "../lib/utils"
 import CopyText from "./CopyText"
+import RowToggle from "./RowToggle"
 
 type Props = {
   title: string
-  ramps: Ramp[]
+  ramps: readonly Ramp[]
+  excluded: ReadonlySet<string>
+  onToggle: (name: string) => void
+  onSetMany: (names: string[], off: boolean) => void
 }
 
 /** Renders a titled section of one or more 11-step ramps. */
-export default function RampGroup({ title, ramps }: Props) {
+export default function RampGroup({ title, ramps, excluded, onToggle, onSetMany }: Props) {
   if (ramps.length === 0) return null
+  const names = ramps.map((r) => r.name)
+  const on = names.filter((n) => !excluded.has(n)).length
+
   return (
     <section className="mb-12">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-3">
         <h2 className="font-display text-xl font-semibold tracking-tight">{title}</h2>
+        {ramps.length > 1 && (
+          <RowToggle
+            checked={on === names.length}
+            indeterminate={on > 0 && on < names.length}
+            onChange={() => onSetMany(names, on === names.length)}
+            label={`${on === names.length ? "Exclude" : "Include"} every ramp in ${title}`}
+          />
+        )}
       </div>
       <div className="flex flex-col gap-5">
         {ramps.map((ramp) => (
-          <RampRow key={ramp.name} ramp={ramp} />
+          <RampRow
+            key={ramp.name}
+            ramp={ramp}
+            included={!excluded.has(ramp.name)}
+            onToggle={() => onToggle(ramp.name)}
+          />
         ))}
       </div>
     </section>
   )
 }
 
-function RampRow({ ramp }: { ramp: Ramp }) {
+function RampRow({
+  ramp,
+  included,
+  onToggle,
+}: {
+  ramp: Ramp
+  included: boolean
+  onToggle: () => void
+}) {
   return (
     <div>
-      <div className="mb-1.5 font-mono text-xs text-ash">{ramp.name}</div>
-      <div className="flex min-w-0 gap-1 pb-1">
+      <div className="mb-1.5 flex items-center gap-2">
+        <RowToggle
+          checked={included}
+          onChange={onToggle}
+          label={`${included ? "Exclude" : "Include"} the ${ramp.name} ramp in exports`}
+        />
+        <span className={cn("font-mono text-xs transition-colors", included ? "text-ash" : "text-line")}>
+          {ramp.name}
+        </span>
+        {!included && (
+          <span className="font-mono text-[10px] uppercase tracking-wide text-line">
+            not exported
+          </span>
+        )}
+      </div>
+      <div
+        className={cn(
+          "flex min-w-0 gap-1 pb-1 transition-opacity",
+          included ? "opacity-100" : "opacity-35",
+        )}
+      >
         {ramp.swatches.map((s) => {
           const fg = readableText(s.hex)
           return (

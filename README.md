@@ -79,9 +79,32 @@ https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 | `m` | Scope: `full` or `basic`. |
 | `s` | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic` |
 | `c` | Contrast target: `AA` (4.5:1) or `AAA` (7:1). |
+| `xr` | Ramps left out of the export, dot-separated — e.g. `accent-2.info`. |
+| `xt` | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`. |
 
 Malformed params are dropped individually, so a bad link degrades to defaults
 rather than erroring.
+
+`xr` and `xt` carry *names* rather than a bitmask over the token table. A bitmask
+would be far shorter, but it would make the table's declaration order a permanent
+public contract — inserting a token in the middle would silently repoint every
+link already shared. Names only break on a rename, which is a breaking change
+anyway, and they stay readable to the agents this URL API exists for. The
+separator is `.` because `URLSearchParams` percent-encodes a comma but leaves
+dots alone.
+
+## Choosing what to export
+
+Every ramp and every semantic token has a checkbox. Unchecking one dims the row
+and drops it from the exports and the agent block — it does **not** stop it being
+generated. That distinction matters: contrast resolution needs the full set
+(`text-primary` is measured against `bg-canvas` even when `bg-canvas` is
+unchecked), so exclusions are applied after the math, never before.
+
+Unchecking a ramp drops its 50–950 scale but leaves tokens that reference it
+working. In the Figma export those tokens would otherwise become dangling
+variable aliases, so they fall back to literal color values instead — the file
+always imports cleanly.
 
 ## Using it from an agent
 
@@ -99,6 +122,27 @@ The page is built to be read by machines as well as people:
 - **A prepared prompt.** The export dialog can hand you a ready-to-paste prompt
   containing the link to your palette plus the constraints an agent needs to
   apply it correctly.
+
+## Forking this
+
+The code is MIT — fork it, change it, ship it. Four things are wired to *this*
+deployment and want changing if you run your own:
+
+| Change | Where |
+| --- | --- |
+| The canonical URL — otherwise your deploy tells search engines it belongs to ramps.studio | `<link rel="canonical">`, `og:url`, and the JSON-LD `url` + `urlTemplate` in `index.html` |
+| Share-link origin | `SITE_URL` in `src/lib/site.ts`, or set `VITE_SITE_URL` in your host's environment |
+| Sitemap + robots URLs | `public/sitemap.xml`, `public/robots.txt` |
+| Footer attribution — my name, photo, and studio | `Attribution` in `src/App.tsx`, plus the two images in `src/assets/` |
+
+The canonical tag is the one that actually bites: it is invisible, and left
+unchanged it quietly tells Google your copy is a duplicate of this site.
+
+Nothing else is environment-specific. There are no secrets, no API keys, and no
+env vars required to run or deploy — `pnpm install && pnpm build` is the whole
+setup. The Vercel Analytics beacons no-op anywhere that isn't a Vercel project.
+
+Keeping the `LICENSE` file is the one thing MIT actually requires.
 
 ## Local development
 

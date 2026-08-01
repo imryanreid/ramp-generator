@@ -63,19 +63,22 @@
           "Enforced WCAG AA (4.5:1) or AAA (7:1) contrast — token steps are adjusted automatically to meet the selected level, not merely flagged",
           "Export to CSS custom properties, a Tailwind v4 theme block, W3C DTCG tokens for Figma variables, or JSON",
           "A copyable prompt that hands the palette to a coding agent",
+          "Per-ramp and per-token selection — deselected rows are omitted from every export and from the machine-readable block",
           "Shareable permalinks that encode the full palette in the URL"
         ],
         "potentialAction": {
           "@type": "SearchAction",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "https://www.ramps.studio/?b={brand_hex_without_hash}&m={scope}&s={scheme}&c={wcag_level}"
+            "urlTemplate": "https://www.ramps.studio/?b={brand_hex_without_hash}&m={scope}&s={scheme}&c={wcag_level}&xr={excluded_ramps}&xt={excluded_tokens}"
           },
           "query-input": [
             "required name=brand_hex_without_hash",
             "required name=scope",
             "required name=scheme",
-            "required name=wcag_level"
+            "required name=wcag_level",
+            "name=excluded_ramps",
+            "name=excluded_tokens"
           ]
         }
       }

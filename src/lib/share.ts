@@ -21,6 +21,32 @@ export type ShareState = {
   mode: DsMode
   scheme: Scheme
   compliance: Compliance
+  /** Ramp names deselected for export, e.g. "accent-2". Empty is the default. */
+  excludedRamps: string[]
+  /** Semantic token names deselected for export, e.g. "bg-info". */
+  excludedTokens: string[]
+}
+
+// Exclusions travel as dot-separated *names* rather than a bitmask over the
+// token table's declaration order. A bitmask would be far shorter, but it would
+// make that order a permanent public contract — inserting a token in the middle
+// would silently repoint every link anyone had shared. Names only break on a
+// rename, which is already a breaking change, and they stay readable to the
+// agents this URL API exists for.
+//
+// The separator is "." rather than the more conventional ",": URLSearchParams
+// serializes as form-urlencoded, which percent-encodes a comma (`%2C`) but
+// leaves "." untouched. Dots keep the shared link legible.
+const NAME_LIST = /^[a-z0-9.-]+$/i
+
+function encodeNames(names: string[]): string {
+  return names.filter((n) => n && !n.includes(".")).sort().join(".")
+}
+
+function decodeNames(raw: string | null): string[] | undefined {
+  if (!raw || !NAME_LIST.test(raw)) return undefined
+  const names = raw.split(".").filter(Boolean)
+  return names.length ? names : undefined
 }
 
 const HEX = /^[0-9a-fA-F]{6}$/
@@ -33,6 +59,8 @@ export function encodeShareState(s: ShareState): string {
   p.set("m", s.mode)
   p.set("s", s.scheme)
   p.set("c", s.compliance)
+  if (s.excludedRamps.length) p.set("xr", encodeNames(s.excludedRamps))
+  if (s.excludedTokens.length) p.set("xt", encodeNames(s.excludedTokens))
   return p.toString()
 }
 
@@ -60,6 +88,12 @@ export function decodeShareState(search: string): Partial<ShareState> {
 
   const c = p.get("c")
   if (c === "AA" || c === "AAA") out.compliance = c
+
+  const xr = decodeNames(p.get("xr"))
+  if (xr) out.excludedRamps = xr
+
+  const xt = decodeNames(p.get("xt"))
+  if (xt) out.excludedTokens = xt
 
   return out
 }
