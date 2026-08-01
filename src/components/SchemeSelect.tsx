@@ -39,19 +39,19 @@ export default function SchemeSelect({ scheme, onChange }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-line bg-paper px-3 text-left text-sm transition-colors hover:border-ink/30"
+        className="border-line bg-paper hover:border-ink/30 flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-left text-sm transition-colors"
       >
-        <span className="font-medium text-ink">{current.label}</span>
+        <span className="text-ink font-medium">{current.label}</span>
         <CaretDown
           size={12}
           weight="bold"
           aria-hidden="true"
-          className={cn("shrink-0 text-ash transition-transform", open && "rotate-180")}
+          className={cn("text-ash shrink-0 transition-transform", open && "rotate-180")}
         />
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1.5 overflow-hidden rounded-md border border-line bg-paper shadow-lg">
+        <div className="border-line bg-paper absolute top-full right-0 left-0 z-20 mt-1.5 overflow-hidden rounded-md border shadow-lg">
           {SCHEMES.map((s) => {
             const selected = s.id === scheme
             return (
@@ -68,14 +68,14 @@ export default function SchemeSelect({ scheme, onChange }: Props) {
                 )}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-sm text-ink", selected && "font-medium")}>
+                  <span className={cn("text-ink text-sm", selected && "font-medium")}>
                     {s.label}
                   </span>
                   {selected && (
-<Check size={12} weight="bold" aria-hidden="true" className="text-ink" />
+                    <Check size={12} weight="bold" aria-hidden="true" className="text-ink" />
                   )}
                 </div>
-                <p className="mt-0.5 text-xs leading-snug text-ash">{s.blurb}</p>
+                <p className="text-ash mt-0.5 text-xs leading-snug">{s.blurb}</p>
               </button>
             )
           })}

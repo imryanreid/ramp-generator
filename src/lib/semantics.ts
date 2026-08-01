@@ -81,48 +81,93 @@ const TOKENS: TokenDef[] = [
   // ---- Backgrounds: surfaces ----
   t("bg-canvas", "Page background", BG, ["neutral", 100], ["neutral", 950]),
   t("bg-surface", "Card, panel", BG, ["neutral", 50], ["neutral", 900]),
-  t("bg-surface-raised", "Dropdown menu", BG, ["neutral", 50], ["neutral", 800], { full: true }),
+  t("bg-surface-raised", "Dropdown menu", BG, ["neutral", 50], ["neutral", 800], {
+    full: true,
+  }),
   t("bg-muted", "Table row hover", BG, ["neutral", 100], ["neutral", 800]),
 
   // ---- Backgrounds: action fills ----
   t("bg-brand", "Primary button", BG, [PRIMARY, 600], [PRIMARY, 500]),
   t("bg-brand-hover", "Cursor over that button", BG, [PRIMARY, 700], [PRIMARY, 400]),
-  t("bg-brand-active", "Button while pressed", BG, [PRIMARY, 800], [PRIMARY, 300], { full: true }),
+  t("bg-brand-active", "Button while pressed", BG, [PRIMARY, 800], [PRIMARY, 300], {
+    full: true,
+  }),
   t("bg-accent", "Secondary button", BG, ["accent", 600], ["accent", 500], { full: true }),
-  t("bg-accent-hover", "Cursor over secondary", BG, ["accent", 700], ["accent", 400], { full: true }),
-  t("bg-accent-active", "Secondary while pressed", BG, ["accent", 800], ["accent", 300], { full: true }),
+  t("bg-accent-hover", "Cursor over secondary", BG, ["accent", 700], ["accent", 400], {
+    full: true,
+  }),
+  t("bg-accent-active", "Secondary while pressed", BG, ["accent", 800], ["accent", 300], {
+    full: true,
+  }),
   t("bg-tertiary", "Tertiary button", BG, ["accent-2", 600], ["accent-2", 500], { full: true }),
-  t("bg-tertiary-hover", "Cursor over tertiary", BG, ["accent-2", 700], ["accent-2", 400], { full: true }),
+  t("bg-tertiary-hover", "Cursor over tertiary", BG, ["accent-2", 700], ["accent-2", 400], {
+    full: true,
+  }),
 
   // ---- Backgrounds: feedback ----
   t("bg-success", "Success badge", BG, ["success", 600], ["success", 500]),
-  t("bg-success-subtle", "Success banner", BG, ["success", 100], ["success", 900], { full: true }),
+  t("bg-success-subtle", "Success banner", BG, ["success", 100], ["success", 900], {
+    full: true,
+  }),
   t("bg-warning", "Warning badge", BG, ["warning", 500], ["warning", 400]),
-  t("bg-warning-subtle", "Warning banner", BG, ["warning", 100], ["warning", 900], { full: true }),
+  t("bg-warning-subtle", "Warning banner", BG, ["warning", 100], ["warning", 900], {
+    full: true,
+  }),
   t("bg-error", "Destructive button", BG, ["error", 600], ["error", 500]),
   t("bg-error-subtle", "Error banner", BG, ["error", 100], ["error", 900], { full: true }),
   t("bg-info", "Info badge", BG, ["info", 600], ["info", 500], { full: true }),
   t("bg-info-subtle", "Info banner", BG, ["info", 100], ["info", 900], { full: true }),
 
   // ---- Text ----
-  t("text-primary", "Body copy", TEXT, ["neutral", 900], ["neutral", 100], { pairWith: "bg-canvas" }),
-  t("text-secondary", "Helper text", TEXT, ["neutral", 600], ["neutral", 400], { pairWith: "bg-canvas" }),
-  t("text-tertiary", "Timestamps, captions", TEXT, ["neutral", 500], ["neutral", 500], { pairWith: "bg-canvas", full: true }),
-  t("text-disabled", "Greyed-out label", TEXT, ["neutral", 400], ["neutral", 600], { full: true }),
-  t("text-link", "Inline link", TEXT, [PRIMARY, 600], [PRIMARY, 400], { pairWith: "bg-canvas" }),
-  t("text-on-brand", "Label on a primary button", TEXT, [PRIMARY, 50], [PRIMARY, 950], { pairWith: "bg-brand" }),
-  t("text-on-accent", "Label on a secondary button", TEXT, ["accent", 50], ["accent", 950], { pairWith: "bg-accent", full: true }),
-  t("text-success", "Saved confirmation", TEXT, ["success", 700], ["success", 400], { pairWith: "bg-canvas", full: true }),
-  t("text-error", "Field error message", TEXT, ["error", 700], ["error", 400], { pairWith: "bg-canvas" }),
-  t("text-warning", "Quota running low", TEXT, ["warning", 700], ["warning", 400], { pairWith: "bg-canvas", full: true }),
-  t("text-info", "Inline tip", TEXT, ["info", 700], ["info", 400], { pairWith: "bg-canvas", full: true }),
+  t("text-primary", "Body copy", TEXT, ["neutral", 900], ["neutral", 100], {
+    pairWith: "bg-canvas",
+  }),
+  t("text-secondary", "Helper text", TEXT, ["neutral", 600], ["neutral", 400], {
+    pairWith: "bg-canvas",
+  }),
+  t("text-tertiary", "Timestamps, captions", TEXT, ["neutral", 500], ["neutral", 500], {
+    pairWith: "bg-canvas",
+    full: true,
+  }),
+  t("text-disabled", "Greyed-out label", TEXT, ["neutral", 400], ["neutral", 600], {
+    full: true,
+  }),
+  t("text-link", "Inline link", TEXT, [PRIMARY, 600], [PRIMARY, 400], {
+    pairWith: "bg-canvas",
+  }),
+  t("text-on-brand", "Label on a primary button", TEXT, [PRIMARY, 50], [PRIMARY, 950], {
+    pairWith: "bg-brand",
+  }),
+  t("text-on-accent", "Label on a secondary button", TEXT, ["accent", 50], ["accent", 950], {
+    pairWith: "bg-accent",
+    full: true,
+  }),
+  t("text-success", "Saved confirmation", TEXT, ["success", 700], ["success", 400], {
+    pairWith: "bg-canvas",
+    full: true,
+  }),
+  t("text-error", "Field error message", TEXT, ["error", 700], ["error", 400], {
+    pairWith: "bg-canvas",
+  }),
+  t("text-warning", "Quota running low", TEXT, ["warning", 700], ["warning", 400], {
+    pairWith: "bg-canvas",
+    full: true,
+  }),
+  t("text-info", "Inline tip", TEXT, ["info", 700], ["info", 400], {
+    pairWith: "bg-canvas",
+    full: true,
+  }),
 
   // ---- Borders ----
   t("border-subtle", "Divider between rows", BORDER, ["neutral", 200], ["neutral", 800]),
   t("border-default", "Input outline", BORDER, ["neutral", 300], ["neutral", 700]),
-  t("border-strong", "Emphasised card edge", BORDER, ["neutral", 400], ["neutral", 600], { full: true }),
+  t("border-strong", "Emphasised card edge", BORDER, ["neutral", 400], ["neutral", 600], {
+    full: true,
+  }),
   t("border-active", "Selected tab", BORDER, [PRIMARY, 600], [PRIMARY, 500]),
-  t("border-error", "Outline on a bad field", BORDER, ["error", 500], ["error", 500], { full: true }),
+  t("border-error", "Outline on a bad field", BORDER, ["error", 500], ["error", 500], {
+    full: true,
+  }),
 
   // ---- Focus ----
   t("ring-focus", "Keyboard focus ring", FOCUS, [PRIMARY, 500], [PRIMARY, 400]),
@@ -145,7 +190,12 @@ export function rampIndex(palette: Palette): Record<string, Ramp> {
   return index
 }
 
-function hexAt(index: Record<string, Ramp>, ramp: string, step: Step, fallback = "neutral"): string {
+function hexAt(
+  index: Record<string, Ramp>,
+  ramp: string,
+  step: Step,
+  fallback = "neutral",
+): string {
   const r = index[ramp] ?? index[fallback]
   return r ? getSwatch(r, step).hex : "#808080"
 }
@@ -162,12 +212,7 @@ export const CONTRAST_TARGET: Record<Compliance, number> = { AA: 4.5, AAA: 7 }
  * a contrast target — repainting the canvas to fix one label would change the
  * whole design. Action fills (bg-brand, bg-accent, …) may move.
  */
-const FIXED_BACKGROUNDS = new Set([
-  "bg-canvas",
-  "bg-surface",
-  "bg-surface-raised",
-  "bg-muted",
-])
+const FIXED_BACKGROUNDS = new Set(["bg-canvas", "bg-surface", "bg-surface-raised", "bg-muted"])
 
 /**
  * When an action fill moves, its hover/active siblings move by the same number
@@ -186,8 +231,7 @@ function stepsByProximity(from: Step): Step[] {
   const origin = STEP_INDEX.get(from) ?? 0
   return [...STEPS].sort(
     (a, b) =>
-      Math.abs((STEP_INDEX.get(a) ?? 0) - origin) -
-      Math.abs((STEP_INDEX.get(b) ?? 0) - origin),
+      Math.abs((STEP_INDEX.get(a) ?? 0) - origin) - Math.abs((STEP_INDEX.get(b) ?? 0) - origin),
   )
 }
 
@@ -357,12 +401,7 @@ const NONE: ReadonlySet<string> = new Set()
 
 /** All ramps as flat name/step pairs, in display order. */
 export function allRamps(palette: Palette): Ramp[] {
-  return [
-    ...palette.primaries,
-    ...palette.accents,
-    palette.neutral,
-    ...palette.status,
-  ]
+  return [...palette.primaries, ...palette.accents, palette.neutral, ...palette.status]
 }
 
 /** The ramps an export should list, honouring the checkboxes. */
@@ -476,7 +515,12 @@ export function toTailwind(palette: Palette, o: ExportOptions = {}): string {
 // A plain hex string is rejected as `invalid-design-token`.
 type FigmaColorToken = {
   $type: "color"
-  $value: { colorSpace: "srgb"; components: [number, number, number]; alpha: number; hex: string }
+  $value: {
+    colorSpace: "srgb"
+    components: [number, number, number]
+    alpha: number
+    hex: string
+  }
 }
 
 function figmaColor(hex: string): FigmaColorToken {
@@ -567,11 +611,21 @@ export function rampNameMap(palette: Palette): Record<string, string> {
  */
 export function rampAliasNames(palette: Palette): Record<string, string> {
   const index = rampIndex(palette)
-  const aliases = ["primary", "accent", "accent-2", "neutral", "success", "warning", "error", "info"]
+  const aliases = [
+    "primary",
+    "accent",
+    "accent-2",
+    "neutral",
+    "success",
+    "warning",
+    "error",
+    "info",
+  ]
   const present = aliases.filter((a) => index[a])
 
   const counts = new Map<string, number>()
-  for (const a of present) counts.set(colorName(index[a]), (counts.get(colorName(index[a])) ?? 0) + 1)
+  for (const a of present)
+    counts.set(colorName(index[a]), (counts.get(colorName(index[a])) ?? 0) + 1)
 
   const used = new Set<string>()
   const map: Record<string, string> = {}
@@ -633,7 +687,10 @@ export function toJson(palette: Palette, o: ExportOptions = {}): string {
   for (const r of ramps) {
     const scale: Record<string, { $value: string; $type: string }> = {}
     for (const s of STEPS) {
-      scale[String(s)] = { $value: formatColor(getSwatch(r, s).hex, o.format ?? "hex"), $type: "color" }
+      scale[String(s)] = {
+        $value: formatColor(getSwatch(r, s).hex, o.format ?? "hex"),
+        $type: "color",
+      }
     }
     out[r.name] = scale
   }

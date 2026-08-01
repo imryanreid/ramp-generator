@@ -26,7 +26,14 @@ type Props = {
 }
 
 /** Renders a titled section of one or more 11-step ramps. */
-export default function RampGroup({ title, ramps, format, excluded, onToggle, onSetMany }: Props) {
+export default function RampGroup({
+  title,
+  ramps,
+  format,
+  excluded,
+  onToggle,
+  onSetMany,
+}: Props) {
   if (ramps.length === 0) return null
   const names = ramps.map((r) => r.name)
   const on = names.filter((n) => !excluded.has(n)).length
@@ -74,7 +81,12 @@ function RampRow({
     <div>
       {/* Label first, then its toggle — matching the section headings above. */}
       <div className="mb-1.5 flex items-center gap-2">
-        <span className={cn("font-mono text-xs transition-colors", included ? "text-ash" : "text-line")}>
+        <span
+          className={cn(
+            "font-mono text-xs transition-colors",
+            included ? "text-ash" : "text-line",
+          )}
+        >
           {ramp.name}
         </span>
         <RowToggle
@@ -83,7 +95,7 @@ function RampRow({
           label={`${included ? "Exclude" : "Include"} the ${ramp.name} ramp in exports`}
         />
         {!included && (
-          <span className="font-mono text-[10px] uppercase tracking-wide text-line">
+          <span className="text-line font-mono text-[10px] tracking-wide uppercase">
             not exported
           </span>
         )}
@@ -108,7 +120,7 @@ function RampRow({
             >
               {(copied) => (
                 <div
-                  className="flex h-16 flex-col justify-between overflow-hidden rounded-md p-2 text-left ring-1 ring-inset ring-black/5 sm:h-20"
+                  className="flex h-16 flex-col justify-between overflow-hidden rounded-md p-2 text-left ring-1 ring-black/5 ring-inset sm:h-20"
                   style={{ backgroundColor: s.hex, color: fg }}
                 >
                   <div className="flex items-center justify-between text-[10px] font-medium">
@@ -116,7 +128,10 @@ function RampRow({
                     <span className="relative inline-flex h-3 min-w-[1.4em] items-center">
                       <span
                         className="transition-all duration-200 ease-out"
-                        style={{ opacity: copied ? 0 : 1, transform: copied ? "translateY(-2px)" : "none" }}
+                        style={{
+                          opacity: copied ? 0 : 1,
+                          transform: copied ? "translateY(-2px)" : "none",
+                        }}
                       >
                         {s.step}
                       </span>
@@ -125,13 +140,16 @@ function RampRow({
                         weight="bold"
                         aria-hidden="true"
                         className="absolute left-0 transition-all duration-200 ease-out"
-                        style={{ opacity: copied ? 1 : 0, transform: copied ? "none" : "translateY(2px)" }}
+                        style={{
+                          opacity: copied ? 1 : 0,
+                          transform: copied ? "none" : "translateY(2px)",
+                        }}
                       />
                     </span>
                     {s.isSource && (
                       <span
                         // No room for this beside the step number on mobile.
-                        className="hidden rounded-full px-1 py-px text-[8px] uppercase tracking-wide ring-1 sm:inline-block"
+                        className="hidden rounded-full px-1 py-px text-[8px] tracking-wide uppercase ring-1 sm:inline-block"
                         style={{ borderColor: fg }}
                       >
                         base

@@ -20,7 +20,13 @@ import RampGroup from "./components/RampGroup"
 import SemanticTokens from "./components/SemanticTokens"
 import ExportPanel from "./components/ExportPanel"
 import SchemeSelect from "./components/SchemeSelect"
-import { buildPalette, deriveAccentHex, type DsMode, type Scheme, type Palette } from "./lib/recommend"
+import {
+  buildPalette,
+  deriveAccentHex,
+  type DsMode,
+  type Scheme,
+  type Palette,
+} from "./lib/recommend"
 import {
   readInitialShareState,
   encodeShareState,
@@ -156,12 +162,26 @@ export default function App() {
   // Keep the address bar in sync so a copy/paste of the URL also reproduces state.
   useEffect(() => {
     try {
-      window.history.replaceState(null, "", isDefault ? "/" : `?${encodeShareState(shareState)}`)
+      window.history.replaceState(
+        null,
+        "",
+        isDefault ? "/" : `?${encodeShareState(shareState)}`,
+      )
     } catch {
       // Ignore — some browsers disallow history writes in restricted contexts.
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
-  }, [brand, accentOverride, mode, scheme, compliance, format, excludedRamps, excludedTokens, isDefault])
+  }, [
+    brand,
+    accentOverride,
+    mode,
+    scheme,
+    compliance,
+    format,
+    excludedRamps,
+    excludedTokens,
+    isDefault,
+  ])
 
   // Apply + persist the page theme by toggling `.dark` on <html>.
   useEffect(() => {
@@ -186,7 +206,16 @@ export default function App() {
     document.title = `Ramp Generator — brand ${brand} · ${scheme} · ${mode} · ${compliance}`
     setMeta("name", "description", describePalette(shareState))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
-  }, [brand, accentOverride, mode, scheme, compliance, excludedRamps, excludedTokens, isDefault])
+  }, [
+    brand,
+    accentOverride,
+    mode,
+    scheme,
+    compliance,
+    excludedRamps,
+    excludedTokens,
+    isDefault,
+  ])
 
   return (
     <MotionConfig reducedMotion="user">
@@ -204,44 +233,46 @@ export default function App() {
         </AnimatePresence>
 
         <div className="mx-auto max-w-[1400px] px-6 py-10 lg:px-10 lg:py-14">
-        {/* Controls — top row */}
-        <section className="mb-12 border-b border-line pb-10">
-          {/* Narrow screens put the action stack on its own line above the
+          {/* Controls — top row */}
+          <section className="border-line mb-12 border-b pb-10">
+            {/* Narrow screens put the action stack on its own line above the
               title, rather than squeezing the header copy into a sliver. */}
-          <div className="mb-8 flex flex-col-reverse items-start gap-5 sm:flex-row sm:justify-between sm:gap-4">
-            <header>
-              <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ash">
-                ramps.studio
-              </p>
-              <h1 className="font-display text-3xl font-semibold leading-none tracking-tight">
-                Color Ramp Generator
-              </h1>
-              <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ash">
-                Generate agent-optimized, accessible color ramps in a few
-                clicks.
-              </p>
-            </header>
+            <div className="mb-8 flex flex-col-reverse items-start gap-5 sm:flex-row sm:justify-between sm:gap-4">
+              <header>
+                <p className="text-ash mb-1 font-mono text-[11px] tracking-[0.2em] uppercase">
+                  ramps.studio
+                </p>
+                <h1 className="font-display text-3xl leading-none font-semibold tracking-tight">
+                  Color Ramp Generator
+                </h1>
+                <p className="text-ash mt-3 max-w-[52ch] text-sm leading-relaxed">
+                  Generate agent-optimized, accessible color ramps in a few clicks.
+                </p>
+              </header>
 
-            {/* Top-right action stack — theme, share, export (icon-only). */}
-            <div className="flex items-center gap-2">
-              <ThemeToggle theme={theme} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
-              <ResetButton onReset={reset} />
-              <ShareButton state={shareState} />
-              <IconButton
-                onClick={() => setExportOpen(true)}
-                title="Export tokens"
-                variant="solid"
-              >
-                <DownloadSimple size={18} weight="regular" aria-hidden="true" />
-              </IconButton>
+              {/* Top-right action stack — theme, share, export (icon-only). */}
+              <div className="flex items-center gap-2">
+                <ThemeToggle
+                  theme={theme}
+                  onToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
+                />
+                <ResetButton onReset={reset} />
+                <ShareButton state={shareState} />
+                <IconButton
+                  onClick={() => setExportOpen(true)}
+                  title="Export tokens"
+                  variant="solid"
+                >
+                  <DownloadSimple size={18} weight="regular" aria-hidden="true" />
+                </IconButton>
+              </div>
             </div>
-          </div>
 
-          {/* Controls — single row */}
-          <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
-            <BrandField brand={brand} onBrandChange={setBrand} />
+            {/* Controls — single row */}
+            <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
+              <BrandField brand={brand} onBrandChange={setBrand} />
 
-            {/*
+              {/*
               Accent and Derivation are coupled: while the accent is on Auto,
               Derivation is what produces it. They share a wrapper so they wrap
               together, with a rule drawn between them to show the link. On
@@ -249,104 +280,104 @@ export default function App() {
               accent-2, the neutral tint and status vividness, so it stays
               selectable rather than being disabled outright.
             */}
-            <div className="flex min-w-[300px] flex-1 flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
-              <AccentField
-                accentOverride={accentOverride}
-                autoAccent={autoAccent}
-                onAccentChange={setAccentOverride}
-                onAccentReset={() => setAccentOverride(null)}
-              />
-              <div
-                aria-hidden="true"
-                className={cn(
-                  "mb-[17px] hidden h-px w-8 shrink-0 transition-colors sm:block",
-                  accentLocked ? "bg-transparent" : "bg-line",
-                )}
-              />
-              <div className="min-w-[180px] flex-1">
-                <SectionLabel>Derivation</SectionLabel>
+              <div className="flex min-w-[300px] flex-1 flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
+                <AccentField
+                  accentOverride={accentOverride}
+                  autoAccent={autoAccent}
+                  onAccentChange={setAccentOverride}
+                  onAccentReset={() => setAccentOverride(null)}
+                />
                 <div
-                  className={cn("transition-opacity", accentLocked && "opacity-45")}
-                  title={
-                    accentLocked
-                      ? "The accent is set manually, so derivation no longer produces it — it still shapes accent-2, the neutral tint and status colors."
-                      : undefined
-                  }
-                >
-                  <SchemeSelect
-                    scheme={scheme}
-                    onChange={(next) => {
-                      setScheme(next)
-                      // Picking a derivation is a request for it to drive the
-                      // accent, so a pinned accent hands control back.
-                      setAccentOverride(null)
-                    }}
-                  />
+                  aria-hidden="true"
+                  className={cn(
+                    "mb-[17px] hidden h-px w-8 shrink-0 transition-colors sm:block",
+                    accentLocked ? "bg-transparent" : "bg-line",
+                  )}
+                />
+                <div className="min-w-[180px] flex-1">
+                  <SectionLabel>Derivation</SectionLabel>
+                  <div
+                    className={cn("transition-opacity", accentLocked && "opacity-45")}
+                    title={
+                      accentLocked
+                        ? "The accent is set manually, so derivation no longer produces it — it still shapes accent-2, the neutral tint and status colors."
+                        : undefined
+                    }
+                  >
+                    <SchemeSelect
+                      scheme={scheme}
+                      onChange={(next) => {
+                        setScheme(next)
+                        // Picking a derivation is a request for it to drive the
+                        // accent, so a pinned accent hands control back.
+                        setAccentOverride(null)
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div>
-              <SectionLabel>Format</SectionLabel>
-              <FormatSelect format={format} onChange={setFormat} />
-            </div>
+              <div>
+                <SectionLabel>Format</SectionLabel>
+                <FormatSelect format={format} onChange={setFormat} />
+              </div>
 
-            <div>
-              <SectionLabel>Contrast</SectionLabel>
-              <ComplianceToggle compliance={compliance} onChange={setCompliance} />
-            </div>
+              <div>
+                <SectionLabel>Contrast</SectionLabel>
+                <ComplianceToggle compliance={compliance} onChange={setCompliance} />
+              </div>
 
-            <div>
-              <SectionLabel>Scope</SectionLabel>
-              <ModeToggle mode={mode} onChange={setMode} />
+              <div>
+                <SectionLabel>Scope</SectionLabel>
+                <ModeToggle mode={mode} onChange={setMode} />
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Output — new section */}
-        <main className="min-w-0">
-          {(
-            [
-              ["Brand", palette.primaries],
-              ["Accents", palette.accents],
-              ["Neutral", [palette.neutral]],
-              ["Status", palette.status],
-            ] as const
-          ).map(([title, ramps]) => (
-            <RampGroup
-              key={title}
-              title={title}
-              ramps={ramps}
+          {/* Output — new section */}
+          <main className="min-w-0">
+            {(
+              [
+                ["Brand", palette.primaries],
+                ["Accents", palette.accents],
+                ["Neutral", [palette.neutral]],
+                ["Status", palette.status],
+              ] as const
+            ).map(([title, ramps]) => (
+              <RampGroup
+                key={title}
+                title={title}
+                ramps={ramps}
+                format={format}
+                excluded={excludedRamps}
+                onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
+                onSetMany={(names, off) =>
+                  setExcludedRamps((prev) => {
+                    const next = new Set(prev)
+                    names.forEach((n) => (off ? next.add(n) : next.delete(n)))
+                    return next
+                  })
+                }
+              />
+            ))}
+            <SemanticTokens
+              palette={palette}
+              mode={mode}
+              compliance={compliance}
               format={format}
-              excluded={excludedRamps}
-              onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
+              excluded={excludedTokens}
+              onToggle={(name) => setExcludedTokens((prev) => toggle(prev, name))}
               onSetMany={(names, off) =>
-                setExcludedRamps((prev) => {
+                setExcludedTokens((prev) => {
                   const next = new Set(prev)
                   names.forEach((n) => (off ? next.add(n) : next.delete(n)))
                   return next
                 })
               }
             />
-          ))}
-          <SemanticTokens
-            palette={palette}
-            mode={mode}
-            compliance={compliance}
-            format={format}
-            excluded={excludedTokens}
-            onToggle={(name) => setExcludedTokens((prev) => toggle(prev, name))}
-            onSetMany={(names, off) =>
-              setExcludedTokens((prev) => {
-                const next = new Set(prev)
-                names.forEach((n) => (off ? next.add(n) : next.delete(n)))
-                return next
-              })
-            }
-          />
-          <AgentData palette={palette} options={exportOptions} state={shareState} />
-          <Attribution />
-        </main>
+            <AgentData palette={palette} options={exportOptions} state={shareState} />
+            <Attribution />
+          </main>
         </div>
       </div>
     </MotionConfig>
@@ -417,8 +448,8 @@ function AgentData({
 
   return (
     <section className="mb-12" aria-label="Machine-readable palette for agents">
-      <details className="group rounded-lg border border-line">
-        <summary className="cursor-pointer list-none px-4 py-3 font-mono text-xs text-ash transition-colors hover:text-ink">
+      <details className="group border-line rounded-lg border">
+        <summary className="text-ash hover:text-ink cursor-pointer list-none px-4 py-3 font-mono text-xs transition-colors">
           <span className="inline-flex items-center gap-1.5">
             <CaretRight
               size={12}
@@ -429,13 +460,13 @@ function AgentData({
             Machine-readable palette (for agents)
           </span>
         </summary>
-        <div className="border-t border-line">
+        <div className="border-line border-t">
           {/* Legend stays outside the copyable block so the copied code is valid. */}
-          <pre className="whitespace-pre-wrap px-4 pt-3 font-mono text-[11px] leading-relaxed text-ash">
+          <pre className="text-ash px-4 pt-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
             {legend}
           </pre>
           <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="inline-flex rounded-md border border-line p-0.5">
+            <div className="border-line inline-flex rounded-md border p-0.5">
               {formats.map((f) => {
                 const active = format === f.id
                 return (
@@ -451,7 +482,7 @@ function AgentData({
                     {active && (
                       <motion.span
                         layoutId="agent-format-pill"
-                        className="absolute inset-0 rounded bg-ink"
+                        className="bg-ink absolute inset-0 rounded"
                         transition={{ type: "spring", stiffness: 480, damping: 38 }}
                       />
                     )}
@@ -463,12 +494,12 @@ function AgentData({
             <button
               type="button"
               onClick={() => copy(code)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-ink/20 px-3 py-1.5 font-mono text-[11px] text-ink transition-colors hover:bg-ink/[0.04]"
+              className="border-ink/20 text-ink hover:bg-ink/[0.04] inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-mono text-[11px] transition-colors"
             >
               {copied ? "Copied" : `Copy ${format.toUpperCase()}`}
             </button>
           </div>
-          <pre className="overflow-x-auto border-t border-line px-4 py-3 font-mono text-[11px] leading-relaxed text-ink">
+          <pre className="border-line text-ink overflow-x-auto border-t px-4 py-3 font-mono text-[11px] leading-relaxed">
             {code}
           </pre>
         </div>
@@ -487,7 +518,10 @@ function getInitialTheme(): Theme {
   } catch {
     // Ignore storage failures.
   }
-  if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+  if (
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-color-scheme: dark)").matches
+  ) {
     return "dark"
   }
   return "light"
@@ -531,7 +565,10 @@ function IconButton({
 function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
   const dark = theme === "dark"
   return (
-    <IconButton onClick={onToggle} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
+    <IconButton
+      onClick={onToggle}
+      title={dark ? "Switch to light mode" : "Switch to dark mode"}
+    >
       <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
         {/* Sun (shown in dark mode → click for light) */}
         <Sun
@@ -539,7 +576,10 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
           weight="regular"
           aria-hidden="true"
           className="absolute transition-all duration-300 ease-out"
-          style={{ opacity: dark ? 1 : 0, transform: dark ? "none" : "rotate(-90deg) scale(0.6)" }}
+          style={{
+            opacity: dark ? 1 : 0,
+            transform: dark ? "none" : "rotate(-90deg) scale(0.6)",
+          }}
         />
         {/* Moon (shown in light mode → click for dark) */}
         <Moon
@@ -547,7 +587,10 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
           weight="regular"
           aria-hidden="true"
           className="absolute transition-all duration-300 ease-out"
-          style={{ opacity: dark ? 0 : 1, transform: dark ? "rotate(90deg) scale(0.6)" : "none" }}
+          style={{
+            opacity: dark ? 0 : 1,
+            transform: dark ? "rotate(90deg) scale(0.6)" : "none",
+          }}
         />
       </span>
     </IconButton>
@@ -625,34 +668,26 @@ function ShareButton({ state }: { state: ShareState }) {
 
 function Attribution() {
   return (
-    <footer className="mt-12 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line pt-6 text-sm text-ash">
+    <footer className="border-line text-ash mt-12 flex flex-wrap items-center gap-x-3 gap-y-2 border-t pt-6 text-sm">
       <span>Built by</span>
       <a
         href="https://www.linkedin.com/in/imryanreid/"
         target="_blank"
         rel="noreferrer"
-        className="inline-flex items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-ink/30 hover:bg-ink/[0.04]"
+        className="border-line hover:border-ink/30 hover:bg-ink/[0.04] inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-all duration-200 hover:-translate-y-0.5"
       >
-        <img
-          src={avatarUrl}
-          alt="Ryan Reid"
-          className="h-6 w-6 rounded-full object-cover"
-        />
-        <span className="font-medium text-ink">Ryan Reid</span>
+        <img src={avatarUrl} alt="Ryan Reid" className="h-6 w-6 rounded-full object-cover" />
+        <span className="text-ink font-medium">Ryan Reid</span>
       </a>
       <span>at</span>
       <a
         href="https://www.tktk.studio/"
         target="_blank"
         rel="noreferrer"
-        className="inline-flex items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-ink/30 hover:bg-ink/[0.04]"
+        className="border-line hover:border-ink/30 hover:bg-ink/[0.04] inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-all duration-200 hover:-translate-y-0.5"
       >
-        <img
-          src={studioLogo}
-          alt="tktk studio"
-          className="h-6 w-6 rounded-full object-cover"
-        />
-        <span className="font-medium text-ink">tktk studio</span>
+        <img src={studioLogo} alt="tktk studio" className="h-6 w-6 rounded-full object-cover" />
+        <span className="text-ink font-medium">tktk studio</span>
       </a>
     </footer>
   )
@@ -687,7 +722,7 @@ function ExportModal({
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
       <motion.div
-        className="mt-6 w-full max-w-3xl rounded-xl border border-line bg-paper p-5 shadow-xl sm:mt-10 sm:p-6"
+        className="border-line bg-paper mt-6 w-full max-w-3xl rounded-xl border p-5 shadow-xl sm:mt-10 sm:p-6"
         onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -695,14 +730,12 @@ function ExportModal({
         transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-display text-xl font-semibold tracking-tight">
-            Export
-          </h2>
+          <h2 className="font-display text-xl font-semibold tracking-tight">Export</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded p-1.5 text-ash transition-colors hover:bg-ink/[0.06] hover:text-ink"
+            className="text-ash hover:bg-ink/[0.06] hover:text-ink rounded p-1.5 transition-colors"
           >
             <X size={18} weight="regular" aria-hidden="true" />
           </button>
@@ -715,7 +748,7 @@ function ExportModal({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-ash">
+    <h2 className="text-ash mb-3 font-mono text-[11px] tracking-[0.16em] uppercase">
       {children}
     </h2>
   )
@@ -738,7 +771,7 @@ function ComplianceToggle({
     { id: "AAA", label: "AAA", title: "WCAG AAA — 7:1 minimum for normal text" },
   ]
   return (
-    <div className="inline-flex rounded-md border border-line p-0.5">
+    <div className="border-line inline-flex rounded-md border p-0.5">
       {options.map((o) => {
         const active = compliance === o.id
         return (
@@ -756,7 +789,7 @@ function ComplianceToggle({
             {active && (
               <motion.span
                 layoutId="compliance-pill"
-                className="absolute inset-0 rounded bg-ink"
+                className="bg-ink absolute inset-0 rounded"
                 transition={{ type: "spring", stiffness: 480, damping: 38 }}
               />
             )}
@@ -786,7 +819,7 @@ function FormatSelect({
         value={format}
         onChange={(e) => onChange(e.target.value as ColorFormat)}
         aria-label="Color notation"
-        className="cursor-pointer appearance-none rounded-md border border-line bg-paper py-1.5 pl-3 pr-8 font-mono text-xs text-ink transition-colors hover:border-ink/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+        className="border-line bg-paper text-ink hover:border-ink/30 focus-visible:ring-ink/30 cursor-pointer appearance-none rounded-md border py-1.5 pr-8 pl-3 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
         {COLOR_FORMATS.map((f) => (
           <option key={f.id} value={f.id}>
@@ -798,25 +831,19 @@ function FormatSelect({
         size={12}
         weight="bold"
         aria-hidden="true"
-        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ash"
+        className="text-ash pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2"
       />
     </div>
   )
 }
 
-function ModeToggle({
-  mode,
-  onChange,
-}: {
-  mode: DsMode
-  onChange: (m: DsMode) => void
-}) {
+function ModeToggle({ mode, onChange }: { mode: DsMode; onChange: (m: DsMode) => void }) {
   const options: { id: DsMode; label: string }[] = [
     { id: "full", label: "Full" },
     { id: "basic", label: "Lite" },
   ]
   return (
-    <div className="inline-flex rounded-md border border-line p-0.5">
+    <div className="border-line inline-flex rounded-md border p-0.5">
       {options.map((o) => {
         const active = mode === o.id
         return (
@@ -832,7 +859,7 @@ function ModeToggle({
             {active && (
               <motion.span
                 layoutId="mode-pill"
-                className="absolute inset-0 rounded bg-ink"
+                className="bg-ink absolute inset-0 rounded"
                 transition={{ type: "spring", stiffness: 480, damping: 38 }}
               />
             )}

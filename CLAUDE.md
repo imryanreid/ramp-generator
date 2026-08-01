@@ -1,6 +1,6 @@
 # CLAUDE.md — Color Ramp Generator
 
-> **What this file is for:** How we work together on *this* project — stack,
+> **What this file is for:** How we work together on _this_ project — stack,
 > conventions, and the rules that are specific to it. Global preferences live in
 > `~/CLAUDE.md`; where the two conflict, this file wins. For what each file
 > does, see [`PROJECT_MAP.md`](PROJECT_MAP.md). For where we left off, see
@@ -88,8 +88,8 @@ Two non-obvious constraints hold this together:
   `<script>` tags, so a JSON-only payload is invisible to exactly the tools this
   exists for.
 
-A third constraint, added later: excluding a token that other tokens are *paired
-against* (`bg-canvas`, `bg-brand`, `bg-accent`) leaves their contrast guarantee
+A third constraint, added later: excluding a token that other tokens are _paired
+against_ (`bg-canvas`, `bg-brand`, `bg-accent`) leaves their contrast guarantee
 dangling — the foregrounds survive still claiming AA/AAA, but the color they were
 measured against is gone. `missingContrastReferences` detects that and exports
 name the background as a reference value rather than forcing it back into the
@@ -111,7 +111,7 @@ button from light to dark text, which looks like a bug even though it passes.
 
 ## Exclusions
 
-Ramp and token checkboxes filter the *output*, never the computation.
+Ramp and token checkboxes filter the _output_, never the computation.
 `resolveTokens` always resolves the full set — contrast pairing depends on it,
 and the UI needs it to render dimmed rows — and `selectedRamps` / `selectedTokens`
 filter afterwards. Never move that filtering earlier: excluding `bg-canvas` would
@@ -135,5 +135,5 @@ pnpm build
 ```
 
 That runs `tsc --noEmit` and then the Vite build. Both must be clean. For visual
-changes, actually load the page — check light *and* dark, and check that a share
+changes, actually load the page — check light _and_ dark, and check that a share
 link still round-trips.

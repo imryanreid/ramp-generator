@@ -53,7 +53,7 @@ export function AccentField({
         <button
           type="button"
           onClick={() => (locked ? onAccentReset() : onAccentChange(autoAccent))}
-          className="rounded-full bg-ink/[0.06] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ash transition-colors hover:bg-ink/10 hover:text-ink"
+          className="bg-ink/[0.06] text-ash hover:bg-ink/10 hover:text-ink rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors"
           title={
             locked
               ? "Manual — click to auto-derive the accent from the brand"
@@ -70,7 +70,9 @@ export function AccentField({
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ash">{children}</span>
+    <span className="text-ash font-mono text-[11px] tracking-[0.14em] uppercase">
+      {children}
+    </span>
   )
 }
 
@@ -88,7 +90,10 @@ function HexField({
 
   // Keep the text field in sync when the value changes from outside (e.g. the
   // auto accent tracking the brand color, or a reset).
-  const shown = draft.toLowerCase() === color.replace("#", "").toLowerCase() ? draft : color.replace("#", "")
+  const shown =
+    draft.toLowerCase() === color.replace("#", "").toLowerCase()
+      ? draft
+      : color.replace("#", "")
 
   const commit = (raw: string) => {
     const hex = normalizeHex(raw)
@@ -113,7 +118,7 @@ function HexField({
       />
       <div
         className={cn(
-          "flex h-9 flex-1 items-center rounded-md border bg-paper px-2.5 font-mono text-sm",
+          "bg-paper flex h-9 flex-1 items-center rounded-md border px-2.5 font-mono text-sm",
           invalid ? "border-red-400" : "border-line",
         )}
       >
@@ -140,13 +145,7 @@ function HexField({
  * than the app. The hex field beside it stays the precise input — this is for
  * exploring. Closes on outside click or Escape, mirroring SchemeSelect.
  */
-function SwatchPicker({
-  color,
-  onChange,
-}: {
-  color: string
-  onChange: (hex: string) => void
-}) {
+function SwatchPicker({ color, onChange }: { color: string; onChange: (hex: string) => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -173,11 +172,11 @@ function SwatchPicker({
         onClick={() => setOpen((v) => !v)}
         aria-label={`Choose color, currently ${color}`}
         aria-expanded={open}
-        className="block h-9 w-9 rounded-md ring-1 ring-inset ring-ink/15 transition-transform hover:scale-[1.04]"
+        className="ring-ink/15 block h-9 w-9 rounded-md ring-1 transition-transform ring-inset hover:scale-[1.04]"
         style={{ backgroundColor: color }}
       />
       {open && (
-        <div className="ramp-picker absolute left-0 top-full z-30 mt-2 rounded-lg border border-line bg-paper p-2.5 shadow-xl">
+        <div className="ramp-picker border-line bg-paper absolute top-full left-0 z-30 mt-2 rounded-lg border p-2.5 shadow-xl">
           <HexColorPicker color={color} onChange={onChange} />
         </div>
       )}

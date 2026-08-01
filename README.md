@@ -17,7 +17,7 @@ pure function of the URL, so the same link always returns the same colors.
 Ramps built by lightening and darkening a hex value in sRGB drift: the mid-tones
 bloom, the darks go muddy, and two ramps built the same way from different hues
 don't feel like siblings. OKLCH is perceptually uniform, so a step at lightness
-`0.637` reads as the same *visual* lightness whether the hue is blue or yellow.
+`0.637` reads as the same _visual_ lightness whether the hue is blue or yellow.
 
 This tool fixes a lightness curve across eleven steps (50–950) and applies a
 bell-curve chroma multiplier that peaks in the mid-tones — so the lightest and
@@ -26,17 +26,17 @@ artificially vivid. Every generated ramp is then gamut-clamped back into sRGB.
 
 ## What it generates
 
-| Group | How it's derived |
-| --- | --- |
-| **Brand** | Your color, laid out across 11 steps. |
-| **Accents** | Rotated off the brand hue by the chosen scheme — complementary, analogous, triadic, split-complementary, or monochromatic. Overridable with a locked hex. |
-| **Neutral** | A near-grey ramp carrying a trace of the brand hue, so greys sit with the palette rather than against it. |
-| **Status** | Success, warning, error, and info anchored at conventional hues, then nudged away from your palette's own hues if they collide — so "error" never reads as "brand". |
-| **Semantic tokens** | Usage-first names (surface, border, text, interactive states) mapped onto ramp steps, resolved separately for light and dark. |
+| Group               | How it's derived                                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Brand**           | Your color, laid out across 11 steps.                                                                                                                               |
+| **Accents**         | Rotated off the brand hue by the chosen scheme — complementary, analogous, triadic, split-complementary, or monochromatic. Overridable with a locked hex.           |
+| **Neutral**         | A near-grey ramp carrying a trace of the brand hue, so greys sit with the palette rather than against it.                                                           |
+| **Status**          | Success, warning, error, and info anchored at conventional hues, then nudged away from your palette's own hues if they collide — so "error" never reads as "brand". |
+| **Semantic tokens** | Usage-first names (surface, border, text, interactive states) mapped onto ramp steps, resolved separately for light and dark.                                       |
 
 ## Contrast is enforced, not just reported
 
-Pick `AA` (4.5:1) or `AAA` (7:1) and the tokens *move* to satisfy it, rather than
+Pick `AA` (4.5:1) or `AAA` (7:1) and the tokens _move_ to satisfy it, rather than
 showing you a red badge and leaving the fix to you.
 
 For each paired foreground the resolver first walks that token along its own ramp
@@ -46,19 +46,19 @@ page surfaces, so the page keeps its character while a button darkens to keep it
 label legible. When a fill moves, its `-hover` and `-active` siblings move with
 it, so the interaction ladder stays ordered.
 
-Candidate pairs are scored by how far *both* colors travel from their authored
+Candidate pairs are scored by how far _both_ colors travel from their authored
 steps, so the result stays as close to the designed palette as the target allows.
 If a ramp genuinely cannot reach the target, the tool takes the best contrast
 available and badges the shortfall honestly instead of faking a pass.
 
 ## Export formats
 
-| Format | Output |
-| --- | --- |
-| **CSS variables** | Custom properties under `:root` and `.dark`. |
-| **Tailwind v4** | A `@theme` block you can paste straight into your stylesheet. |
+| Format              | Output                                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| **CSS variables**   | Custom properties under `:root` and `.dark`.                                                             |
+| **Tailwind v4**     | A `@theme` block you can paste straight into your stylesheet.                                            |
 | **Figma variables** | W3C DTCG token JSON, one file per mode — import via Figma's native variable import, one import per mode. |
-| **JSON** | The whole palette as structured data. |
+| **JSON**            | The whole palette as structured data.                                                                    |
 
 The export dialog opens on a choice: take the tokens as code, or copy a prompt
 pointing an agent at this exact palette.
@@ -72,21 +72,21 @@ database — the inputs fit in the query string:
 https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 ```
 
-| Param | Meaning |
-| --- | --- |
-| `b` | Brand hex, no `#`. Required. |
-| `a` | Accent hex, no `#`. Optional — omit to auto-derive from the scheme. |
-| `m` | Scope: `full` or `basic`. |
-| `s` | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic` |
-| `c` | Contrast target: `AA` (4.5:1) or `AAA` (7:1). |
-| `f` | Colour notation: `oklch` (default), `hex`, `rgb`, `hsl`. Drives display and the CSS/Tailwind/JSON exports. |
-| `xr` | Ramps left out of the export, dot-separated — e.g. `accent-2.info`. |
-| `xt` | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`. |
+| Param | Meaning                                                                                                    |
+| ----- | ---------------------------------------------------------------------------------------------------------- |
+| `b`   | Brand hex, no `#`. Required.                                                                               |
+| `a`   | Accent hex, no `#`. Optional — omit to auto-derive from the scheme.                                        |
+| `m`   | Scope: `full` or `basic`.                                                                                  |
+| `s`   | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic`                               |
+| `c`   | Contrast target: `AA` (4.5:1) or `AAA` (7:1).                                                              |
+| `f`   | Colour notation: `oklch` (default), `hex`, `rgb`, `hsl`. Drives display and the CSS/Tailwind/JSON exports. |
+| `xr`  | Ramps left out of the export, dot-separated — e.g. `accent-2.info`.                                        |
+| `xt`  | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`.                                     |
 
 Malformed params are dropped individually, so a bad link degrades to defaults
 rather than erroring.
 
-`xr` and `xt` carry *names* rather than a bitmask over the token table. A bitmask
+`xr` and `xt` carry _names_ rather than a bitmask over the token table. A bitmask
 would be far shorter, but it would make the table's declaration order a permanent
 public contract — inserting a token in the middle would silently repoint every
 link already shared. Names only break on a rename, which is a breaking change
@@ -143,16 +143,16 @@ Everything else the page offers machines:
 
 ## Forking this
 
-The code is MIT — fork it, change it, ship it. Four things are wired to *this*
+The code is MIT — fork it, change it, ship it. Four things are wired to _this_
 deployment and want changing if you run your own:
 
-| Change | Where |
-| --- | --- |
+| Change                                                                                    | Where                                                                                     |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | The canonical URL — otherwise your deploy tells search engines it belongs to ramps.studio | `<link rel="canonical">`, `og:url`, and the JSON-LD `url` + `urlTemplate` in `index.html` |
-| Share-link origin | `SITE_URL` in `src/lib/site.ts`, or set `VITE_SITE_URL` in your host's environment |
-| Sitemap + robots URLs | `public/sitemap.xml`, `public/robots.txt` |
-| Footer attribution — my name, photo, and studio | `Attribution` in `src/App.tsx`, plus the two images in `src/assets/` |
-| URLs in the agent docs | `public/llms.txt` |
+| Share-link origin                                                                         | `SITE_URL` in `src/lib/site.ts`, or set `VITE_SITE_URL` in your host's environment        |
+| Sitemap + robots URLs                                                                     | `public/sitemap.xml`, `public/robots.txt`                                                 |
+| Footer attribution — my name, photo, and studio                                           | `Attribution` in `src/App.tsx`, plus the two images in `src/assets/`                      |
+| URLs in the agent docs                                                                    | `public/llms.txt`                                                                         |
 
 The canonical tag is the one that actually bites: it is invisible, and left
 unchanged it quietly tells Google your copy is a duplicate of this site.
@@ -175,13 +175,13 @@ Requires Node 22 and pnpm (see `.mise.toml`).
 pnpm install && pnpm dev
 ```
 
-| Script | Does |
-| --- | --- |
-| `pnpm dev` | Vite dev server with hot reload |
-| `pnpm build` | Typecheck, then build to `dist/` |
-| `pnpm preview` | Serve the built output locally |
-| `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm format` | Format with oxfmt |
+| Script           | Does                             |
+| ---------------- | -------------------------------- |
+| `pnpm dev`       | Vite dev server with hot reload  |
+| `pnpm build`     | Typecheck, then build to `dist/` |
+| `pnpm preview`   | Serve the built output locally   |
+| `pnpm typecheck` | `tsc --noEmit`                   |
+| `pnpm format`    | Format with oxfmt                |
 
 Built with React 19, Vite, Tailwind CSS v4, [culori](https://culorijs.org/) for
 the color math, and [Motion](https://motion.dev/) for animation.

@@ -66,7 +66,7 @@ export default function SemanticTokens({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] border-collapse text-sm">
           <thead>
-            <tr className="text-left font-mono text-[11px] uppercase tracking-wide text-ash">
+            <tr className="text-ash text-left font-mono text-[11px] tracking-wide uppercase">
               <th className="py-2 pr-4 font-medium">Token</th>
               <th className="py-2 pr-4 font-medium">Example</th>
               <th className="py-2 pr-4 font-medium">Light</th>
@@ -104,7 +104,7 @@ function ViewToggle({ view, onChange }: { view: ValueView; onChange: (v: ValueVi
     { id: "ramp", label: "Ramp" },
   ]
   return (
-    <div className="inline-flex items-center rounded-full border border-line bg-paper p-0.5">
+    <div className="border-line bg-paper inline-flex items-center rounded-full border p-0.5">
       {options.map((o) => {
         const active = view === o.id
         return (
@@ -113,14 +113,14 @@ function ViewToggle({ view, onChange }: { view: ValueView; onChange: (v: ValueVi
             type="button"
             onClick={() => onChange(o.id)}
             className={cn(
-              "relative rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors",
+              "relative rounded-full px-3 py-1 font-mono text-[11px] tracking-wide uppercase transition-colors",
               active ? "text-ink" : "text-ash hover:text-ink",
             )}
           >
             {active && (
               <motion.span
                 layoutId="sem-view-pill"
-                className="absolute inset-0 rounded-full bg-ink/[0.08]"
+                className="bg-ink/[0.08] absolute inset-0 rounded-full"
                 transition={{ type: "spring", stiffness: 480, damping: 38 }}
               />
             )}
@@ -159,7 +159,7 @@ function GroupBlock({
     <>
       <tr>
         <td colSpan={5} className="pt-7 pb-1.5">
-          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">
+          <span className="text-ink inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold tracking-[0.16em] uppercase">
             <CategoryIcon category={category} />
             {category}
           </span>
@@ -212,11 +212,15 @@ function Row({
   onToggle: () => void
 }) {
   const lightLabel =
-    view === "ramp" ? rampRef(rampNames, t.light.ramp, t.light.step) : formatColor(t.lightHex, format)
+    view === "ramp"
+      ? rampRef(rampNames, t.light.ramp, t.light.step)
+      : formatColor(t.lightHex, format)
   const darkLabel =
-    view === "ramp" ? rampRef(rampNames, t.dark.ramp, t.dark.step) : formatColor(t.darkHex, format)
+    view === "ramp"
+      ? rampRef(rampNames, t.dark.ramp, t.dark.step)
+      : formatColor(t.darkHex, format)
   return (
-    <tr className="border-t border-line-soft">
+    <tr className="border-line-soft border-t">
       {/* Only the content dims — the checkbox stays at full strength so an
           excluded row is still obviously re-includable. */}
       <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
@@ -227,7 +231,7 @@ function Row({
           </span>
         </CopyCell>
       </td>
-      <td className={cn("py-2 pr-4 text-ash transition-opacity", !included && "opacity-40")}>
+      <td className={cn("text-ash py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         {t.role}
       </td>
       <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
@@ -285,7 +289,6 @@ function CategoryIcon({ category }: { category: string }) {
   }
 }
 
-
 /**
  * A hex value shown inside its intended context: the Light column always renders
  * on a light surface and the Dark column on a dark one, so the token's real
@@ -295,7 +298,7 @@ function Chip({ hex, label, mode }: { hex: string; label: string; mode: "light" 
   const dark = mode === "dark"
   return (
     <span
-      className="inline-flex items-center gap-2 rounded-full border py-1 pl-1.5 pr-2.5"
+      className="inline-flex items-center gap-2 rounded-full border py-1 pr-2.5 pl-1.5"
       style={{
         backgroundColor: dark ? "#141310" : "#ffffff",
         color: dark ? "#f3f2ec" : "#16150f",
@@ -312,14 +315,16 @@ function Chip({ hex, label, mode }: { hex: string; label: string; mode: "light" 
         }}
       />
       {/* Uppercase suits a bare hex; it would mangle `oklch(...)`. */}
-      <span className={cn("font-mono text-xs", label.startsWith("#") && "uppercase")}>{label}</span>
+      <span className={cn("font-mono text-xs", label.startsWith("#") && "uppercase")}>
+        {label}
+      </span>
     </span>
   )
 }
 
 function AA({ light, dark, target }: { light?: number; dark?: number; target: number }) {
   if (light === undefined && dark === undefined) {
-    return <span className="font-mono text-[11px] text-line">—</span>
+    return <span className="text-line font-mono text-[11px]">—</span>
   }
   const badge = (ratio?: number, label?: string) => {
     if (ratio === undefined) return null

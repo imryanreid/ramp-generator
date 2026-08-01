@@ -43,10 +43,10 @@ export default function RowToggle({
       <span
         className={cn(
           "flex h-[15px] w-[15px] items-center justify-center rounded-[4px] border transition-colors",
-          "peer-focus-visible:ring-2 peer-focus-visible:ring-ink/30 peer-focus-visible:ring-offset-1",
+          "peer-focus-visible:ring-ink/30 peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1",
           filled
             ? "border-ink bg-ink text-paper"
-            : "border-line bg-transparent group-hover/toggle:border-ash",
+            : "border-line group-hover/toggle:border-ash bg-transparent",
         )}
       >
         {indeterminate ? (

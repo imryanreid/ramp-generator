@@ -151,7 +151,7 @@ level, and exact light/dark hex values.
 
 - **Checkboxes on all 45 rows** (8 ramps + 37 tokens), plus mixed-state toggles
   on each section header. Unchecking dims the row and drops it from every export
-  and the agent block; it does *not* stop the row being generated.
+  and the agent block; it does _not_ stop the row being generated.
 - **Filtering happens after resolution, never before.** Contrast pairing needs
   the full set — `text-primary` is measured against `bg-canvas` even when
   `bg-canvas` is unchecked — so `resolveTokens` still returns everything and
@@ -183,7 +183,7 @@ level, and exact light/dark hex values.
   ordered. Verified: at AAA on the default palette, 15 tokens move and **zero**
   remain below 7:1.
 - **The scoring detail that matters**: candidate (fill, foreground) pairs are
-  ranked by *combined* travel from their authored steps. Ranking on the fill
+  ranked by _combined_ travel from their authored steps. Ranking on the fill
   alone made `bg-brand` lighten one step and flip its label to dark text — same
   distance, but a much bigger visual change than darkening one step and keeping
   the authored light label.
@@ -199,7 +199,6 @@ level, and exact light/dark hex values.
   module and would capture a palette-specific title as "canonical", so the
   landing page never restored its real title in dev. Now stashed on `window`
   and captured once per page load.
-
 
 ### 2026-08-01 — Migration off Figma Make
 

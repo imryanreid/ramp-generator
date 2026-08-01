@@ -67,10 +67,7 @@ export async function GET(request: Request): Promise<Response> {
       /<link rel="canonical" href="[^"]*" \/>/,
       `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
     )
-    .replace(
-      /(<meta\s+name="description"\s+content=")[^"]*(")/s,
-      `$1${escapeHtml(summary)}$2`,
-    )
+    .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/s, `$1${escapeHtml(summary)}$2`)
     .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${escapeHtml(canonical)}$2`)
     // Point the share image at this palette so a link unfurls with its own
     // colors rather than the default blue.

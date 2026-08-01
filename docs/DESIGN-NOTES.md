@@ -1,11 +1,13 @@
 # Share Links (current task)
 
 ## Context
+
 The ramp generator's entire output is derived deterministically from four inputs held in `App.tsx` (`brand`, `accentOverride`, `mode`, `scheme` — `src/App.tsx:13–16`); everything else is recomputed by `buildPalette`. This means a shared palette needs no backend, database, or IDs — the four values fit in a URL. We want a **Share** button that encodes the current inputs into a link and copies it, and load-time hydration so opening such a link reproduces the exact palette. Caveat surfaced to the user and accepted: the link is only externally shareable once the app is deployed to a stable URL (the Make preview iframe uses a per-session proxy URL); it still round-trips locally.
 
 ## Approach
 
 ### New util: `src/lib/share.ts`
+
 - `type ShareState = { brand: string; accentOverride: string | null; mode: DsMode; scheme: Scheme }` (import types from `./recommend`).
 - `encodeShareState(s): string` — build `URLSearchParams` with short keys: `b` (brand hex, no `#`), `a` (accent hex no `#`, omitted when `null`/auto), `m` (`full`|`basic`), `s` (scheme id). Return the query string.
 - `shareUrl(s): string` — `${location.origin}${location.pathname}?${encodeShareState(s)}`. Build from state (not `location.search`) so it works inside the sandboxed iframe.
@@ -16,16 +18,19 @@ The ramp generator's entire output is derived deterministically from four inputs
 - `readInitialShareState(): Partial<ShareState>` — `decodeShareState(window.location.search)`, guarded for no-window.
 
 ### Wire into `App.tsx`
+
 - Lazy-init the four `useState`s from `readInitialShareState()` merged over current defaults (e.g. `useState(() => init.brand ?? "#3d7dff")`). Call `readInitialShareState()` once above the state.
 - Add a `useEffect` on `[brand, accentOverride, mode, scheme]` that calls `history.replaceState(null, "", "?" + encodeShareState(...))` to keep the address bar in sync (nice-to-have; harmless in iframe).
 - Add a **Share** control in the controls row next to Export (`src/App.tsx:72–81`), as its own `<SectionLabel>Share</SectionLabel>` + button styled as a secondary of the Export button (outline/ghost, not solid `bg-ink`, keeping Export the primary CTA). Use the existing `useCopy` hook (`src/lib/clipboard.ts`) to copy `shareUrl(...)` and crossfade the label to a check + "Copied" on success (mirror the `CopyButton` crossfade pattern already in the repo).
 
 ## Reuse
+
 - `copyToClipboard` / `useCopy` — `src/lib/clipboard.ts` (already handles the sandbox `execCommand` fallback).
 - `SCHEMES` ids + `DsMode`/`Scheme` types — `src/lib/recommend.ts`.
 - Check-swap animation pattern — mirror `src/components/CopyButton.tsx`.
 
 ## Verification
+
 - `npx tsc --noEmit` clean.
 - In preview: set a non-default brand, lock an accent, switch scheme + scope → address bar query updates. Click Share → button shows the check/"Copied".
 - Paste the copied URL into a fresh reload → the four controls and the full palette return identically.
@@ -40,8 +45,9 @@ The ramp generator's entire output is derived deterministically from four inputs
 The user wants a comprehensive color ramp generator to bootstrap a design system. Today the scaffold only renders a placeholder dot-grid in `src/App.tsx`. We are building a real tool from scratch that (1) accepts user-chosen primary colors, (2) generates perceptually-even Tailwind-style ramps for them, (3) recommends additional colors (accents, neutral, status) with their own ramps, and (4) maps semantic tokens onto ramp steps and exports them.
 
 Decisions confirmed with the user:
+
 - **Ramp scale:** Tailwind-style `50 → 950` (11 steps).
-- **Recommendations:** a UI **toggle** between a *Full DS set* (harmony accents + tinted neutral + all four status colors) and *Quick/basic* (tuned neutral + status colors only).
+- **Recommendations:** a UI **toggle** between a _Full DS set_ (harmony accents + tinted neutral + all four status colors) and _Quick/basic_ (tuned neutral + status colors only).
 - **Export:** all of CSS variables, Tailwind v4 `@theme`, and W3C-style JSON design tokens (tabbed panel with copy buttons).
 
 ## Aesthetic
@@ -53,18 +59,21 @@ Editorial-precise "instrument": true-white ground so generated colors are the on
 Generate ramps in **OKLCH** for perceptual evenness (naive HSL ramps go muddy/uneven). Use the **`culori`** library for reliable conversions (parse hex, sRGB⇄OKLCH, WCAG contrast) rather than hand-rolling matrices — install it as a dependency.
 
 **Ramp algorithm** (`src/lib/color.ts`):
+
 - Fixed lightness targets per step, tuned to Tailwind's feel, e.g. `50:0.97, 100:0.94, 200:0.88, 300:0.80, 400:0.70, 500:0.62, 600:0.54, 700:0.46, 800:0.38, 900:0.30, 950:0.22` (OKLCH L).
 - Keep the base color's **hue**; apply a small chroma bell curve (peak in the 400–600 mids, tapering toward 50 and 950) scaled by the base's own chroma so vivid inputs stay vivid and muted inputs stay muted.
 - Snap the input color to its nearest step by lightness and label the ramp with which step is the "source".
 - Clamp out-of-gamut results back into sRGB; output hex + oklch string per step.
 
 **Recommendations** (`src/lib/recommend.ts`):
+
 - Harmony accents: rotate primary hue for complementary (+180°) and analogous/triadic options; pick 1–2 that read distinct from the primary.
 - Tinted neutral: near-zero chroma ramp sharing the primary hue (gives a gray that belongs to the palette).
 - Status colors: semantic anchor hues — success ~145°, warning ~85°, error ~27°, info ~250° — each run through the same ramp engine. Nudge chroma toward the palette's overall saturation for cohesion.
 - Full DS = accents + neutral + status; Quick/basic = neutral + status only. Toggle controlled in `App.tsx` state.
 
 **Semantic mapping** (`src/lib/semantics.ts`):
+
 - Map tokens to ramp+step for both light and dark: `background, surface, surface-raised, border, border-strong, text, text-muted, primary, primary-hover, primary-foreground, accent, ring, success/warning/error/info (+ -foreground)`.
 - Compute WCAG contrast for text-on-surface and foreground-on-fill pairs; show AA pass/fail badges so mappings are trustworthy.
 - Export serializers here: CSS `:root{--primary-500: ...}` (+ `.dark`), Tailwind v4 `@theme { --color-primary-500: ... }`, and JSON `{ "primary": { "500": { "$value": "#..." } } }`.

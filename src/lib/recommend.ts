@@ -8,13 +8,7 @@
 // out of the way — so "error" never reads as
 // "brand". `buildPalette` assembles the whole set.
 // ==============================================
-import {
-  buildRamp,
-  buildNeutralRamp,
-  toOklch,
-  getSwatch,
-  type Ramp,
-} from "./color.js"
+import { buildRamp, buildNeutralRamp, toOklch, getSwatch, type Ramp } from "./color.js"
 
 export type DsMode = "full" | "basic"
 
@@ -69,12 +63,7 @@ function baseComponents(hex: string): { hue: number; chroma: number } {
  * A derivation scheme (a "vibe") governs how downstream colors are rotated off
  * the brand hue, how tinted the neutral gray is, and how vivid status colors read.
  */
-export type Scheme =
-  | "complementary"
-  | "analogous"
-  | "triadic"
-  | "split"
-  | "monochromatic"
+export type Scheme = "complementary" | "analogous" | "triadic" | "split" | "monochromatic"
 
 type SchemeSpec = {
   accent: number // hue rotation for the accent
@@ -93,11 +82,23 @@ const SCHEME_SPECS: Record<Scheme, SchemeSpec> = {
 
 /** Dropdown metadata for the derivation schemes, in display order. */
 export const SCHEMES: { id: Scheme; label: string; blurb: string }[] = [
-  { id: "complementary", label: "Complementary", blurb: "Accent opposite the brand — punchy, confident." },
+  {
+    id: "complementary",
+    label: "Complementary",
+    blurb: "Accent opposite the brand — punchy, confident.",
+  },
   { id: "analogous", label: "Analogous", blurb: "Neighbouring hues — calm, cohesive." },
   { id: "triadic", label: "Triadic", blurb: "Evenly spaced hues — playful, balanced." },
-  { id: "split", label: "Split complementary", blurb: "The complement's neighbours — bold, less tension." },
-  { id: "monochromatic", label: "Monochromatic", blurb: "Stays near the brand — quiet, unified." },
+  {
+    id: "split",
+    label: "Split complementary",
+    blurb: "The complement's neighbours — bold, less tension.",
+  },
+  {
+    id: "monochromatic",
+    label: "Monochromatic",
+    blurb: "Stays near the brand — quiet, unified.",
+  },
 ]
 
 /**
@@ -162,6 +163,9 @@ export function buildPalette(
 
 // Build a hex seed directly from OKLCH components via a throwaway ramp lookup.
 function hexFromHue(hue: number, chroma: number, lightness: number): string {
-  const ramp = buildRamp("seed", `oklch(${(lightness * 100).toFixed(1)}% ${chroma.toFixed(3)} ${hue.toFixed(1)})`)
+  const ramp = buildRamp(
+    "seed",
+    `oklch(${(lightness * 100).toFixed(1)}% ${chroma.toFixed(3)} ${hue.toFixed(1)})`,
+  )
   return ramp ? getSwatch(ramp, 500).hex : "#808080"
 }

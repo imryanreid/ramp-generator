@@ -54,98 +54,99 @@ export async function GET(request: Request): Promise<Response> {
   ])
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        background: PAPER,
+        fontFamily: "Geist",
+        overflow: "hidden",
+      }}
+    >
+      {/* Left — the page header, same words as the site */}
       <div
         style={{
-          width: "100%",
-          height: "100%",
           display: "flex",
-          background: PAPER,
-          fontFamily: "Geist",
-          overflow: "hidden",
+          flexDirection: "column",
+          justifyContent: "center",
+          width: 600,
+          flexShrink: 0,
+          paddingLeft: 72,
+          paddingRight: 28,
         }}
       >
-        {/* Left — the page header, same words as the site */}
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            width: 600,
-            flexShrink: 0,
-            paddingLeft: 72,
-            paddingRight: 28,
+            fontFamily: "Geist Mono",
+            fontSize: 21,
+            letterSpacing: 5.5,
+            color: ASH,
+            marginBottom: 20,
           }}
         >
-          <div
-            style={{
-              fontFamily: "Geist Mono",
-              fontSize: 21,
-              letterSpacing: 5.5,
-              color: ASH,
-              marginBottom: 20,
-            }}
-          >
-            RAMPS.STUDIO
-          </div>
-          <div
-            style={{
-              fontFamily: "Geist",
-              fontWeight: 600,
-              // Wraps to two lines by design — at the size a feed renders
-              // this, large type on two lines reads better than small type on one.
-              fontSize: 78,
-              lineHeight: 0.98,
-              letterSpacing: -3,
-              color: INK,
-              marginBottom: 22,
-            }}
-          >
-            Color Ramp Generator
-          </div>
-          <div style={{ fontSize: 27, lineHeight: 1.32, color: ASH, maxWidth: 470 }}>
-            Generate agent-optimized, accessible color ramps in a few clicks.
-          </div>
+          RAMPS.STUDIO
         </div>
-
-        {/* Right — real swatches, bleeding off the edge like the mock */}
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            gap: 26,
-            paddingTop: 8,
+            fontFamily: "Geist",
+            fontWeight: 600,
+            // Wraps to two lines by design — at the size a feed renders
+            // this, large type on two lines reads better than small type on one.
+            fontSize: 78,
+            lineHeight: 0.98,
+            letterSpacing: -3,
+            color: INK,
+            marginBottom: 22,
           }}
         >
-          {ramps.map((ramp, row) => (
-            <div key={ramp.name} style={{ display: "flex", gap: 14, marginLeft: OFFSETS[row] ?? 0 }}>
-              {STEPS.slice(0, 6).map((step) => {
-                const swatch = getSwatch(ramp, step)
-                return (
-                  <div
-                    key={step}
-                    style={{
-                      display: "flex",
-                      width: 126,
-                      height: 122,
-                      borderRadius: 12,
-                      background: swatch.hex,
-                      color: readableText(swatch.hex),
-                      padding: 12,
-                      fontFamily: "Geist Mono",
-                      fontSize: 17,
-                    }}
-                  >
-                    {step}
-                  </div>
-                )
-              })}
-            </div>
-          ))}
+          Color Ramp Generator
+        </div>
+        <div style={{ fontSize: 27, lineHeight: 1.32, color: ASH, maxWidth: 470 }}>
+          Generate agent-optimized, accessible color ramps in a few clicks.
         </div>
       </div>
-    ),
+
+      {/* Right — real swatches, bleeding off the edge like the mock */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: 26,
+          paddingTop: 8,
+        }}
+      >
+        {ramps.map((ramp, row) => (
+          <div
+            key={ramp.name}
+            style={{ display: "flex", gap: 14, marginLeft: OFFSETS[row] ?? 0 }}
+          >
+            {STEPS.slice(0, 6).map((step) => {
+              const swatch = getSwatch(ramp, step)
+              return (
+                <div
+                  key={step}
+                  style={{
+                    display: "flex",
+                    width: 126,
+                    height: 122,
+                    borderRadius: 12,
+                    background: swatch.hex,
+                    color: readableText(swatch.hex),
+                    padding: 12,
+                    fontFamily: "Geist Mono",
+                    fontSize: 17,
+                  }}
+                >
+                  {step}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    </div>,
     {
       width: 1200,
       height: 630,

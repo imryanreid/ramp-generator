@@ -22,13 +22,7 @@ import {
 import type { Palette } from "../lib/recommend"
 import { cn } from "../lib/utils"
 import CopyText from "./CopyText"
-import {
-  ArrowLeft,
-  Code,
-  DownloadSimple,
-  Sparkle,
-  CaretRight,
-} from "@phosphor-icons/react"
+import { ArrowLeft, Code, DownloadSimple, Sparkle, CaretRight } from "@phosphor-icons/react"
 
 type Stage = "choose" | "code" | "prompt"
 type Tab = "css" | "tailwind" | "figma" | "json"
@@ -189,18 +183,18 @@ function ChoiceCard({
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-full flex-col items-start rounded-lg border border-line p-4 text-left transition-all hover:-translate-y-0.5 hover:border-ink/30 hover:bg-ink/[0.03]"
+      className="group border-line hover:border-ink/30 hover:bg-ink/[0.03] flex h-full flex-col items-start rounded-lg border p-4 text-left transition-all hover:-translate-y-0.5"
     >
-      <span className="mb-3 text-ink">{icon}</span>
-      <span className="mb-1 flex w-full items-center justify-between gap-2 font-display text-base font-semibold tracking-tight">
+      <span className="text-ink mb-3">{icon}</span>
+      <span className="font-display mb-1 flex w-full items-center justify-between gap-2 text-base font-semibold tracking-tight">
         {title}
         <CaretRight
           size={14}
           weight="bold"
-          className="shrink-0 text-ash transition-transform group-hover:translate-x-0.5"
+          className="text-ash shrink-0 transition-transform group-hover:translate-x-0.5"
         />
       </span>
-      <span className="text-sm leading-relaxed text-ash">{body}</span>
+      <span className="text-ash text-sm leading-relaxed">{body}</span>
     </button>
   )
 }
@@ -210,7 +204,7 @@ function BackButton({ onBack }: { onBack: () => void }) {
     <button
       type="button"
       onClick={onBack}
-      className="mb-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-ash transition-colors hover:text-ink"
+      className="text-ash hover:text-ink mb-3 inline-flex items-center gap-1.5 font-mono text-[11px] transition-colors"
     >
       <ArrowLeft size={13} weight="bold" />
       back
@@ -223,7 +217,7 @@ function PromptExport({ prompt, onBack }: { prompt: string; onBack: () => void }
     <div>
       <BackButton onBack={onBack} />
       <div
-        className="overflow-hidden rounded-lg border border-line bg-ink"
+        className="border-line bg-ink overflow-hidden rounded-lg border"
         // Pin ink/paper so the terminal stays dark even when the page is in dark mode.
         style={{ "--color-ink": "#16150f", "--color-paper": "#fdfdfc" } as CSSProperties}
       >
@@ -235,19 +229,19 @@ function PromptExport({ prompt, onBack }: { prompt: string; onBack: () => void }
             value={prompt}
             title="Copy prompt"
             swapOnCopy
-            className="shrink-0 rounded border border-white/15 px-2.5 py-1 font-mono text-[11px] text-paper hover:bg-white/10 hover:opacity-100"
+            className="text-paper shrink-0 rounded border border-white/15 px-2.5 py-1 font-mono text-[11px] hover:bg-white/10 hover:opacity-100"
           >
             copy prompt
           </CopyText>
         </div>
-        <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap p-4 font-mono text-[12px] leading-relaxed text-white/85">
+        <pre className="max-h-[60vh] overflow-auto p-4 font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-white/85">
           {prompt}
         </pre>
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-ash">
+      <p className="text-ash mt-3 text-xs leading-relaxed">
         Working with an agent that can't browse the web? Use{" "}
-        <span className="font-medium text-ink">Export code</span> instead and paste
-        the tokens directly.
+        <span className="text-ink font-medium">Export code</span> instead and paste the tokens
+        directly.
       </p>
     </div>
   )
@@ -284,7 +278,7 @@ function CodeExport({
     <div>
       <BackButton onBack={onBack} />
       <div
-        className="overflow-hidden rounded-lg border border-line bg-ink"
+        className="border-line bg-ink overflow-hidden rounded-lg border"
         // Pin ink/paper so the terminal stays dark even when the page is in dark mode.
         style={{ "--color-ink": "#16150f", "--color-paper": "#fdfdfc" } as CSSProperties}
       >
@@ -304,7 +298,7 @@ function CodeExport({
                 {tab === t.id && (
                   <motion.span
                     layoutId="export-tab-underline"
-                    className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-paper"
+                    className="bg-paper absolute inset-x-2 -bottom-px h-0.5 rounded-full"
                     transition={{ type: "spring", stiffness: 480, damping: 38 }}
                   />
                 )}
@@ -316,7 +310,7 @@ function CodeExport({
               type="button"
               onClick={() => download(file.name, file.mime, code)}
               title={`Download ${file.name}`}
-              className="inline-flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1 font-mono text-[11px] text-paper transition-colors hover:bg-white/10"
+              className="text-paper inline-flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1 font-mono text-[11px] transition-colors hover:bg-white/10"
             >
               <DownloadSimple size={12} weight="bold" />
               download
@@ -327,7 +321,7 @@ function CodeExport({
               value={code}
               title="Copy all"
               swapOnCopy
-              className="rounded border border-white/15 px-2.5 py-1 font-mono text-[11px] text-paper hover:bg-white/10 hover:opacity-100"
+              className="text-paper rounded border border-white/15 px-2.5 py-1 font-mono text-[11px] hover:bg-white/10 hover:opacity-100"
             >
               copy
             </CopyText>
@@ -345,7 +339,7 @@ function CodeExport({
                   type="button"
                   onClick={() => setColorMode(m)}
                   className={cn(
-                    "relative rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide transition-colors",
+                    "relative rounded px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors",
                     colorMode === m ? "text-paper" : "text-white/45 hover:text-white/80",
                   )}
                 >

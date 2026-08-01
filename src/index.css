@@ -9,16 +9,16 @@
    never uses italics, so the italic files are deliberately not imported.
    Each file declares per-subset @font-face rules with unicode-range, so a
    browser only downloads the subsets a page actually renders. */
-@import '@fontsource-variable/geist/wght.css';
-@import '@fontsource-variable/inter/wght.css';
-@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import "@fontsource-variable/geist/wght.css";
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
 
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
-  --font-display: 'Geist Variable', system-ui, sans-serif;
-  --font-sans: 'Inter Variable', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --font-display: "Geist Variable", system-ui, sans-serif;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
   --color-paper: #fdfdfc;
   --color-ink: #16150f;

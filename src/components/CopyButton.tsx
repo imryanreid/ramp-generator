@@ -27,7 +27,7 @@ export default function CopyButton({ value, title, className = "" }: Props) {
       title={title ?? `Copy ${value}`}
       aria-label={title ?? `Copy ${value}`}
       className={cn(
-        "relative inline-flex h-5 w-5 items-center justify-center rounded text-ash transition-colors hover:bg-ink/[0.06] hover:text-ink",
+        "text-ash hover:bg-ink/[0.06] hover:text-ink relative inline-flex h-5 w-5 items-center justify-center rounded transition-colors",
         className,
       )}
     >

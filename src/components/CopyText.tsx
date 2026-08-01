@@ -21,7 +21,13 @@ type Props = {
 }
 
 /** Wraps content in a click-to-copy button with brief "Copied" feedback. */
-export default function CopyText({ value, children, className = "", title, swapOnCopy = false }: Props) {
+export default function CopyText({
+  value,
+  children,
+  className = "",
+  title,
+  swapOnCopy = false,
+}: Props) {
   const { copied, copy } = useCopy()
   const content = typeof children === "function" ? children(copied) : children
 
@@ -41,7 +47,7 @@ export default function CopyText({ value, children, className = "", title, swapO
         content
       )}
       {!swapOnCopy && copied && typeof children !== "function" && (
-        <span className="pointer-events-none absolute -top-6 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 font-mono text-[10px] text-paper">
+        <span className="bg-ink text-paper pointer-events-none absolute -top-6 left-1/2 z-10 -translate-x-1/2 rounded px-1.5 py-0.5 font-mono text-[10px] whitespace-nowrap">
           copied
         </span>
       )}
