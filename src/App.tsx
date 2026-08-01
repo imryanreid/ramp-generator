@@ -15,7 +15,7 @@
 // ==============================================
 import { useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
-import ColorInput from "./components/ColorInput"
+import { BrandField, AccentField } from "./components/ColorInput"
 import RampGroup from "./components/RampGroup"
 import SemanticTokens from "./components/SemanticTokens"
 import ExportPanel from "./components/ExportPanel"
@@ -133,6 +133,7 @@ export default function App() {
     setExcludedTokens(new Set())
   }
 
+  const accentLocked = accentOverride !== null
   const autoAccent = useMemo(() => deriveAccentHex(brand, scheme), [brand, scheme])
   const palette = useMemo(
     () => buildPalette(brand, accentOverride, mode, scheme),
@@ -238,25 +239,48 @@ export default function App() {
 
           {/* Controls — single row */}
           <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
-            <div className="min-w-[280px] flex-1">
-              <ColorInput
-                brand={brand}
-                onBrandChange={setBrand}
+            <BrandField brand={brand} onBrandChange={setBrand} />
+
+            {/*
+              Accent and Derivation are coupled: while the accent is on Auto,
+              Derivation is what produces it. They share a wrapper so they wrap
+              together, with a rule drawn between them to show the link. On
+              Manual the rule disappears and Derivation dims — it still shapes
+              accent-2, the neutral tint and status vividness, so it stays
+              selectable rather than being disabled outright.
+            */}
+            <div className="flex min-w-[300px] flex-1 flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
+              <AccentField
                 accentOverride={accentOverride}
                 autoAccent={autoAccent}
                 onAccentChange={setAccentOverride}
                 onAccentReset={() => setAccentOverride(null)}
               />
-            </div>
-
-            <div className="min-w-[180px]">
-              <SectionLabel>Derivation</SectionLabel>
-              <SchemeSelect scheme={scheme} onChange={setScheme} />
+              <div
+                aria-hidden="true"
+                className={cn(
+                  "mb-[17px] hidden h-px w-8 shrink-0 transition-colors sm:block",
+                  accentLocked ? "bg-transparent" : "bg-line",
+                )}
+              />
+              <div className="min-w-[180px] flex-1">
+                <SectionLabel>Derivation</SectionLabel>
+                <div
+                  className={cn("transition-opacity", accentLocked && "opacity-45")}
+                  title={
+                    accentLocked
+                      ? "The accent is set manually, so derivation no longer produces it — it still shapes accent-2, the neutral tint and status colors."
+                      : undefined
+                  }
+                >
+                  <SchemeSelect scheme={scheme} onChange={setScheme} />
+                </div>
+              </div>
             </div>
 
             <div>
-              <SectionLabel>Scope</SectionLabel>
-              <ModeToggle mode={mode} onChange={setMode} />
+              <SectionLabel>Format</SectionLabel>
+              <FormatSelect format={format} onChange={setFormat} />
             </div>
 
             <div>
@@ -265,8 +289,8 @@ export default function App() {
             </div>
 
             <div>
-              <SectionLabel>Format</SectionLabel>
-              <FormatSelect format={format} onChange={setFormat} />
+              <SectionLabel>Scope</SectionLabel>
+              <ModeToggle mode={mode} onChange={setMode} />
             </div>
           </div>
         </section>

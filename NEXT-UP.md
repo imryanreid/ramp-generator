@@ -59,6 +59,23 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — OKLCH by default; accent/derivation pairing
+
+- **OKLCH is now the default notation.** The ramps are built in OKLCH, so hex
+  was throwing away the gamut headroom by default. `f=` is omitted from the URL
+  at the default, which is now `oklch` rather than `hex`.
+- **Control order** is Brand, Accent, Derivation, Format, Contrast, Scope.
+- **Accent and Derivation are visually paired.** They share a wrapper so they
+  wrap as one unit, with a rule drawn between them while the accent is on Auto.
+  On Manual the rule disappears and Derivation dims to 45%.
+  **It stays selectable on purpose** — derivation still shapes accent-2, the
+  neutral tint and status vividness even when the accent is pinned, so
+  disabling it would be a lie. The dimming says "no longer driving the accent",
+  not "inert". Worth revisiting if that reads as too subtle.
+- `ColorInput` split into `BrandField` and `AccentField` so Accent can sit
+  beside Derivation. Both the hex fields and the scheme select are `h-9` now, so
+  the connector lines up with their centres.
+
 ### 2026-08-01 — Header copy, share images, picker, colour formats
 
 - **Header copy** now reads ramps.studio / Color Ramp Generator / "Generate

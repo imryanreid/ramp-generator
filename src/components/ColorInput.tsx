@@ -10,54 +10,60 @@ import { HexColorPicker } from "react-colorful"
 import { normalizeHex } from "../lib/color"
 import { cn } from "../lib/utils"
 
-type Props = {
-  brand: string
-  onBrandChange: (hex: string) => void
-  accentOverride: string | null
-  autoAccent: string
-  onAccentChange: (hex: string) => void
-  onAccentReset: () => void
-}
-
-/** Brand color plus an accent that is auto-derived until the user locks it. */
-export default function ColorInput({
+/**
+ * Brand and Accent are split into separate exports so the layout can sit Accent
+ * directly beside Derivation — the two are coupled (Derivation is what derives
+ * the accent while it's on Auto) and the row draws a connector between them.
+ */
+export function BrandField({
   brand,
   onBrandChange,
+}: {
+  brand: string
+  onBrandChange: (hex: string) => void
+}) {
+  return (
+    <div className="min-w-[128px] flex-1">
+      <div className="mb-1.5 flex h-4 items-center">
+        <FieldLabel>Brand</FieldLabel>
+      </div>
+      <HexField color={brand} onCommit={onBrandChange} />
+    </div>
+  )
+}
+
+export function AccentField({
   accentOverride,
   autoAccent,
   onAccentChange,
   onAccentReset,
-}: Props) {
+}: {
+  accentOverride: string | null
+  autoAccent: string
+  onAccentChange: (hex: string) => void
+  onAccentReset: () => void
+}) {
   const locked = accentOverride !== null
   const accentValue = accentOverride ?? autoAccent
 
   return (
-    <div className="flex gap-4">
-      <div className="min-w-[128px] flex-1">
-        <div className="mb-1.5 flex h-4 items-center">
-          <FieldLabel>Brand</FieldLabel>
-        </div>
-        <HexField color={brand} onCommit={onBrandChange} />
+    <div className="min-w-[128px] flex-1">
+      <div className="mb-1.5 flex h-4 items-center justify-between gap-2">
+        <FieldLabel>Accent</FieldLabel>
+        <button
+          type="button"
+          onClick={() => (locked ? onAccentReset() : onAccentChange(autoAccent))}
+          className="rounded-full bg-ink/[0.06] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ash transition-colors hover:bg-ink/10 hover:text-ink"
+          title={
+            locked
+              ? "Manual — click to auto-derive the accent from the brand"
+              : "Auto-derived from brand — click to set the accent manually"
+          }
+        >
+          {locked ? "Manual" : "Auto"}
+        </button>
       </div>
-
-      <div className="min-w-[128px] flex-1">
-        <div className="mb-1.5 flex h-4 items-center justify-between gap-2">
-          <FieldLabel>Accent</FieldLabel>
-          <button
-            type="button"
-            onClick={() => (locked ? onAccentReset() : onAccentChange(autoAccent))}
-            className="rounded-full bg-ink/[0.06] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ash transition-colors hover:bg-ink/10 hover:text-ink"
-            title={
-              locked
-                ? "Manual — click to auto-derive the accent from the brand"
-                : "Auto-derived from brand — click to set the accent manually"
-            }
-          >
-            {locked ? "Manual" : "Auto"}
-          </button>
-        </div>
-        <HexField color={accentValue} muted={!locked} onCommit={onAccentChange} />
-      </div>
+      <HexField color={accentValue} muted={!locked} onCommit={onAccentChange} />
     </div>
   )
 }
@@ -107,7 +113,7 @@ function HexField({
       />
       <div
         className={cn(
-          "flex flex-1 items-center rounded-md border bg-paper px-2.5 py-1.5 font-mono text-sm",
+          "flex h-9 flex-1 items-center rounded-md border bg-paper px-2.5 font-mono text-sm",
           invalid ? "border-red-400" : "border-line",
         )}
       >

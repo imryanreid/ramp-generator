@@ -39,7 +39,7 @@ export default function SchemeSelect({ scheme, onChange }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 rounded-md border border-line bg-paper px-3 py-2 text-left text-sm transition-colors hover:border-ink/30"
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-line bg-paper px-3 text-left text-sm transition-colors hover:border-ink/30"
       >
         <span className="font-medium text-ink">{current.label}</span>
         <CaretDown

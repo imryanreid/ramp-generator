@@ -40,7 +40,7 @@ export const DEFAULT_STATE: ShareState = {
   mode: "full",
   scheme: "complementary",
   compliance: "AA",
-  format: "hex",
+  format: "oklch",
   excludedRamps: [],
   excludedTokens: [],
 }
@@ -80,7 +80,7 @@ export function encodeShareState(s: ShareState): string {
   p.set("m", s.mode)
   p.set("s", s.scheme)
   p.set("c", s.compliance)
-  if (s.format !== "hex") p.set("f", s.format)
+  if (s.format !== DEFAULT_STATE.format) p.set("f", s.format)
   if (s.excludedRamps.length) p.set("xr", encodeNames(s.excludedRamps))
   if (s.excludedTokens.length) p.set("xt", encodeNames(s.excludedTokens))
   return p.toString()
