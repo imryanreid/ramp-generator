@@ -171,13 +171,13 @@ export default function App() {
           <div className="mb-8 flex items-start justify-between gap-4">
             <header>
               <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ash">
-                Design system
+                ramps.studio
               </p>
               <h1 className="font-display text-3xl font-semibold leading-none tracking-tight">
-                Ramp Generator
+                Color Ramp Generator
               </h1>
               <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ash">
-                Generate agent-optimized, accessible color ramps in just a few
+                Generate agent-optimized, accessible color ramps in a few
                 clicks.
               </p>
             </header>

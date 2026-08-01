@@ -72,6 +72,16 @@ export async function GET(request: Request): Promise<Response> {
       `$1${escapeHtml(summary)}$2`,
     )
     .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${escapeHtml(canonical)}$2`)
+    // Point the share image at this palette so a link unfurls with its own
+    // colors rather than the default blue.
+    .replace(
+      /(<meta property="og:image" content=")[^"]*(")/,
+      `$1${escapeHtml(`${origin}/api/og?${encodeShareState(state)}`)}$2`,
+    )
+    .replace(
+      /(<meta name="twitter:image" content=")[^"]*(")/,
+      `$1${escapeHtml(`${origin}/api/og?${encodeShareState(state)}`)}$2`,
+    )
     // Keep parameterized palettes out of the search index. Each one is
     // self-canonical so it shares and unfurls correctly, but `?b=` is an
     // unbounded parameter space and letting a crawler wander it would bloat the
