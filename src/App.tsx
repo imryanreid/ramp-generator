@@ -21,7 +21,13 @@ import SemanticTokens from "./components/SemanticTokens"
 import ExportPanel from "./components/ExportPanel"
 import SchemeSelect from "./components/SchemeSelect"
 import { buildPalette, deriveAccentHex, type DsMode, type Scheme, type Palette } from "./lib/recommend"
-import { readInitialShareState, encodeShareState, shareUrl, type ShareState } from "./lib/share"
+import {
+  readInitialShareState,
+  encodeShareState,
+  shareUrl,
+  DEFAULT_STATE,
+  type ShareState,
+} from "./lib/share"
 import { toCss, toJson, allRamps, type Compliance, type ExportOptions } from "./lib/semantics"
 import { useCopy } from "./lib/clipboard"
 import { cn } from "./lib/utils"
@@ -49,17 +55,6 @@ const CANONICAL = (() => {
   }
   return w.__rampCanonicalHead
 })()
-
-/** The palette shown to a first-time visitor with no share params in the URL. */
-const DEFAULT_STATE: ShareState = {
-  brand: "#3d7dff",
-  accentOverride: null,
-  mode: "full",
-  scheme: "complementary",
-  compliance: "AA",
-  excludedRamps: [],
-  excludedTokens: [],
-}
 
 export default function App() {
   // Hydrate initial state from a shared link, if present.

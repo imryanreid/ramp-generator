@@ -7,8 +7,8 @@ ramps, derived accents, a matched neutral, status colors, and usage-first
 semantic tokens for light and dark — exportable as CSS custom properties, a
 Tailwind v4 theme, Figma variables, or JSON.
 
-Everything is computed in the browser. There is no backend, no account, and no
-stored data.
+No account, no API key, no rate limit, and nothing stored. Every palette is a
+pure function of the URL, so the same link always returns the same colors.
 
 ---
 
@@ -108,7 +108,24 @@ always imports cleanly.
 
 ## Using it from an agent
 
-The page is built to be read by machines as well as people:
+Point an agent at any palette link and it gets the real values — no JavaScript
+required. The site is client-rendered, so a plain fetch would normally return an
+empty shell; a Vercel Function recomputes the palette server-side and injects it
+into the HTML for any URL carrying `?b=`.
+
+```
+https://www.ramps.studio/?b=3d7dff          → page + embedded palette (JSON and plain text)
+https://www.ramps.studio/api/palette?b=3d7dff → JSON only
+https://www.ramps.studio/llms.txt            → the full contract, written for agents
+```
+
+Both shapes are emitted deliberately: HTML-to-markdown conversion — what most
+agents do before reading a page — strips `<script>` tags, so a JSON-only payload
+would be invisible to exactly the tools this exists for. The plain-text block
+survives that conversion. Human visitors never see it; the app removes it once
+JavaScript is running.
+
+Everything else the page offers machines:
 
 - **`robots.txt` allows everything.** Nothing here is private or rate-limited.
 - **JSON-LD in `<head>`** describes the tool and documents the URL API above,
@@ -134,6 +151,7 @@ deployment and want changing if you run your own:
 | Share-link origin | `SITE_URL` in `src/lib/site.ts`, or set `VITE_SITE_URL` in your host's environment |
 | Sitemap + robots URLs | `public/sitemap.xml`, `public/robots.txt` |
 | Footer attribution — my name, photo, and studio | `Attribution` in `src/App.tsx`, plus the two images in `src/assets/` |
+| URLs in the agent docs | `public/llms.txt` |
 
 The canonical tag is the one that actually bites: it is invisible, and left
 unchanged it quietly tells Google your copy is a duplicate of this site.
@@ -141,6 +159,10 @@ unchanged it quietly tells Google your copy is a duplicate of this site.
 Nothing else is environment-specific. There are no secrets, no API keys, and no
 env vars required to run or deploy — `pnpm install && pnpm build` is the whole
 setup. The Vercel Analytics beacons no-op anywhere that isn't a Vercel project.
+
+The two functions in `api/` assume Vercel. On another host the site still works
+for humans; you'd need to port those two files to get the agent-readable
+rendering, since that's the one piece that can't happen in the browser.
 
 Keeping the `LICENSE` file is the one thing MIT actually requires.
 

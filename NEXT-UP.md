@@ -53,6 +53,38 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — Server-rendered palettes for agents
+
+**The audit finding that drove this:** the site is client-rendered, so a plain
+fetch of a share link returned an empty `#root`. Verified by fetching a palette
+URL with a real agent tool — it came back with the page title and nothing else.
+Worse than a clean failure: the meta description confidently describes a palette
+that isn't in the response, inviting hallucinated hex values. The in-browser
+testing used up to that point was blind to this, because the browser is the one
+client that already worked.
+
+- **`api/render.ts`** — serves `/` when the URL carries `?b=`, injecting the
+  palette as both JSON and plain text and rewriting canonical/description/og:url
+  to describe that specific palette. React still boots over it.
+- **`api/palette.ts`** — `GET /api/palette`, same data as JSON.
+- **`public/llms.txt`** — the URL contract written for agents.
+- **`vercel.json`** — routes `/` to the function only when `?b=` is present, so
+  the bare homepage stays a static asset.
+- **`src/lib/params.ts`** — the URL contract split out of `share.ts` because the
+  functions can't import anything touching `import.meta.env` or `window`.
+- **`src/lib/agent.ts`** — builds the payload; shared by both functions.
+
+Two non-obvious constraints, both easy to undo by accident:
+
+- The injected block carries **no hiding styles**. `display:none` reads as the
+  obvious choice but readability-style extractors honour it and skip the
+  content. It ships visible and `src/main.tsx` removes it on mount.
+- It emits **both** JSON and plain text because HTML-to-markdown conversion
+  strips `<script>` tags.
+
+Anything touching `api/`, `agent.ts`, or `params.ts` must be verified with a real
+no-JavaScript fetch — a browser check proves nothing here.
+
 ### 2026-08-01 — Per-row export selection
 
 - **Checkboxes on all 45 rows** (8 ramps + 37 tokens), plus mixed-state toggles

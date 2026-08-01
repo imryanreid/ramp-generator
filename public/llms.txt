@@ -1,0 +1,74 @@
+# Ramps Studio
+
+> Generates a complete design-system color palette from a single brand color:
+> perceptually-even OKLCH ramps (50–950), scheme-derived accents, a matched
+> neutral, collision-avoided status colors, and usage-first semantic tokens for
+> light and dark — with WCAG AA or AAA contrast enforced, not just reported.
+
+Free, no account, no API key, no rate limit. Every palette is a pure function of
+the URL, so the same link always returns the same colors.
+
+## Using this as a tool
+
+Build a URL. The response contains the whole palette.
+
+- Human + agent readable page: `https://www.ramps.studio/?b=3d7dff`
+- JSON only: `https://www.ramps.studio/api/palette?b=3d7dff`
+
+Both accept the same parameters:
+
+| Param | Required | Values | Meaning |
+| --- | --- | --- | --- |
+| `b` | yes | 6-digit hex, no `#` — e.g. `3d7dff` | Brand color. Everything derives from this. |
+| `a` | no | 6-digit hex, no `#` | Pin the accent. Omit to derive it from `s`. |
+| `m` | no | `full` (default), `basic` | Token scope. `basic` drops hover/active states and subtle surfaces. |
+| `s` | no | `complementary` (default), `analogous`, `triadic`, `split`, `monochromatic` | How accents are rotated off the brand hue. |
+| `c` | no | `AA` (default, 4.5:1), `AAA` (7:1) | Contrast target. Token steps move to satisfy it. |
+| `xr` | no | dot-separated ramp names — e.g. `accent-2.info` | Ramps to leave out. |
+| `xt` | no | dot-separated token names — e.g. `bg-info.text-warning` | Semantic tokens to leave out. |
+
+Invalid values are ignored individually and fall back to defaults, so a
+malformed URL still returns a usable palette rather than an error.
+
+### Example
+
+`https://www.ramps.studio/api/palette?b=e4572e&s=analogous&c=AAA`
+
+```json
+{
+  "source": "https://www.ramps.studio/?b=e4572e&m=full&s=analogous&c=AAA",
+  "input": { "brand": "#e4572e", "scheme": "analogous", "wcag": "AAA", "...": "..." },
+  "ramps": { "primary": { "50": "#...", "950": "#..." }, "neutral": { "...": "..." } },
+  "tokens": { "bg-canvas": { "light": "#...", "dark": "#...", "role": "Page background" } },
+  "notes": ["..."]
+}
+```
+
+## Applying a palette
+
+- Prefer the semantic tokens (`bg-*`, `text-*`, `border-*`, `ring-*`) over raw
+  ramp steps. They already carry the light/dark mapping, so using them means
+  dark mode works without a second pass.
+- Every paired foreground already clears the requested WCAG ratio against its
+  background. Substituting your own color into one of those pairs silently
+  breaks that guarantee.
+- Use the hex values verbatim. The ramps are OKLCH-derived and perceptually
+  even; re-deriving them in sRGB will drift.
+- If `xr` or `xt` are present, the author deliberately removed those rows. Treat
+  what is returned as the complete intended palette — don't add colors back to
+  fill perceived gaps.
+
+## What the ramps mean
+
+Steps run `50` (lightest) to `950` (darkest): `50, 100, 200, 300, 400, 500, 600,
+700, 800, 900, 950`. Lightness follows a fixed curve and chroma follows a bell
+curve peaking in the mid-tones, so the lightest and darkest steps desaturate the
+way hand-tuned ramps do. Every value is gamut-clamped back into sRGB.
+
+Ramp names: `primary` (your brand), `accent`, `accent-2`, `neutral` (tinted
+toward the brand hue), and the status ramps `success`, `warning`, `error`,
+`info`.
+
+## Source
+
+MIT licensed: https://github.com/imryanreid/ramp-generator

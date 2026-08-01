@@ -19,3 +19,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <SpeedInsights />
   </React.StrictMode>,
 )
+
+// On a palette URL the server injects a plain-text + JSON copy of the palette
+// into the HTML so agents that don't run JavaScript can still read it (see
+// api/render.ts). It ships unstyled on purpose — hiding it with CSS would make
+// readability-style extractors skip it — so the app removes it here, the moment
+// we know JavaScript is running and a human is looking.
+document.getElementById('agent-palette')?.remove()

@@ -20,9 +20,11 @@ Public, open source (MIT), and a portfolio piece.
 React 19 · Vite · Tailwind CSS v4 · TypeScript (strict) · culori · Motion ·
 pnpm · deployed on Vercel.
 
-There is **no backend**. Every palette is derived in the browser from four
-inputs. Keep it that way — it's why share links work without a database and why
-the site costs nothing to run.
+**No database, no state, no auth.** Every palette is a pure function of the URL.
+Two Vercel Functions under `api/` exist solely because the site is
+client-rendered and most agents don't run JavaScript — they recompute the same
+pure function server-side. Keep it that way: nothing in `api/` should ever read
+or write persistent state, so every response stays cacheable forever.
 
 ## History: this began in Figma Make
 
@@ -66,6 +68,28 @@ nice-to-have. That means: `robots.txt` stays permissive, the JSON-LD block stays
 accurate, and the "Machine-readable palette" section keeps rendering the full
 palette as plain text in the DOM. Don't move that content behind an interaction.
 
+## Agent consumption is a first-class use case
+
+The site is client-rendered, so a plain fetch of a share link returns an empty
+`#root` — nothing readable unless the agent executes JavaScript, which most
+link-following agents don't. `api/render.ts` fixes that by injecting the palette
+into the HTML for any URL carrying `?b=`; `api/palette.ts` serves the same data
+as JSON; `public/llms.txt` documents the contract.
+
+Two non-obvious constraints hold this together:
+
+- **The injected block carries no hiding styles.** `display:none` would be the
+  obvious way to keep it from human eyes, but readability-style extractors honour
+  inline hiding and skip such content. It ships visible and `src/main.tsx`
+  removes it on mount instead.
+- **It emits both JSON and plain text.** HTML-to-markdown conversion strips
+  `<script>` tags, so a JSON-only payload is invisible to exactly the tools this
+  exists for.
+
+Anything touching `api/`, `src/lib/agent.ts`, or `src/lib/params.ts` must be
+verified with a real no-JavaScript fetch. Testing in a browser proves nothing
+here — the browser is the one client that already worked.
+
 ## Contrast resolution
 
 `resolveTokens` in `src/lib/semantics.ts` is the most subtle code here. It moves
@@ -91,7 +115,8 @@ Figma rejects on import. Those tokens fall back to literal colors instead.
 
 - Adding, removing, or upgrading any dependency.
 - Touching `.env` files (there are none today — the app needs no secrets).
-- Anything that would add a server, a database, or a build-time API call.
+- Adding state anywhere — a database, a session, a write path. The functions in
+  `api/` are pure and must stay pure.
 
 ## Verify before calling it done
 

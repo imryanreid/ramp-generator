@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "query", "key": "b" }],
+      "destination": "/api/render"
+    }
+  ]
+}
