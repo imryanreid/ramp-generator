@@ -49,6 +49,7 @@ type PaletteJson = {
   input: {
     brand: string
     accent: string | null
+    accent2: string | null
     scope: string
     scheme: string
     wcag: string
@@ -71,7 +72,13 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
   const state = resolveShareState(search)
   const canonical = `${origin}/?${encodeShareState(state)}`
 
-  const palette = buildPalette(state.brand, state.accentOverride, state.mode, state.scheme)
+  const palette = buildPalette(
+    state.brand,
+    state.accentOverride,
+    state.mode,
+    state.scheme,
+    state.accent2Override,
+  )
 
   const excludedRamps = new Set(state.excludedRamps)
   const excludedTokens = new Set(state.excludedTokens)
@@ -122,6 +129,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     input: {
       brand: state.brand,
       accent: state.accentOverride,
+      accent2: state.accent2Override,
       scope: state.mode,
       scheme: state.scheme,
       wcag: state.compliance,
@@ -153,7 +161,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     "RAMPS STUDIO — GENERATED COLOR PALETTE",
     `Source: ${canonical}`,
     "",
-    `Brand ${state.brand} · accent ${state.accentOverride ?? "auto-derived"} · ${state.scheme} derivation · ${state.mode} scope · WCAG ${state.compliance}`,
+    `Brand ${state.brand} · accent ${state.accentOverride ?? "auto-derived"} · accent-2 ${state.accent2Override ?? "auto-derived"} · ${state.scheme} derivation · ${state.mode} scope · WCAG ${state.compliance}`,
     "",
     "RAMPS (OKLCH-derived, 50 lightest to 950 darkest)",
   ]

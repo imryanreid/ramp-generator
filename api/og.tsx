@@ -41,7 +41,13 @@ export async function GET(request: Request): Promise<Response> {
   const origin = publicOrigin(request)
   const state = resolveShareState(url.search)
 
-  const palette = buildPalette(state.brand, state.accentOverride, state.mode, state.scheme)
+  const palette = buildPalette(
+    state.brand,
+    state.accentOverride,
+    state.mode,
+    state.scheme,
+    state.accent2Override,
+  )
   const excluded = new Set(state.excludedRamps)
   const ramps = allRamps(palette)
     .filter((r) => !excluded.has(r.name))
