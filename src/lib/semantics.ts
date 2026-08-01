@@ -81,10 +81,13 @@ const TOKENS: TokenDef[] = [
   // ---- Backgrounds: surfaces ----
   t("bg-canvas", "Page background", BG, ["neutral-light", 100], ["neutral-dark", 950]),
   t("bg-surface", "Card, panel", BG, ["neutral-light", 50], ["neutral-dark", 900]),
+  // Light has no step above 50, so raised matches surface there and elevation
+  // reads through shadow instead — the usual light-theme pattern. Dark has the
+  // headroom for a real third level.
   t("bg-surface-raised", "Dropdown menu", BG, ["neutral-light", 50], ["neutral-dark", 800], {
     full: true,
   }),
-  t("bg-muted", "Table row hover", BG, ["neutral-light", 100], ["neutral-dark", 800]),
+  t("bg-muted", "Table row hover", BG, ["neutral-light", 200], ["neutral-dark", 700]),
 
   // ---- Backgrounds: action fills ----
   t("bg-brand", "Primary button", BG, [PRIMARY, 600], [PRIMARY, 500]),
@@ -122,15 +125,15 @@ const TOKENS: TokenDef[] = [
   t("text-primary", "Body copy", TEXT, ["neutral-light", 900], ["neutral-dark", 100], {
     pairWith: "bg-canvas",
   }),
-  t("text-secondary", "Helper text", TEXT, ["neutral-light", 600], ["neutral-dark", 400], {
+  t("text-secondary", "Helper text", TEXT, ["neutral-light", 800], ["neutral-dark", 300], {
     pairWith: "bg-canvas",
   }),
   t(
     "text-tertiary",
     "Timestamps, captions",
     TEXT,
-    ["neutral-light", 500],
-    ["neutral-dark", 500],
+    ["neutral-light", 700],
+    ["neutral-dark", 400],
     {
       pairWith: "bg-canvas",
       full: true,
