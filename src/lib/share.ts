@@ -7,8 +7,8 @@
 // the Vercel Functions under /api, which import
 // params.ts directly.
 // ==============================================
-import { encodeShareState, decodeShareState, type ShareState } from "./params"
-import { SITE_URL } from "./site"
+import { encodeShareState, decodeShareState, type ShareState } from "./params.js"
+import { SITE_URL } from "./site.js"
 
 export {
   encodeShareState,
@@ -16,7 +16,7 @@ export {
   resolveShareState,
   DEFAULT_STATE,
   type ShareState,
-} from "./params"
+} from "./params.js"
 
 /** A shareable absolute URL for the given state, on the canonical domain. */
 export function shareUrl(s: ShareState): string {

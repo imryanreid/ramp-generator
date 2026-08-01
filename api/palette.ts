@@ -9,7 +9,7 @@
 // Pure function of the query string — no state, no
 // storage — so responses cache indefinitely.
 // ==============================================
-import { buildAgentPayload, publicOrigin } from "../src/lib/agent"
+import { buildAgentPayload, publicOrigin } from "../src/lib/agent.js"
 
 export function GET(request: Request): Response {
   const url = new URL(request.url)

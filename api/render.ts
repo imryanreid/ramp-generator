@@ -16,8 +16,8 @@
 // vercel.json routes here only when `?b=` is present,
 // leaving the bare homepage a static asset.
 // ==============================================
-import { buildAgentPayload, publicOrigin } from "../src/lib/agent"
-import { encodeShareState } from "../src/lib/params"
+import { buildAgentPayload, publicOrigin } from "../src/lib/agent.js"
+import { encodeShareState } from "../src/lib/params.js"
 
 function escapeHtml(value: string): string {
   return value

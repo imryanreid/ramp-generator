@@ -14,10 +14,10 @@
 // Imported by the Vercel Functions in /api, so this
 // file must stay free of browser and Vite globals.
 // ==============================================
-import { STEPS, getSwatch } from "./color"
-import { buildPalette } from "./recommend"
-import { resolveTokens, allRamps } from "./semantics"
-import { resolveShareState, encodeShareState, type ShareState } from "./params"
+import { STEPS, getSwatch } from "./color.js"
+import { buildPalette } from "./recommend.js"
+import { resolveTokens, allRamps } from "./semantics.js"
+import { resolveShareState, encodeShareState, type ShareState } from "./params.js"
 
 /**
  * The public origin for a request. Vercel invokes functions with an internal

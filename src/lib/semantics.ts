@@ -11,8 +11,8 @@
 // the page both render from them. Don't add a
 // fourth serialization elsewhere.
 // ==============================================
-import { STEPS, getSwatch, contrast, hexToSrgbComponents, toOklch, type Ramp, type Step } from "./color"
-import type { Palette } from "./recommend"
+import { STEPS, getSwatch, contrast, hexToSrgbComponents, toOklch, type Ramp, type Step } from "./color.js"
+import type { Palette } from "./recommend.js"
 
 export type DsMode = "full" | "basic"
 

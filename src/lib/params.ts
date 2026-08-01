@@ -14,8 +14,8 @@
 // /api import it too. Anything needing the canonical
 // origin lives in share.ts instead.
 // ==============================================
-import { SCHEMES, type DsMode, type Scheme } from "./recommend"
-import type { Compliance } from "./semantics"
+import { SCHEMES, type DsMode, type Scheme } from "./recommend.js"
+import type { Compliance } from "./semantics.js"
 
 /** The full, deterministic input state that reproduces a palette. */
 export type ShareState = {

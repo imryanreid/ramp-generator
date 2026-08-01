@@ -14,7 +14,7 @@ import {
   toOklch,
   getSwatch,
   type Ramp,
-} from "./color"
+} from "./color.js"
 
 export type DsMode = "full" | "basic"
 
