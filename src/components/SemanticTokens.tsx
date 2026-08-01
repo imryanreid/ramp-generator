@@ -226,11 +226,14 @@ function Row({
       <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         <CopyCell value={t.token}>
           <span className="inline-flex items-center gap-2 font-mono text-[13px]">
-            <CategoryIcon category={t.category} />
+            {t.warnings?.length ? (
+              <CollisionWarning token={t} />
+            ) : (
+              <CategoryIcon category={t.category} />
+            )}
             {t.token}
           </span>
         </CopyCell>
-        <CollisionWarning token={t} />
       </td>
       <td className={cn("text-ash py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         {t.role}
@@ -351,25 +354,35 @@ function AA({ light, dark, target }: { light?: number; dark?: number; target: nu
 }
 
 /**
- * Flags a token that shares its value with a sibling it ought to differ from.
+ * Flags a token that shares its value with a sibling it ought to differ from,
+ * standing in for the category chip so the row doesn't get busier.
  *
  * Both causes are constraints rather than bugs — an achromatic brand, or AAA
  * squeezing a three-level text hierarchy into the few steps that clear 7:1 —
- * so this explains the situation rather than implying something is broken.
+ * so the copy explains the situation rather than implying something is broken.
  */
 function CollisionWarning({ token }: { token: ResolvedToken }) {
   if (!token.warnings?.length) return null
-  const summary = token.warnings
-    .map((w) => `Same as ${w.sameAs.join(", ")} in ${w.mode} mode. ${w.reason}`)
-    .join("\n\n")
+  // List the clashes per mode, then give the reason once — it's the same
+  // constraint in both, and repeating it doubles the tooltip for no gain.
+  const where = token.warnings.map((w) => `${w.sameAs.join(", ")} in ${w.mode}`).join("; ")
+  const summary = `Same value as ${where}. ${token.warnings[0].reason}`
+
   return (
-    <span
-      title={summary}
-      role="img"
-      aria-label={summary}
-      className="ml-1.5 inline-flex shrink-0 cursor-help align-middle text-amber-500"
-    >
-      <Warning size={14} weight="fill" aria-hidden="true" />
+    <span className="group/warn relative inline-flex shrink-0">
+      <button
+        type="button"
+        aria-label={summary}
+        className="inline-flex cursor-help text-amber-500 focus-visible:outline-none"
+      >
+        <Warning size={14} weight="fill" aria-hidden="true" />
+      </button>
+      <span
+        role="tooltip"
+        className="bg-ink text-paper pointer-events-none absolute bottom-full left-0 z-30 mb-2 w-64 rounded-md px-3 py-2 text-left font-sans text-[11px] leading-relaxed opacity-0 shadow-lg transition-opacity duration-150 group-focus-within/warn:opacity-100 group-hover/warn:opacity-100"
+      >
+        {summary}
+      </span>
     </span>
   )
 }
