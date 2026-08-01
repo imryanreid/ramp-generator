@@ -25,11 +25,16 @@ to it. Every absolute URL in the codebase must match — see the note in
    Squarespace: apex A → Vercel, `www` CNAME → the per-domain
    `*.vercel-dns-016.com` target. The `v=spf1 -all` TXT record was deliberately
    left in place; there are no MX or CAA records on the domain.
-4. **Turn on Vercel Analytics + Speed Insights** in the project dashboard. The
-   client code is already wired in `src/main.tsx`; both no-op until enabled.
-5. **Submit `https://www.ramps.studio/sitemap.xml`** to Google Search Console.
-   The site was `noindex` for its whole life under Figma Make, so it has never
-   been crawled. Verify ownership on the `www` host to match the canonical.
+4. ~~Turn on Vercel Analytics + Speed Insights.~~ **Done 2026-08-01.** Both
+   `/_vercel/insights/script.js` and `/_vercel/speed-insights/script.js` serve
+   200 on the live site, so the wiring in `src/main.tsx` is live, not just
+   toggled on in the dashboard.
+5. ~~Verify the domain in Google Search Console.~~ **Done 2026-08-01.** Set up
+   as a **Domain property** on `ramps.studio` (covers the apex, `www`, and any
+   subdomain), verified by a root TXT record alongside the existing SPF record.
+   **Still to do:** submit `https://www.ramps.studio/sitemap.xml` in the Search
+   Console UI. The site was `noindex` for its whole life under Figma Make, so
+   it has never been crawled — expect indexing to take days, not hours.
 
 ## Known gaps / deliberate omissions
 
@@ -73,6 +78,15 @@ Took the exported Figma Make project and made it self-hostable.
   canonical title — that's what crawlers index.
 - **Added**: `cn()` utility, Vercel Analytics + Speed Insights, MIT license, and
   this doc set.
+- **Deployed** to Vercel on `www.ramps.studio`, with the apex 308-redirecting to
+  it. All absolute URLs in the codebase were repointed at `www` to match, since
+  the canonical tag would otherwise have named a redirecting URL.
+- **DNS**: cut over at Squarespace off Figma Make. Two Let's Encrypt certs (one
+  per hostname). Worth knowing: for a while the site appeared to have no cert
+  when tested locally — that was a stale macOS resolver cache still holding
+  Figma's old Cloudflare IPv6 address. Public resolvers were correct throughout.
+  If HTTPS looks broken from a machine that used to reach the Figma version,
+  flush the DNS cache before assuming a real problem.
 - **Published** to https://github.com/imryanreid/ramp-generator. The repo had
   been created with GitHub's auto-generated `LICENSE` commit; that was replaced
   by a force push so history starts at the migration commit. The only difference
