@@ -71,7 +71,7 @@ export async function GET(request: Request): Promise<Response> {
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            width: 664,
+            width: 600,
             flexShrink: 0,
             paddingLeft: 72,
             paddingRight: 28,
@@ -80,10 +80,10 @@ export async function GET(request: Request): Promise<Response> {
           <div
             style={{
               fontFamily: "Geist Mono",
-              fontSize: 19,
-              letterSpacing: 5,
+              fontSize: 21,
+              letterSpacing: 5.5,
               color: ASH,
-              marginBottom: 22,
+              marginBottom: 20,
             }}
           >
             RAMPS.STUDIO
@@ -92,17 +92,18 @@ export async function GET(request: Request): Promise<Response> {
             style={{
               fontFamily: "Geist",
               fontWeight: 600,
-              fontSize: 52,
-              lineHeight: 1.05,
-              letterSpacing: -1.7,
+              // Wraps to two lines by design — at the size a feed renders
+              // this, large type on two lines reads better than small type on one.
+              fontSize: 78,
+              lineHeight: 0.98,
+              letterSpacing: -3,
               color: INK,
-              marginBottom: 24,
-              whiteSpace: "nowrap",
+              marginBottom: 22,
             }}
           >
             Color Ramp Generator
           </div>
-          <div style={{ fontSize: 21, lineHeight: 1.4, color: ASH, maxWidth: 520 }}>
+          <div style={{ fontSize: 27, lineHeight: 1.32, color: ASH, maxWidth: 470 }}>
             Generate agent-optimized, accessible color ramps in a few clicks.
           </div>
         </div>
