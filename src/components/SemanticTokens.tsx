@@ -29,6 +29,7 @@ export default function SemanticTokens({
   mode,
   compliance,
   format,
+  excludedRamps,
   excluded,
   onToggle,
   onSetMany,
@@ -37,6 +38,8 @@ export default function SemanticTokens({
   mode: DsMode
   compliance: Compliance
   format: ColorFormat
+  /** Ramps deselected for export — their tokens can no longer show a ramp alias. */
+  excludedRamps: ReadonlySet<string>
   excluded: ReadonlySet<string>
   onToggle: (name: string) => void
   onSetMany: (names: string[], off: boolean) => void
@@ -72,7 +75,7 @@ export default function SemanticTokens({
               <th className="py-2 pr-4 font-medium">Light</th>
               <th className="py-2 pr-4 font-medium">Dark</th>
               <th className="py-2 pr-4 font-medium">{compliance}</th>
-              <th className="py-2 text-right font-medium">Export</th>
+              <th className="py-2 text-right font-medium print:hidden">Export</th>
             </tr>
           </thead>
           <tbody>
@@ -85,6 +88,7 @@ export default function SemanticTokens({
                 rampNames={rampNames}
                 target={target}
                 format={format}
+                excludedRamps={excludedRamps}
                 excluded={excluded}
                 onToggle={onToggle}
                 onSetMany={onSetMany}
@@ -139,6 +143,7 @@ function GroupBlock({
   rampNames,
   target,
   format,
+  excludedRamps,
   excluded,
   onToggle,
   onSetMany,
@@ -149,6 +154,7 @@ function GroupBlock({
   rampNames: Record<string, string>
   target: number
   format: ColorFormat
+  excludedRamps: ReadonlySet<string>
   excluded: ReadonlySet<string>
   onToggle: (name: string) => void
   onSetMany: (names: string[], off: boolean) => void
@@ -164,7 +170,7 @@ function GroupBlock({
             {category}
           </span>
         </td>
-        <td className="pt-7 pb-1.5 text-right">
+        <td className="pt-7 pb-1.5 text-right print:hidden">
           <RowToggle
             checked={on === names.length}
             indeterminate={on > 0 && on < names.length}
@@ -181,6 +187,7 @@ function GroupBlock({
           rampNames={rampNames}
           target={target}
           format={format}
+          excludedRamps={excludedRamps}
           included={!excluded.has(t.token)}
           onToggle={() => onToggle(t.token)}
         />
@@ -200,6 +207,7 @@ function Row({
   rampNames,
   target,
   format,
+  excludedRamps,
   included,
   onToggle,
 }: {
@@ -208,17 +216,19 @@ function Row({
   rampNames: Record<string, string>
   target: number
   format: ColorFormat
+  excludedRamps: ReadonlySet<string>
   included: boolean
   onToggle: () => void
 }) {
-  const lightLabel =
-    view === "ramp"
-      ? rampRef(rampNames, t.light.ramp, t.light.step)
-      : formatColor(t.lightHex, format)
-  const darkLabel =
-    view === "ramp"
-      ? rampRef(rampNames, t.dark.ramp, t.dark.step)
-      : formatColor(t.darkHex, format)
+  // A ramp alias only means something if that ramp is actually exported. When
+  // it isn't the exporters inline the literal colour, so the table shows the
+  // literal too rather than pointing at a scale the consumer won't receive.
+  const label = (loc: { ramp: string; step: number }, hex: string) =>
+    view === "ramp" && !excludedRamps.has(loc.ramp)
+      ? rampRef(rampNames, loc.ramp, loc.step)
+      : formatColor(hex, format)
+  const lightLabel = label(t.light, t.lightHex)
+  const darkLabel = label(t.dark, t.darkHex)
   return (
     <tr className="border-line-soft border-t">
       {/* Only the content dims — the checkbox stays at full strength so an
@@ -251,7 +261,7 @@ function Row({
       <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         <AA light={t.lightRatio} dark={t.darkRatio} target={target} />
       </td>
-      <td className="py-2 text-right">
+      <td className="py-2 text-right print:hidden">
         <RowToggle
           checked={included}
           onChange={onToggle}

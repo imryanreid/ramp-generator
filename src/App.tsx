@@ -241,6 +241,12 @@ export default function App() {
                 palette={palette}
                 options={exportOptions}
                 shareHref={shareUrl(shareState)}
+                onPrint={() => {
+                  // Close first — the modal would otherwise land on page one.
+                  // The delay lets the exit animation finish before printing.
+                  setExportOpen(false)
+                  window.setTimeout(() => window.print(), 300)
+                }}
               />
             </ExportModal>
           )}
@@ -265,7 +271,7 @@ export default function App() {
               </header>
 
               {/* Top-right action stack — theme, share, export (icon-only). */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 print:hidden">
                 <ThemeToggle
                   theme={theme}
                   onToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -354,7 +360,7 @@ export default function App() {
               [
                 ["Brand", palette.primaries],
                 ["Accents", palette.accents],
-                ["Neutral", palette.neutrals],
+                ["Neutral", [palette.neutral]],
                 ["Status", palette.status],
               ] as const
             ).map(([title, ramps]) => (
@@ -379,6 +385,7 @@ export default function App() {
               mode={mode}
               compliance={compliance}
               format={format}
+              excludedRamps={excludedRamps}
               excluded={excludedTokens}
               onToggle={(name) => setExcludedTokens((prev) => toggle(prev, name))}
               onSetMany={(names, off) =>
@@ -461,7 +468,7 @@ function AgentData({
   ]
 
   return (
-    <section className="mb-12" aria-label="Machine-readable palette for agents">
+    <section className="mb-12 print:hidden" aria-label="Machine-readable palette for agents">
       <details className="group border-line rounded-lg border">
         <summary className="text-ash hover:text-ink cursor-pointer list-none px-4 py-3 font-mono text-xs transition-colors">
           <span className="inline-flex items-center gap-1.5">
@@ -625,37 +632,46 @@ function ResetButton({ onReset, onUndo }: { onReset: () => void; onUndo: () => v
   const stopTimer = () => window.clearTimeout(timer.current ?? undefined)
   useEffect(() => stopTimer, [])
 
-  if (undoable) {
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          stopTimer()
+  // One element throughout, so the width eases and the labels crossfade the way
+  // the share and copy buttons do. Swapping between two elements snapped.
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        stopTimer()
+        if (undoable) {
           setUndoable(false)
           onUndo()
-        }}
-        title="Restore the palette you had before resetting"
-        className="border-ink/20 text-ink hover:border-ink/40 hover:bg-ink/[0.04] inline-flex h-10 items-center gap-1.5 rounded-md border px-3 font-mono text-xs transition-all hover:-translate-y-0.5"
+          return
+        }
+        onReset()
+        setUndoable(true)
+        timer.current = window.setTimeout(() => setUndoable(false), 3500)
+      }}
+      title={undoable ? "Restore the palette you had before resetting" : "Reset to defaults"}
+      aria-label={undoable ? "Undo reset" : "Reset to defaults"}
+      className={cn(
+        "relative inline-flex h-10 shrink-0 items-center justify-center overflow-hidden rounded-md border transition-all duration-300 ease-out hover:-translate-y-0.5",
+        undoable
+          ? "border-ink/20 text-ink hover:border-ink/40 hover:bg-ink/[0.04] w-[92px]"
+          : "border-ink/20 text-ink w-10 hover:border-red-500 hover:bg-red-500/[0.06] hover:text-red-500",
+      )}
+    >
+      <ArrowCounterClockwise
+        size={18}
+        weight="regular"
+        aria-hidden="true"
+        className="absolute transition-all duration-200 ease-out"
+        style={{ opacity: undoable ? 0 : 1, transform: undoable ? "scale(0.7)" : "none" }}
+      />
+      <span
+        className="absolute inline-flex items-center gap-1.5 font-mono text-xs whitespace-nowrap transition-all duration-200 ease-out"
+        style={{ opacity: undoable ? 1 : 0, transform: undoable ? "none" : "scale(0.9)" }}
       >
         <ArrowCounterClockwise size={14} weight="bold" aria-hidden="true" />
         Undo?
-      </button>
-    )
-  }
-
-  return (
-    <IconButton
-      onClick={() => {
-        onReset()
-        setUndoable(true)
-        stopTimer()
-        timer.current = window.setTimeout(() => setUndoable(false), 3500)
-      }}
-      title="Reset to defaults"
-      variant="danger"
-    >
-      <ArrowCounterClockwise size={18} weight="regular" aria-hidden="true" />
-    </IconButton>
+      </span>
+    </button>
   )
 }
 

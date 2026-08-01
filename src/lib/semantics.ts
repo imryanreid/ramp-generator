@@ -87,15 +87,15 @@ const FOCUS = "Focus"
 // Tokens flagged `full` only ship in Full DS mode.
 const TOKENS: TokenDef[] = [
   // ---- Backgrounds: surfaces ----
-  t("bg-canvas", "Page background", BG, ["neutral-light", 100], ["neutral-dark", 950]),
-  t("bg-surface", "Card, panel", BG, ["neutral-light", 50], ["neutral-dark", 900]),
+  t("bg-canvas", "Page background", BG, ["neutral", 100], ["neutral", 950]),
+  t("bg-surface", "Card, panel", BG, ["neutral", 50], ["neutral", 900]),
   // Light has no step above 50, so raised matches surface there and elevation
   // reads through shadow instead — the usual light-theme pattern. Dark has the
   // headroom for a real third level.
-  t("bg-surface-raised", "Dropdown menu", BG, ["neutral-light", 50], ["neutral-dark", 800], {
+  t("bg-surface-raised", "Dropdown menu", BG, ["neutral", 50], ["neutral", 800], {
     full: true,
   }),
-  t("bg-muted", "Table row hover", BG, ["neutral-light", 200], ["neutral-dark", 700]),
+  t("bg-muted", "Table row hover", BG, ["neutral", 200], ["neutral", 700]),
 
   // ---- Backgrounds: action fills ----
   t("bg-brand", "Primary button", BG, [PRIMARY, 600], [PRIMARY, 500]),
@@ -130,24 +130,17 @@ const TOKENS: TokenDef[] = [
   t("bg-info-subtle", "Info banner", BG, ["info", 100], ["info", 900], { full: true }),
 
   // ---- Text ----
-  t("text-primary", "Body copy", TEXT, ["neutral-light", 900], ["neutral-dark", 100], {
+  t("text-primary", "Body copy", TEXT, ["neutral", 900], ["neutral", 100], {
     pairWith: "bg-canvas",
   }),
-  t("text-secondary", "Helper text", TEXT, ["neutral-light", 800], ["neutral-dark", 300], {
+  t("text-secondary", "Helper text", TEXT, ["neutral", 800], ["neutral", 300], {
     pairWith: "bg-canvas",
   }),
-  t(
-    "text-tertiary",
-    "Timestamps, captions",
-    TEXT,
-    ["neutral-light", 700],
-    ["neutral-dark", 400],
-    {
-      pairWith: "bg-canvas",
-      full: true,
-    },
-  ),
-  t("text-disabled", "Greyed-out label", TEXT, ["neutral-light", 400], ["neutral-dark", 600], {
+  t("text-tertiary", "Timestamps, captions", TEXT, ["neutral", 700], ["neutral", 400], {
+    pairWith: "bg-canvas",
+    full: true,
+  }),
+  t("text-disabled", "Greyed-out label", TEXT, ["neutral", 400], ["neutral", 600], {
     full: true,
   }),
   t("text-link", "Inline link", TEXT, [PRIMARY, 600], [PRIMARY, 400], {
@@ -177,24 +170,11 @@ const TOKENS: TokenDef[] = [
   }),
 
   // ---- Borders ----
-  t(
-    "border-subtle",
-    "Divider between rows",
-    BORDER,
-    ["neutral-light", 200],
-    ["neutral-dark", 800],
-  ),
-  t("border-default", "Input outline", BORDER, ["neutral-light", 300], ["neutral-dark", 700]),
-  t(
-    "border-strong",
-    "Emphasised card edge",
-    BORDER,
-    ["neutral-light", 400],
-    ["neutral-dark", 600],
-    {
-      full: true,
-    },
-  ),
+  t("border-subtle", "Divider between rows", BORDER, ["neutral", 200], ["neutral", 800]),
+  t("border-default", "Input outline", BORDER, ["neutral", 300], ["neutral", 700]),
+  t("border-strong", "Emphasised card edge", BORDER, ["neutral", 400], ["neutral", 600], {
+    full: true,
+  }),
   t("border-active", "Selected tab", BORDER, [PRIMARY, 600], [PRIMARY, 500]),
   t("border-error", "Outline on a bad field", BORDER, ["error", 500], ["error", 500], {
     full: true,
@@ -205,10 +185,10 @@ const TOKENS: TokenDef[] = [
   // toasts, command palettes. This is what the split neutrals buy — a light
   // theme can reach for a properly-built dark grey instead of the far end of
   // its own ramp.
-  t("bg-inverse", "Tooltip, toast", BG, ["neutral-dark", 900], ["neutral-light", 100], {
+  t("bg-inverse", "Tooltip, toast", BG, ["neutral", 900], ["neutral", 100], {
     full: true,
   }),
-  t("text-inverse", "Text on a tooltip", TEXT, ["neutral-dark", 50], ["neutral-light", 900], {
+  t("text-inverse", "Text on a tooltip", TEXT, ["neutral", 50], ["neutral", 900], {
     pairWith: "bg-inverse",
     full: true,
   }),
@@ -229,7 +209,7 @@ export function rampIndex(palette: Palette): Record<string, Ramp> {
   if (palette.primaries[0]) index[PRIMARY] = palette.primaries[0]
   for (const r of palette.accents) index[r.name] = r
   if (palette.accents[0]) index["accent"] = palette.accents[0]
-  for (const r of palette.neutrals) index[r.name] = r
+  index["neutral"] = palette.neutral
   for (const r of palette.status) index[r.name] = r
   return index
 }
@@ -503,7 +483,7 @@ const NONE: ReadonlySet<string> = new Set()
 
 /** All ramps as flat name/step pairs, in display order. */
 export function allRamps(palette: Palette): Ramp[] {
-  return [...palette.primaries, ...palette.accents, ...palette.neutrals, ...palette.status]
+  return [...palette.primaries, ...palette.accents, palette.neutral, ...palette.status]
 }
 
 /** The ramps an export should list, honouring the checkboxes. */
@@ -649,7 +629,6 @@ const HUE_NAMES: { hue: number; name: string }[] = [
 
 /** A human color name for a ramp, derived from its mid-step (500) OKLCH hue. */
 function colorName(ramp: Ramp): string {
-  if (NAME_OVERRIDES[ramp.name]) return NAME_OVERRIDES[ramp.name]
   const c = toOklch(getSwatch(ramp, 500).hex)
   if (!c || (c.c ?? 0) < 0.03) return "Neutral"
   const h = c.h ?? 0
@@ -666,12 +645,6 @@ function colorName(ramp: Ramp): string {
 }
 
 // Friendly role labels used to disambiguate ramps that share a color name.
-/** Ramps whose display name can't be derived from hue alone. */
-const NAME_OVERRIDES: Record<string, string> = {
-  "neutral-light": "Neutral Light",
-  "neutral-dark": "Neutral Dark",
-}
-
 const ROLE_LABELS: Record<string, string> = {
   primary: "Brand",
   accent: "Accent",

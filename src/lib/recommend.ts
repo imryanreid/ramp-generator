@@ -15,8 +15,7 @@ export type DsMode = "full" | "basic"
 export type Palette = {
   primaries: Ramp[]
   accents: Ramp[]
-  /** Two neutrals: one tuned for light themes, one for dark. */
-  neutrals: Ramp[]
+  neutral: Ramp
   status: Ramp[]
 }
 
@@ -142,10 +141,7 @@ export function buildPalette(
         ].filter((r): r is Ramp => r !== null)
       : []
 
-  const neutrals = [
-    buildNeutralRamp("neutral-light", baseHue, spec.neutralTint, "light"),
-    buildNeutralRamp("neutral-dark", baseHue, spec.neutralTint, "dark"),
-  ]
+  const neutral = buildNeutralRamp("neutral", baseHue, spec.neutralTint)
 
   // Status chroma: blend a sensible floor with the palette's own saturation,
   // scaled by the scheme's vividness.
@@ -162,7 +158,7 @@ export function buildPalette(
     })
     .filter((r): r is Ramp => r !== null)
 
-  return { primaries, accents, neutrals, status }
+  return { primaries, accents, neutral, status }
 }
 
 // Build a hex seed directly from OKLCH components via a throwaway ramp lookup.

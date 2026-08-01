@@ -28,13 +28,13 @@ artificially vivid. Every generated ramp is then gamut-clamped back into sRGB.
 
 ## What it generates
 
-| Group               | How it's derived                                                                                                                                                                                                                                                                    |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Brand**           | Your color, laid out across 11 steps.                                                                                                                                                                                                                                               |
-| **Accents**         | Rotated off the brand hue by the chosen scheme — complementary, analogous, triadic, split-complementary, or monochromatic. Overridable with a locked hex.                                                                                                                           |
-| **Neutral**         | Two near-grey ramps carrying a trace of the brand hue. `neutral-light` serves light themes; `neutral-dark` carries roughly double the chroma and a compressed lightness range, because greys tuned against white read flat on a dark screen and dark themes rarely want true black. |
-| **Status**          | Success, warning, error, and info anchored at conventional hues, then nudged away from your palette's own hues if they collide — so "error" never reads as "brand".                                                                                                                 |
-| **Semantic tokens** | Usage-first names (surface, border, text, interactive states) mapped onto ramp steps, resolved separately for light and dark.                                                                                                                                                       |
+| Group               | How it's derived                                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Brand**           | Your color, laid out across 11 steps.                                                                                                                               |
+| **Accents**         | Rotated off the brand hue by the chosen scheme — complementary, analogous, triadic, split-complementary, or monochromatic. Overridable with a locked hex.           |
+| **Neutral**         | A near-grey ramp carrying a trace of the brand hue, so greys sit with the palette rather than against it.                                                           |
+| **Status**          | Success, warning, error, and info anchored at conventional hues, then nudged away from your palette's own hues if they collide — so "error" never reads as "brand". |
+| **Semantic tokens** | Usage-first names (surface, border, text, inverse, interactive states) mapped onto ramp steps, resolved separately for light and dark.                              |
 
 ## Contrast is enforced, not just reported
 
@@ -74,16 +74,16 @@ database — the inputs fit in the query string:
 https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 ```
 
-| Param | Meaning                                                                                                                                                                                     |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `b`   | Brand hex, no `#`. Required.                                                                                                                                                                |
-| `a`   | Accent hex, no `#`. Optional — omit to auto-derive from the scheme.                                                                                                                         |
-| `m`   | Scope: `full` or `basic`.                                                                                                                                                                   |
-| `s`   | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic`                                                                                                                |
-| `c`   | Contrast target: `AA` (4.5:1) or `AAA` (7:1).                                                                                                                                               |
-| `f`   | Colour notation: `oklch` (default), `hex`, `rgb`, `hsl`. Drives display and the CSS/Tailwind/JSON exports.                                                                                  |
-| `xr`  | Ramps left out of the export, dot-separated — e.g. `accent-2.info`. Ramp names are `primary`, `accent`, `accent-2`, `neutral-light`, `neutral-dark`, `success`, `warning`, `error`, `info`. |
-| `xt`  | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`.                                                                                                                      |
+| Param | Meaning                                                                                                                                                               |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `b`   | Brand hex, no `#`. Required.                                                                                                                                          |
+| `a`   | Accent hex, no `#`. Optional — omit to auto-derive from the scheme.                                                                                                   |
+| `m`   | Scope: `full` or `basic`.                                                                                                                                             |
+| `s`   | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic`                                                                                          |
+| `c`   | Contrast target: `AA` (4.5:1) or `AAA` (7:1).                                                                                                                         |
+| `f`   | Colour notation: `oklch` (default), `hex`, `rgb`, `hsl`. Drives display and the CSS/Tailwind/JSON exports.                                                            |
+| `xr`  | Ramps left out of the export, dot-separated — e.g. `accent-2.info`. Ramp names are `primary`, `accent`, `accent-2`, `neutral`, `success`, `warning`, `error`, `info`. |
+| `xt`  | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`.                                                                                                |
 
 Malformed params are dropped individually, so a bad link degrades to defaults
 rather than erroring.

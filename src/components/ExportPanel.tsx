@@ -22,7 +22,14 @@ import {
 import type { Palette } from "../lib/recommend"
 import { cn } from "../lib/utils"
 import CopyText from "./CopyText"
-import { ArrowLeft, Code, DownloadSimple, Sparkle, CaretRight } from "@phosphor-icons/react"
+import {
+  ArrowLeft,
+  Code,
+  DownloadSimple,
+  Sparkle,
+  CaretRight,
+  Printer,
+} from "@phosphor-icons/react"
 
 type Stage = "choose" | "code" | "prompt"
 type Tab = "css" | "tailwind" | "figma" | "json"
@@ -115,10 +122,12 @@ export default function ExportPanel({
   palette,
   options,
   shareHref,
+  onPrint,
 }: {
   palette: Palette
   options: ExportOptions
   shareHref: string
+  onPrint: () => void
 }) {
   const [stage, setStage] = useState<Stage>("choose")
   const omitted = (options.excludedRamps?.size ?? 0) + (options.excludedTokens?.size ?? 0)
@@ -133,7 +142,7 @@ export default function ExportPanel({
         exit={{ opacity: 0, y: -4 }}
         transition={{ duration: 0.16, ease: "easeOut" }}
       >
-        {stage === "choose" && <Chooser onPick={setStage} />}
+        {stage === "choose" && <Chooser onPick={setStage} onPrint={onPrint} />}
         {stage === "code" && (
           <CodeExport palette={palette} options={options} onBack={() => setStage("choose")} />
         )}
@@ -149,9 +158,9 @@ export default function ExportPanel({
 }
 
 /** Step one — how do you want to take this palette out of here? */
-function Chooser({ onPick }: { onPick: (s: Stage) => void }) {
+function Chooser({ onPick, onPrint }: { onPick: (s: Stage) => void; onPrint: () => void }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-3 sm:grid-cols-3">
       <ChoiceCard
         icon={<Code size={22} weight="regular" />}
         title="Export code"
@@ -163,6 +172,12 @@ function Chooser({ onPick }: { onPick: (s: Stage) => void }) {
         title="Copy agent prompt"
         body="A ready-to-paste prompt with a link to this palette, for Claude, GPT, or any coding agent."
         onClick={() => onPick("prompt")}
+      />
+      <ChoiceCard
+        icon={<Printer size={22} weight="regular" />}
+        title="Save as PDF"
+        body="The whole palette as a printable document, via your browser's print dialog."
+        onClick={onPrint}
       />
     </div>
   )

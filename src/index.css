@@ -97,6 +97,61 @@ body {
   height: 16px;
 }
 
+/* ==============================================
+   PRINT
+   Drives the PDF export: the app calls window.print()
+   and the browser handles pagination and Save as PDF.
+   ============================================== */
+@media print {
+  /* Browsers drop background colors when printing, which would turn every
+     swatch into an empty rectangle — the whole point of the document. This is
+     the one rule the export cannot work without. */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Always print the light theme. A dark page floods the paper with ink and
+     the swatches lose their relationship to the surrounding white. */
+  :root.dark {
+    color-scheme: light;
+    --color-paper: #fdfdfc;
+    --color-ink: #16150f;
+    --color-ash: #6b6a63;
+    --color-line: #e6e5df;
+    --color-line-soft: #f0efe9;
+  }
+
+  /* Horizontal scrollers clip their overflow on paper, cutting ramps in half. */
+  .overflow-x-auto,
+  .overflow-auto {
+    overflow: visible !important;
+  }
+  table {
+    min-width: 0 !important;
+  }
+  /* Ramp swatches size to the container rather than a scrollable minimum. */
+  [class*="min-w-[54px]"] {
+    min-width: 0 !important;
+  }
+
+  /* Don't split a ramp, a token row, or a section across a page boundary. */
+  section,
+  tr {
+    break-inside: avoid;
+  }
+  /* Repeat the column headers — the token table runs to several pages. */
+  thead {
+    display: table-header-group;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}
+
 /* Reference the theme vars so selection inverts correctly in dark mode. */
 ::selection {
   background: var(--color-ink);

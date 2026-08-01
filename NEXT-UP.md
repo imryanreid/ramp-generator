@@ -59,6 +59,26 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — PDF export; neutral split reverted
+
+- **PDF export** via a print stylesheet and `window.print()`. No dependency;
+  the browser paginates and offers Save as PDF. The rule the whole thing hangs
+  on is `print-color-adjust: exact` — without it browsers drop backgrounds and
+  every swatch prints as an empty rectangle. Also unsets the `overflow-x-auto`
+  scrollers (they clip on paper), repeats the token table header per page,
+  avoids breaking inside a ramp, and forces the light theme.
+- **Neutral split reverted** to a single `neutral` ramp. `neutral-light` /
+  `neutral-dark` didn't achieve what it was meant to.
+- **`bg-inverse` / `text-inverse` kept** — they work fine against one ramp
+  (neutral-900 surface in light, neutral-100 in dark) at 11.7:1 / 10.6:1.
+- The audit fixes survived the revert: `bg-muted` still has its own step, and
+  the text ladder still reads 10.6 / 7.8 / 5.6 in light.
+- **Excluded ramps now show a raw value in RAMP view**, since that's what the
+  exporters emit for them. Pointing at a scale the consumer won't receive was
+  misleading.
+- Reset → Undo is one element that eases its width and crossfades its label,
+  rather than swapping between two elements.
+
 ### 2026-08-01 — Split neutrals and inverse tokens
 
 - **`neutral` became `neutral-light` + `neutral-dark`.** Dark carries double the
