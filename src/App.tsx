@@ -273,7 +273,15 @@ export default function App() {
                       : undefined
                   }
                 >
-                  <SchemeSelect scheme={scheme} onChange={setScheme} />
+                  <SchemeSelect
+                    scheme={scheme}
+                    onChange={(next) => {
+                      setScheme(next)
+                      // Picking a derivation is a request for it to drive the
+                      // accent, so a pinned accent hands control back.
+                      setAccentOverride(null)
+                    }}
+                  />
                 </div>
               </div>
             </div>
