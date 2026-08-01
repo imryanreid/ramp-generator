@@ -35,10 +35,10 @@ type Tab = "css" | "tailwind" | "figma" | "json"
 type ColorMode = "light" | "dark"
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "css", label: "CSS variables" },
-  { id: "tailwind", label: "Tailwind v4" },
-  { id: "figma", label: "Figma variables" },
-  { id: "json", label: "JSON tokens" },
+  { id: "css", label: "CSS" },
+  { id: "tailwind", label: "Tailwind" },
+  { id: "figma", label: "Figma" },
+  { id: "json", label: "JSON" },
 ]
 
 // Filename + mime per tab. Figma/JSON download as .json (what import plugins

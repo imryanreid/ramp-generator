@@ -205,7 +205,9 @@ export default function App() {
         <div className="mx-auto max-w-[1400px] px-6 py-10 lg:px-10 lg:py-14">
         {/* Controls — top row */}
         <section className="mb-12 border-b border-line pb-10">
-          <div className="mb-8 flex items-start justify-between gap-4">
+          {/* Narrow screens put the action stack on its own line above the
+              title, rather than squeezing the header copy into a sliver. */}
+          <div className="mb-8 flex flex-col-reverse items-start gap-5 sm:flex-row sm:justify-between sm:gap-4">
             <header>
               <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ash">
                 ramps.studio

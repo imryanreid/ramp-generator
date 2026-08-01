@@ -90,7 +90,9 @@ function RampRow({
       </div>
       <div
         className={cn(
-          "flex min-w-0 gap-1 pb-1 transition-opacity",
+          // Below `sm` the 11 steps would crush to ~40px each and the labels
+          // would collide, so the row scrolls instead.
+          "flex gap-1 overflow-x-auto pb-1 transition-opacity",
           included ? "opacity-100" : "opacity-35",
         )}
       >
@@ -102,11 +104,11 @@ function RampRow({
               key={s.step}
               value={value}
               title={`Copy ${ramp.name}-${s.step} · ${value}`}
-              className="group min-w-0 flex-1 basis-0"
+              className="group min-w-[54px] flex-1 basis-0 sm:min-w-0"
             >
               {(copied) => (
                 <div
-                  className="flex h-20 flex-col justify-between overflow-hidden rounded-md p-2 text-left ring-1 ring-inset ring-black/5"
+                  className="flex h-16 flex-col justify-between overflow-hidden rounded-md p-2 text-left ring-1 ring-inset ring-black/5 sm:h-20"
                   style={{ backgroundColor: s.hex, color: fg }}
                 >
                   <div className="flex items-center justify-between text-[10px] font-medium">
@@ -128,7 +130,8 @@ function RampRow({
                     </span>
                     {s.isSource && (
                       <span
-                        className="rounded-full px-1 py-px text-[8px] uppercase tracking-wide ring-1"
+                        // No room for this beside the step number on mobile.
+                        className="hidden rounded-full px-1 py-px text-[8px] uppercase tracking-wide ring-1 sm:inline-block"
                         style={{ borderColor: fg }}
                       >
                         base
