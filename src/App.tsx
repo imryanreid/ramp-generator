@@ -23,6 +23,7 @@ import SchemeSelect from "./components/SchemeSelect"
 import {
   buildPalette,
   deriveAccentHex,
+  deriveAccent2Hex,
   type DsMode,
   type Scheme,
   type Palette,
@@ -80,6 +81,9 @@ export default function App() {
   const [accentOverride, setAccentOverride] = useState<string | null>(
     initial.accentOverride ?? DEFAULT_STATE.accentOverride,
   )
+  const [accent2Override, setAccent2Override] = useState<string | null>(
+    initial.accent2Override ?? DEFAULT_STATE.accent2Override,
+  )
   const [mode, setMode] = useState<DsMode>(initial.mode ?? DEFAULT_STATE.mode)
   const [scheme, setScheme] = useState<Scheme>(initial.scheme ?? DEFAULT_STATE.scheme)
   const [compliance, setCompliance] = useState<Compliance>(
@@ -106,6 +110,7 @@ export default function App() {
   const shareState: ShareState = {
     brand,
     accentOverride,
+    accent2Override,
     mode,
     scheme,
     compliance,
@@ -132,6 +137,7 @@ export default function App() {
   const applyState = (next: ShareState) => {
     setBrand(next.brand)
     setAccentOverride(next.accentOverride)
+    setAccent2Override(next.accent2Override)
     setMode(next.mode)
     setScheme(next.scheme)
     setCompliance(next.compliance)
@@ -153,11 +159,12 @@ export default function App() {
     undoSnapshot.current = null
   }
 
-  const accentLocked = accentOverride !== null
+  const accentLocked = accentOverride !== null || accent2Override !== null
   const autoAccent = useMemo(() => deriveAccentHex(brand, scheme), [brand, scheme])
+  const autoAccent2 = useMemo(() => deriveAccent2Hex(brand, scheme), [brand, scheme])
   const palette = useMemo(
-    () => buildPalette(brand, accentOverride, mode, scheme),
-    [brand, accentOverride, mode, scheme],
+    () => buildPalette(brand, accentOverride, mode, scheme, accent2Override),
+    [brand, accentOverride, mode, scheme, accent2Override],
   )
 
   // True while the visitor is still looking at the untouched default palette.
@@ -166,6 +173,7 @@ export default function App() {
   const isDefault =
     brand === DEFAULT_STATE.brand &&
     accentOverride === DEFAULT_STATE.accentOverride &&
+    accent2Override === DEFAULT_STATE.accent2Override &&
     mode === DEFAULT_STATE.mode &&
     scheme === DEFAULT_STATE.scheme &&
     compliance === DEFAULT_STATE.compliance &&
@@ -290,7 +298,7 @@ export default function App() {
 
             {/* Controls — single row */}
             <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
-              <BrandField brand={brand} onBrandChange={setBrand} />
+              <BrandField brand={brand} format={format} onBrandChange={setBrand} />
 
               {/*
               Accent and Derivation are coupled: while the accent is on Auto,
@@ -300,12 +308,20 @@ export default function App() {
               accent-2, the neutral tint and status vividness, so it stays
               selectable rather than being disabled outright.
             */}
-              <div className="flex min-w-[300px] flex-1 flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
+              <div className="flex min-w-[300px] flex-[2] flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
                 <AccentField
                   accentOverride={accentOverride}
+                  accent2Override={accent2Override}
                   autoAccent={autoAccent}
+                  autoAccent2={autoAccent2}
+                  showAccent2={mode === "full"}
+                  format={format}
                   onAccentChange={setAccentOverride}
-                  onAccentReset={() => setAccentOverride(null)}
+                  onAccent2Change={setAccent2Override}
+                  onReset={() => {
+                    setAccentOverride(null)
+                    setAccent2Override(null)
+                  }}
                 />
                 <div
                   aria-hidden="true"
@@ -329,8 +345,9 @@ export default function App() {
                       onChange={(next) => {
                         setScheme(next)
                         // Picking a derivation is a request for it to drive the
-                        // accent, so a pinned accent hands control back.
+                        // accents, so pinned accents hand control back.
                         setAccentOverride(null)
+                        setAccent2Override(null)
                       }}
                     />
                   </div>

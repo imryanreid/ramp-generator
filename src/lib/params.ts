@@ -22,6 +22,8 @@ import type { Compliance } from "./semantics.js"
 export type ShareState = {
   brand: string
   accentOverride: string | null
+  /** Pinned tertiary accent, or null to derive it from the scheme. */
+  accent2Override: string | null
   mode: DsMode
   scheme: Scheme
   compliance: Compliance
@@ -37,6 +39,7 @@ export type ShareState = {
 export const DEFAULT_STATE: ShareState = {
   brand: "#3d7dff",
   accentOverride: null,
+  accent2Override: null,
   mode: "full",
   scheme: "complementary",
   compliance: "AA",
@@ -77,6 +80,7 @@ export function encodeShareState(s: ShareState): string {
   const p = new URLSearchParams()
   p.set("b", s.brand.replace("#", ""))
   if (s.accentOverride) p.set("a", s.accentOverride.replace("#", ""))
+  if (s.accent2Override) p.set("a2", s.accent2Override.replace("#", ""))
   p.set("m", s.mode)
   p.set("s", s.scheme)
   p.set("c", s.compliance)
@@ -96,6 +100,9 @@ export function decodeShareState(search: string): Partial<ShareState> {
 
   const a = p.get("a")
   if (a && HEX.test(a)) out.accentOverride = `#${a.toLowerCase()}`
+
+  const a2 = p.get("a2")
+  if (a2 && HEX.test(a2)) out.accent2Override = `#${a2.toLowerCase()}`
 
   const m = p.get("m")
   if (m === "full" || m === "basic") out.mode = m

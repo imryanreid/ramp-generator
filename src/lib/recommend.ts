@@ -110,6 +110,12 @@ export function deriveAccentHex(brand: string, scheme: Scheme = "complementary")
   return hexFromHue(rotate(hue, SCHEME_SPECS[scheme].accent), chroma, 0.637)
 }
 
+/** The auto-derived tertiary accent, on the same terms as `deriveAccentHex`. */
+export function deriveAccent2Hex(brand: string, scheme: Scheme = "complementary"): string {
+  const { hue, chroma } = baseComponents(brand)
+  return hexFromHue(rotate(hue, SCHEME_SPECS[scheme].tertiary), chroma, 0.637)
+}
+
 /**
  * Derive a full palette from a brand color, an optional accent override, and a
  * derivation scheme.
@@ -124,6 +130,7 @@ export function buildPalette(
   accentOverride: string | null,
   mode: DsMode,
   scheme: Scheme = "complementary",
+  accent2Override: string | null = null,
 ): Palette {
   const spec = SCHEME_SPECS[scheme]
   const brandRamp = buildRamp("primary", brand)
@@ -137,7 +144,7 @@ export function buildPalette(
     mode === "full"
       ? [
           buildRamp("accent", accentHex),
-          buildRamp("accent-2", hexFromHue(rotate(baseHue, spec.tertiary), baseChroma, 0.637)),
+          buildRamp("accent-2", accent2Override ?? deriveAccent2Hex(brand, scheme)),
         ].filter((r): r is Ramp => r !== null)
       : []
 

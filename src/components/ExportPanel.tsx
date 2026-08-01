@@ -22,14 +22,7 @@ import {
 import type { Palette } from "../lib/recommend"
 import { cn } from "../lib/utils"
 import CopyText from "./CopyText"
-import {
-  ArrowLeft,
-  Code,
-  DownloadSimple,
-  Sparkle,
-  CaretRight,
-  Printer,
-} from "@phosphor-icons/react"
+import { ArrowLeft, Code, DownloadSimple, Sparkle, CaretRight } from "@phosphor-icons/react"
 
 type Stage = "choose" | "code" | "prompt"
 type Tab = "css" | "tailwind" | "figma" | "json"
@@ -158,9 +151,11 @@ export default function ExportPanel({
 }
 
 /** Step one — how do you want to take this palette out of here? */
-function Chooser({ onPick, onPrint }: { onPick: (s: Stage) => void; onPrint: () => void }) {
+// `onPrint` is kept wired but unexposed: the print stylesheet works, but the
+// PDF output needs design work before it earns a place in this menu.
+function Chooser({ onPick }: { onPick: (s: Stage) => void; onPrint: () => void }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2">
       <ChoiceCard
         icon={<Code size={22} weight="regular" />}
         title="Export code"
@@ -172,12 +167,6 @@ function Chooser({ onPick, onPrint }: { onPick: (s: Stage) => void; onPrint: () 
         title="Copy agent prompt"
         body="A ready-to-paste prompt with a link to this palette, for Claude, GPT, or any coding agent."
         onClick={() => onPick("prompt")}
-      />
-      <ChoiceCard
-        icon={<Printer size={22} weight="regular" />}
-        title="Save as PDF"
-        body="The whole palette as a printable document, via your browser's print dialog."
-        onClick={onPrint}
       />
     </div>
   )

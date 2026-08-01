@@ -139,8 +139,11 @@ export function hexToSrgbComponents(hex: string): [number, number, number] {
 /** Normalize loose hex input ("#abc", "abc", "aabbcc") to a full hex, or null. */
 export function normalizeHex(input: string): string | null {
   const trimmed = input.trim()
-  const withHash = trimmed.startsWith("#") ? trimmed : `#${trimmed}`
-  const parsed = parse(withHash)
+  if (!trimmed) return null
+  // A bare hex is the only form that needs the "#" put back; anything else is
+  // already a complete CSS colour (`oklch(...)`, `rgb(...)`, a named colour).
+  const candidate = /^[0-9a-f]{3,8}$/i.test(trimmed) ? `#${trimmed}` : trimmed
+  const parsed = parse(candidate)
   if (!parsed) return null
   return formatHex(parsed)
 }

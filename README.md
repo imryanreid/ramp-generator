@@ -78,6 +78,7 @@ https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `b`   | Brand hex, no `#`. Required.                                                                                                                                          |
 | `a`   | Accent hex, no `#`. Optional — omit to auto-derive from the scheme.                                                                                                   |
+| `a2`  | Tertiary accent hex, no `#`. Optional — omit to derive it from the scheme.                                                                                            |
 | `m`   | Scope: `full` or `basic`.                                                                                                                                             |
 | `s`   | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic`                                                                                          |
 | `c`   | Contrast target: `AA` (4.5:1) or `AAA` (7:1).                                                                                                                         |

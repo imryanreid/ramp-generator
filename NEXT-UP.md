@@ -59,6 +59,25 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — Second accent picker; format-aware inputs; PDF hidden
+
+- **`accent-2` is pinnable** via a second picker in the accent block and a new
+  `a2=` param. One Auto/Manual switch governs both accents — splitting them
+  would add two states to explain for a case nobody asked for. Changing the
+  derivation still releases both.
+- **The brand and accent inputs follow the Format selector**, so picking OKLCH
+  no longer leaves hex fields underneath it. `normalizeHex` now accepts any CSS
+  notation, so a field showing `oklch(...)` takes one back, as well as a pasted
+  hex, `rgb()` or `hsl()`.
+  **Known rough edge:** two accent fields side by side can't show a full
+  `oklch(...)` string — it truncates. The swatch still conveys the colour and
+  the field is editable, and hex fits fine, but it's not ideal. Widening the
+  accent block further, stacking the two fields, or showing an abbreviated form
+  are the options.
+- **PDF export is hidden**, not removed. The print stylesheet works and is
+  committed; `onPrint` is still wired through `ExportPanel`. Re-adding the
+  choice card is a few lines once the output has had design attention.
+
 ### 2026-08-01 — PDF export; neutral split reverted
 
 - **PDF export** via a print stylesheet and `window.print()`. No dependency;
