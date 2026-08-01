@@ -89,4 +89,5 @@ build time rather than fetched separately.
 
 | File              | What it does                                                                                                     |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `share.png` | The social card, committed so the README renders without depending on the deployment being up. Regenerate from `/api/og` if the design changes. |
 | `DESIGN-NOTES.md` | The original build plans, kept as history — useful for understanding why the color math is shaped the way it is. |

@@ -2,6 +2,8 @@
 
 **[ramps.studio](https://www.ramps.studio)**
 
+[![Perceptually-even OKLCH color ramps generated from one brand color](docs/share.png)](https://www.ramps.studio)
+
 Pick one brand color. Get a complete design system: perceptually-even OKLCH
 ramps, derived accents, a matched neutral, status colors, and usage-first
 semantic tokens for light and dark — exportable as CSS custom properties, a
