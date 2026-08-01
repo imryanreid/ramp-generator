@@ -72,6 +72,16 @@ export async function GET(request: Request): Promise<Response> {
       `$1${escapeHtml(summary)}$2`,
     )
     .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${escapeHtml(canonical)}$2`)
+    // Keep parameterized palettes out of the search index. Each one is
+    // self-canonical so it shares and unfurls correctly, but `?b=` is an
+    // unbounded parameter space and letting a crawler wander it would bloat the
+    // index of a site with exactly one real page. `follow` keeps outbound links
+    // live, and this says nothing to agents — they fetch and read regardless of
+    // indexing directives.
+    .replace(
+      /<meta name="robots" content="[^"]*" \/>/,
+      '<meta name="robots" content="noindex, follow" />',
+    )
 
   // Both shapes on purpose: HTML-to-markdown conversion — what most agents do
   // before reading a page — strips <script>, so JSON alone would be invisible

@@ -46,8 +46,14 @@ to it. Every absolute URL in the codebase must match — see the note in
 - **Fonts total ~118 KB** for the Latin subsets of three families (Geist, Inter,
   JetBrains Mono). Self-hosted, so no third-party round trip, but if load time
   ever matters more than the type choices, dropping to two families is the lever.
-- **oxfmt** is still the formatter, inherited from the Figma scaffold. It works;
-  it's just an unusual choice. Swapping to Prettier was considered and declined.
+- **There is no working formatter.** oxfmt (0.2.0, inherited from the Figma
+  scaffold) **corrupts the code**: it strips the separators inside single-line
+  TypeScript type literals, turning `{ title: string; description: string }`
+  into `{ title: string description: string }`. Running it produced six syntax
+  errors across `App.tsx` and `semantics.ts` and broke the build. The `format`
+  script now fails loudly instead of running it. Prettier is the obvious
+  replacement — declined earlier on style grounds, but that was before this was
+  a correctness problem.
 
 ---
 
