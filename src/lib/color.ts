@@ -46,7 +46,16 @@ const round = (n: number, places = 0) => {
  * so a ramp step and a semantic token that resolve to the same color always
  * render identically. Falls back to the input if it can't be parsed.
  */
-export function formatColor(hex: string, format: ColorFormat = "hex"): string {
+export function formatColor(
+  hex: string,
+  format: ColorFormat = "hex",
+  /**
+   * Drop the CSS function wrapper — `62% 0.205 262.4` rather than
+   * `oklch(62% 0.205 262.4)`. For narrow fields where the Format control
+   * already says which notation this is, so the wrapper is redundant.
+   */
+  compact = false,
+): string {
   if (format === "hex") return hex
   const parsed = parse(hex)
   if (!parsed) return hex
@@ -54,16 +63,19 @@ export function formatColor(hex: string, format: ColorFormat = "hex"): string {
   if (format === "oklch") {
     const c = oklch(parsed)
     if (!c) return hex
-    return `oklch(${round((c.l ?? 0) * 100, 1)}% ${round(c.c ?? 0, 3)} ${round(c.h ?? 0, 1)})`
+    const body = `${round((c.l ?? 0) * 100, 1)}% ${round(c.c ?? 0, 3)} ${round(c.h ?? 0, 1)}`
+    return compact ? body : `oklch(${body})`
   }
   if (format === "rgb") {
     const c = rgb(parsed)
     if (!c) return hex
-    return `rgb(${round((c.r ?? 0) * 255)} ${round((c.g ?? 0) * 255)} ${round((c.b ?? 0) * 255)})`
+    const body = `${round((c.r ?? 0) * 255)} ${round((c.g ?? 0) * 255)} ${round((c.b ?? 0) * 255)}`
+    return compact ? body : `rgb(${body})`
   }
   const c = hsl(parsed)
   if (!c) return hex
-  return `hsl(${round(c.h ?? 0, 1)} ${round((c.s ?? 0) * 100, 1)}% ${round((c.l ?? 0) * 100, 1)}%)`
+  const body = `${round(c.h ?? 0, 1)} ${round((c.s ?? 0) * 100, 1)}% ${round((c.l ?? 0) * 100, 1)}%`
+  return compact ? body : `hsl(${body})`
 }
 export type Step = (typeof STEPS)[number]
 
@@ -146,6 +158,17 @@ export function normalizeHex(input: string): string | null {
   const parsed = parse(candidate)
   if (!parsed) return null
   return formatHex(parsed)
+}
+
+/**
+ * Parse whatever a user typed into a colour field, tolerating the compact form
+ * the field itself shows at rest. Someone who reads `62% 0.205 262.4` and types
+ * it back should not be told it's invalid.
+ */
+export function parseColorInput(raw: string, format: ColorFormat = "hex"): string | null {
+  const direct = normalizeHex(raw)
+  if (direct || format === "hex") return direct
+  return normalizeHex(`${format}(${raw.trim()})`)
 }
 
 function oklchToHex(l: number, c: number, h: number): string {

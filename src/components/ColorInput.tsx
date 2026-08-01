@@ -7,7 +7,7 @@
 // ==============================================
 import { useEffect, useRef, useState } from "react"
 import { HexColorPicker } from "react-colorful"
-import { normalizeHex, formatColor, type ColorFormat } from "../lib/color"
+import { parseColorInput, formatColor, type ColorFormat } from "../lib/color"
 import { cn } from "../lib/utils"
 
 /**
@@ -127,12 +127,16 @@ function HexField({
   // fighting whatever the user is halfway through typing.
   const [draft, setDraft] = useState<string | null>(null)
   const [invalid, setInvalid] = useState(false)
-  const display = formatColor(color, format)
+  const [focused, setFocused] = useState(false)
+
+  // Compact at rest so two accents fit side by side; the full CSS value on
+  // focus, since that's the form you'd want to read, copy or replace.
+  const display = formatColor(color, format, !focused)
 
   const commit = (raw: string) => {
-    // normalizeHex takes any CSS notation, so a field showing `oklch(...)`
-    // accepts one back — as well as a pasted hex.
-    const hex = normalizeHex(raw)
+    // Takes any CSS notation, so a field showing `oklch(...)` accepts one back,
+    // along with a pasted hex or the compact form shown at rest.
+    const hex = parseColorInput(raw, format)
     setDraft(null)
     if (hex) {
       setInvalid(false)
@@ -162,7 +166,16 @@ function HexField({
           value={draft ?? display}
           spellCheck={false}
           onChange={(e) => setDraft(e.target.value)}
-          onBlur={(e) => commit(e.target.value)}
+          // The value grows on focus, so any click position would be wrong
+          // anyway — selecting it makes that shift deliberate rather than jarring.
+          onFocus={(e) => {
+            setFocused(true)
+            e.target.select()
+          }}
+          onBlur={(e) => {
+            setFocused(false)
+            commit(e.target.value)
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") (e.target as HTMLInputElement).blur()
           }}
