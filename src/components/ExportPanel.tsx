@@ -10,7 +10,15 @@
 // ==============================================
 import { useState, type CSSProperties, type ReactNode } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { toCss, toTailwind, toJson, toFigma, type ExportOptions } from "../lib/semantics"
+import {
+  toCss,
+  toTailwind,
+  toJson,
+  toFigma,
+  missingContrastReferences,
+  type ExportOptions,
+  type ContrastReference,
+} from "../lib/semantics"
 import type { Palette } from "../lib/recommend"
 import { cn } from "../lib/utils"
 import CopyText from "./CopyText"
@@ -60,7 +68,12 @@ function download(filename: string, mime: string, content: string) {
  * whole palette as plain text, so the agent can read it there. The code tab is
  * the fallback for agents that can't browse.
  */
-function agentPrompt(url: string, o: ExportOptions, omitted: number): string {
+function agentPrompt(
+  url: string,
+  o: ExportOptions,
+  omitted: number,
+  references: ContrastReference[],
+): string {
   const compliance = o.compliance ?? "AA"
   const ratio = compliance === "AAA" ? "7:1" : "4.5:1"
   const scope =
@@ -71,9 +84,10 @@ function agentPrompt(url: string, o: ExportOptions, omitted: number): string {
 
 Palette: ${url}
 
-That page contains the complete palette in machine-readable form. Open the
-"Machine-readable palette" section for every ramp step (50-950) and every
-semantic token, resolved for both light and dark themes. It covers ${scope}.
+That page contains the complete palette in machine-readable form — every ramp
+step (50-950) and every semantic token, resolved for both light and dark themes.
+It covers ${scope}. The same data is available as JSON at
+${url.replace("/?", "/api/palette?")}.
 
 When you apply it:
 
@@ -90,7 +104,15 @@ When you apply it:
 - I have deliberately left ${omitted} row(s) out of this palette. Treat what the
   page lists as the complete set — don't add colors back in to fill gaps.`
       : ""
-  }
+  }${references
+    .map(
+      (r) => `
+- ${r.token} is not part of this palette, but ${r.measures.join(", ")} were
+  measured against it (${r.light} light / ${r.dark} dark). If you put a
+  different background behind those, re-check the contrast — the WCAG
+  ${compliance} claim only holds against those values.`,
+    )
+    .join("")}
 
 Set up the tokens first, then use them to style the components we build.`
 }
@@ -106,6 +128,7 @@ export default function ExportPanel({
 }) {
   const [stage, setStage] = useState<Stage>("choose")
   const omitted = (options.excludedRamps?.size ?? 0) + (options.excludedTokens?.size ?? 0)
+  const references = missingContrastReferences(palette, options)
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -122,7 +145,7 @@ export default function ExportPanel({
         )}
         {stage === "prompt" && (
           <PromptExport
-            prompt={agentPrompt(shareHref, options, omitted)}
+            prompt={agentPrompt(shareHref, options, omitted, references)}
             onBack={() => setStage("choose")}
           />
         )}

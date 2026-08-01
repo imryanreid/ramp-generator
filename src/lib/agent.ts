@@ -16,7 +16,12 @@
 // ==============================================
 import { STEPS, getSwatch } from "./color.js"
 import { buildPalette } from "./recommend.js"
-import { resolveTokens, allRamps } from "./semantics.js"
+import {
+  resolveTokens,
+  allRamps,
+  missingContrastReferences,
+  type ContrastReference,
+} from "./semantics.js"
 import { resolveShareState, encodeShareState, type ShareState } from "./params.js"
 
 /**
@@ -52,6 +57,12 @@ type PaletteJson = {
   }
   ramps: Record<string, Record<string, string>>
   tokens: Record<string, { light: string; dark: string; role: string; step: string }>
+  /**
+   * Backgrounds the author excluded that retained foregrounds were still
+   * measured against. Not part of the palette — supplied so the contrast
+   * guarantee stays verifiable.
+   */
+  contrastReferences?: ContrastReference[]
   notes: string[]
 }
 
@@ -69,6 +80,11 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     (t) => !excludedTokens.has(t.token),
   )
   const ratio = state.compliance === "AAA" ? "7:1" : "4.5:1"
+  const references = missingContrastReferences(palette, {
+    mode: state.mode,
+    compliance: state.compliance,
+    excludedTokens,
+  })
 
   const notes = [
     `Every paired foreground meets WCAG ${state.compliance} (${ratio}) against its background. Do not substitute other colors into those pairs.`,
@@ -78,6 +94,11 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
   if (state.excludedRamps.length || state.excludedTokens.length) {
     notes.push(
       `The author deselected ${state.excludedRamps.length} ramp(s) and ${state.excludedTokens.length} token(s). What is listed here is the complete intended palette — do not add colors back to fill gaps.`,
+    )
+  }
+  for (const r of references) {
+    notes.push(
+      `${r.token} is not part of this palette, but ${r.measures.join(", ")} were measured against it (${r.light} light / ${r.dark} dark). If you use a different background behind those, re-check the contrast yourself — the WCAG ${state.compliance} claim above only holds against these values.`,
     )
   }
 
@@ -111,6 +132,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
         },
       ]),
     ),
+    ...(references.length ? { contrastReferences: references } : {}),
     notes,
   }
 

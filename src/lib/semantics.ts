@@ -364,6 +364,56 @@ function selectedTokens(palette: Palette, o: ExportOptions): ResolvedToken[] {
   )
 }
 
+/** A background a retained foreground was measured against, but which isn't exported. */
+export type ContrastReference = {
+  /** The excluded token, e.g. "bg-canvas". */
+  token: string
+  light: string
+  dark: string
+  /** Retained tokens whose contrast guarantee depends on it. */
+  measures: string[]
+}
+
+/**
+ * Contrast guarantees that would otherwise dangle.
+ *
+ * Excluding a background that other tokens are *paired against* is subtler than
+ * excluding a leaf: the foregrounds survive, still carrying "meets WCAG AA/AAA",
+ * but the color that claim was computed against is gone. A consumer then picks
+ * their own background and the guarantee quietly stops holding.
+ *
+ * Rather than force the background back into the palette, exports name it as a
+ * reference value — enough to verify the claim without adding a color the
+ * author deliberately removed.
+ */
+export function missingContrastReferences(
+  palette: Palette,
+  o: ExportOptions = {},
+): ContrastReference[] {
+  const excluded = o.excludedTokens ?? NONE
+  if (excluded.size === 0) return []
+
+  const all = resolveTokens(palette, o.mode ?? "full", o.compliance ?? "AA")
+  const byToken = new Map(all.map((t) => [t.token, t]))
+  const found = new Map<string, ContrastReference>()
+
+  for (const t of all) {
+    if (excluded.has(t.token)) continue
+    if (!t.pairWith || !excluded.has(t.pairWith)) continue
+    const target = byToken.get(t.pairWith)
+    if (!target) continue
+    const entry = found.get(t.pairWith) ?? {
+      token: target.token,
+      light: target.lightHex,
+      dark: target.darkHex,
+      measures: [],
+    }
+    entry.measures.push(t.token)
+    found.set(t.pairWith, entry)
+  }
+  return [...found.values()]
+}
+
 export function toCss(palette: Palette, o: ExportOptions = {}): string {
   const ramps = selectedRamps(palette, o)
   const tokens = selectedTokens(palette, o)

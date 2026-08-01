@@ -88,6 +88,14 @@ Two non-obvious constraints hold this together:
   `<script>` tags, so a JSON-only payload is invisible to exactly the tools this
   exists for.
 
+A third constraint, added later: excluding a token that other tokens are *paired
+against* (`bg-canvas`, `bg-brand`, `bg-accent`) leaves their contrast guarantee
+dangling — the foregrounds survive still claiming AA/AAA, but the color they were
+measured against is gone. `missingContrastReferences` detects that and exports
+name the background as a reference value rather than forcing it back into the
+palette. Same class of bug as the Figma dangling alias; check for it whenever
+exclusions grow new behavior.
+
 Anything touching `api/`, `src/lib/agent.ts`, or `src/lib/params.ts` must be
 verified with a real no-JavaScript fetch. Testing in a browser proves nothing
 here — the browser is the one client that already worked.
