@@ -19,13 +19,19 @@ Both accept the same parameters:
 
 | Param | Required | Values | Meaning |
 | --- | --- | --- | --- |
-| `b` | yes | 6-digit hex, no `#` — e.g. `3d7dff` | Brand color. Everything derives from this. |
-| `a` | no | 6-digit hex, no `#` | Pin the accent. Omit to derive it from `s`. |
+| `b` | no | 6-digit hex, no `#` — e.g. `3d7dff` | Brand color. Everything derives from this. Omitted, you get the default `3d7dff` — pass your own. |
+| `a` | no | 6-digit hex, no `#` | Pin the secondary accent. Omit to derive it from `s`. |
+| `a2` | no | 6-digit hex, no `#` | Pin the tertiary accent. Omit to derive it from `s`. |
 | `m` | no | `full` (default), `basic` | Token scope. `basic` drops hover/active states and subtle surfaces. |
 | `s` | no | `complementary` (default), `analogous`, `triadic`, `split`, `monochromatic` | How accents are rotated off the brand hue. |
 | `c` | no | `AA` (default, 4.5:1), `AAA` (7:1) | Contrast target. Token steps move to satisfy it. |
+| `f` | no | `oklch` (default), `hex`, `rgb`, `hsl` | Notation used by the page and the CSS/Tailwind/JSON exports. The JSON API always reports hex. |
 | `xr` | no | dot-separated ramp names — e.g. `accent-2.info` | Ramps to leave out. |
 | `xt` | no | dot-separated token names — e.g. `bg-info.text-warning` | Semantic tokens to leave out. |
+
+Fetching `https://www.ramps.studio/` with no parameters at all returns a complete
+default palette plus this parameter list, in plain text, with no JavaScript
+required — so a cold start needs nothing but the hostname.
 
 Invalid values are ignored individually and fall back to defaults, so a
 malformed URL still returns a usable palette rather than an error.
@@ -39,10 +45,25 @@ malformed URL still returns a usable palette rather than an error.
   "source": "https://www.ramps.studio/?b=e4572e&m=full&s=analogous&c=AAA",
   "input": { "brand": "#e4572e", "scheme": "analogous", "wcag": "AAA", "...": "..." },
   "ramps": { "primary": { "50": "#...", "950": "#..." }, "neutral": { "...": "..." } },
-  "tokens": { "bg-canvas": { "light": "#...", "dark": "#...", "role": "Page background" } },
+  "tokens": {
+    "bg-canvas": {
+      "light": "#...", "dark": "#...", "role": "Page background",
+      "step": { "light": "neutral-100", "dark": "neutral-950" }
+    },
+    "text-primary": {
+      "light": "#...", "dark": "#...", "role": "Body copy",
+      "step": { "light": "neutral-900", "dark": "neutral-100" },
+      "contrast": { "against": "bg-canvas", "light": 10.6, "dark": 13.99 }
+    }
+  },
   "notes": ["..."]
 }
 ```
+
+`step` names the rung of the ramp each mode resolved to — use it to extend the
+system with values that belong to the same scale. `contrast` is the *measured*
+WCAG 2.1 ratio against the named token, present on every token that pairs with a
+background, so the accessibility claim can be verified rather than trusted.
 
 ## Applying a palette
 

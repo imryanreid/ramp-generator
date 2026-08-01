@@ -9,18 +9,23 @@
 // index.html, so such a rule never fires. Middleware
 // runs before that check.
 //
-// Only "/" is matched, and only URLs carrying ?b=
-// are diverted — the bare homepage stays a static
-// asset with no function in front of it.
+// Every "/" request is diverted, including the bare
+// homepage. That URL is how an agent told to "use
+// ramps.studio" arrives — there's no link to follow
+// yet, so it has to find the default palette and the
+// query-string contract in the page itself. Serving
+// it as a static asset left it with nothing to read.
+//
+// Only "/" is matched, so /index.html is still a
+// plain file and api/render can fetch it as the
+// shell without recursing.
 // ==============================================
-import { next, rewrite } from "@vercel/functions"
+import { rewrite } from "@vercel/functions"
 
 export const config = { matcher: "/" }
 
 export default function middleware(request: Request): Response {
   const url = new URL(request.url)
-  if (!url.searchParams.has("b")) return next()
-
   const target = new URL("/api/render", url)
   target.search = url.search
   return rewrite(target)

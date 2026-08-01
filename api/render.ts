@@ -1,5 +1,5 @@
 // ==============================================
-// GET / (only when the URL carries palette params)
+// GET /
 //
 // The site is a client-rendered SPA, so a plain fetch
 // of a share link used to return an empty <div
@@ -13,8 +13,13 @@
 // the injected block sits outside #root so hydration
 // never touches it.
 //
-// vercel.json routes here only when `?b=` is present,
-// leaving the bare homepage a static asset.
+// The bare homepage comes through here too, carrying
+// the default palette — it's the URL an agent lands
+// on when it was told the tool's name but given no
+// link. Only the *parameterized* URLs get their
+// <head> rewritten to describe their own palette;
+// the homepage keeps the metadata that makes it the
+// site's one indexable page.
 // ==============================================
 import { buildAgentPayload, publicOrigin } from "../src/lib/agent.js"
 import { encodeShareState } from "../src/lib/params.js"
@@ -60,35 +65,44 @@ export async function GET(request: Request): Promise<Response> {
     `${state.scheme} derivation, ${state.mode} scope, WCAG ${state.compliance} contrast. ` +
     `Includes OKLCH ramps and semantic tokens for light and dark, with exact hex values.`
 
-  // Point the canonical at *this* palette rather than the bare homepage, so a
-  // shared link doesn't announce itself as a duplicate of the front page.
-  html = html
-    .replace(
-      /<link rel="canonical" href="[^"]*" \/>/,
-      `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
-    )
-    .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/s, `$1${escapeHtml(summary)}$2`)
-    .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${escapeHtml(canonical)}$2`)
-    // Point the share image at this palette so a link unfurls with its own
-    // colors rather than the default blue.
-    .replace(
-      /(<meta property="og:image" content=")[^"]*(")/,
-      `$1${escapeHtml(`${origin}/api/og?${encodeShareState(state)}`)}$2`,
-    )
-    .replace(
-      /(<meta name="twitter:image" content=")[^"]*(")/,
-      `$1${escapeHtml(`${origin}/api/og?${encodeShareState(state)}`)}$2`,
-    )
-    // Keep parameterized palettes out of the search index. Each one is
-    // self-canonical so it shares and unfurls correctly, but `?b=` is an
-    // unbounded parameter space and letting a crawler wander it would bloat the
-    // index of a site with exactly one real page. `follow` keeps outbound links
-    // live, and this says nothing to agents — they fetch and read regardless of
-    // indexing directives.
-    .replace(
-      /<meta name="robots" content="[^"]*" \/>/,
-      '<meta name="robots" content="noindex, follow" />',
-    )
+  // Only a URL that actually asked for a palette gets its <head> rewritten. The
+  // bare homepage must keep `index, follow` and its own canonical — routing it
+  // through here to pick up the readable block must not quietly deindex the
+  // site's only indexable page.
+  if (url.searchParams.has("b")) {
+    // Point the canonical at *this* palette rather than the bare homepage, so a
+    // shared link doesn't announce itself as a duplicate of the front page.
+    html = html
+      .replace(
+        /<link rel="canonical" href="[^"]*" \/>/,
+        `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
+      )
+      .replace(
+        /(<meta\s+name="description"\s+content=")[^"]*(")/s,
+        `$1${escapeHtml(summary)}$2`,
+      )
+      .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${escapeHtml(canonical)}$2`)
+      // Point the share image at this palette so a link unfurls with its own
+      // colors rather than the default blue.
+      .replace(
+        /(<meta property="og:image" content=")[^"]*(")/,
+        `$1${escapeHtml(`${origin}/api/og?${encodeShareState(state)}`)}$2`,
+      )
+      .replace(
+        /(<meta name="twitter:image" content=")[^"]*(")/,
+        `$1${escapeHtml(`${origin}/api/og?${encodeShareState(state)}`)}$2`,
+      )
+      // Keep parameterized palettes out of the search index. Each one is
+      // self-canonical so it shares and unfurls correctly, but `?b=` is an
+      // unbounded parameter space and letting a crawler wander it would bloat the
+      // index of a site with exactly one real page. `follow` keeps outbound links
+      // live, and this says nothing to agents — they fetch and read regardless of
+      // indexing directives.
+      .replace(
+        /<meta name="robots" content="[^"]*" \/>/,
+        '<meta name="robots" content="noindex, follow" />',
+      )
+  }
 
   // Both shapes on purpose: HTML-to-markdown conversion — what most agents do
   // before reading a page — strips <script>, so JSON alone would be invisible

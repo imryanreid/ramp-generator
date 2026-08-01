@@ -5,6 +5,11 @@
 # palette is computed in the browser from the query string, so crawling is
 # cheap and nothing here is worth hiding.
 
+# If you are an agent: https://www.ramps.studio/llms.txt is the full contract —
+# every query parameter, every ramp and semantic token name, and the JSON
+# endpoint at /api/palette. Fetching the homepage also returns a complete
+# default palette in plain text, with no JavaScript required.
+
 User-agent: *
 Allow: /
 

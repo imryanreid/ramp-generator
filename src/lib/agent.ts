@@ -20,6 +20,7 @@ import {
   resolveTokens,
   allRamps,
   missingContrastReferences,
+  CONTRAST_TARGET,
   type ContrastReference,
 } from "./semantics.js"
 import { resolveShareState, encodeShareState, type ShareState } from "./params.js"
@@ -35,6 +36,9 @@ export function publicOrigin(request: Request): string {
   const proto = request.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "")
   return `${proto}://${host}`
 }
+
+/** Contrast ratios read as "12.4:1"; more precision than that is noise. */
+const round2 = (n: number) => Math.round(n * 100) / 100
 
 export type AgentPayload = {
   state: ShareState
@@ -57,7 +61,27 @@ type PaletteJson = {
     excludedTokens: string[]
   }
   ramps: Record<string, Record<string, string>>
-  tokens: Record<string, { light: string; dark: string; role: string; step: string }>
+  tokens: Record<
+    string,
+    {
+      light: string
+      dark: string
+      role: string
+      /**
+       * Which rung of which ramp each mode landed on. Both are given because
+       * the contrast resolver moves them independently — a token can sit at
+       * neutral-900 in light and neutral-100 in dark, and a single step string
+       * would silently describe only one of them.
+       */
+      step: { light: string; dark: string }
+      /**
+       * Measured WCAG ratios for tokens that name a background. Stated rather
+       * than merely claimed, so a consumer can verify the guarantee instead of
+       * trusting it — or recomputing it themselves.
+       */
+      contrast?: { against: string; light: number; dark: number }
+    }
+  >
   /**
    * Backgrounds the author excluded that retained foregrounds were still
    * measured against. Not part of the palette — supplied so the contrast
@@ -93,8 +117,25 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     excludedTokens,
   })
 
+  // The resolver's last resort is the best contrast a ramp can offer, which may
+  // still fall short. Emitting ratios makes that visible, so the blanket claim
+  // has to name its own exceptions rather than quietly overstating them.
+  const target = CONTRAST_TARGET[state.compliance]
+  const shortfalls = tokens.filter(
+    (t) =>
+      t.pairWith &&
+      ((t.lightRatio !== undefined && t.lightRatio < target) ||
+        (t.darkRatio !== undefined && t.darkRatio < target)),
+  )
+
   const notes = [
-    `Every paired foreground meets WCAG ${state.compliance} (${ratio}) against its background. Do not substitute other colors into those pairs.`,
+    shortfalls.length
+      ? `Every paired foreground meets WCAG ${state.compliance} (${ratio}) against its background, except ${shortfalls
+          .map((t) => t.token)
+          .join(
+            ", ",
+          )} — those ramps cannot reach the target, and the ratio given is the best available. Do not substitute other colors into those pairs.`
+      : `Every paired foreground meets WCAG ${state.compliance} (${ratio}) against its background — the measured ratio is stated per token. Do not substitute other colors into those pairs.`,
     "Prefer the semantic tokens over raw ramp steps; they already carry the light/dark mapping.",
     "Ramps are OKLCH-derived and perceptually even. Use these hex values verbatim rather than re-deriving them.",
   ]
@@ -149,7 +190,19 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
           light: t.lightHex,
           dark: t.darkHex,
           role: t.role,
-          step: `${t.light.ramp}-${t.light.step}`,
+          step: {
+            light: `${t.light.ramp}-${t.light.step}`,
+            dark: `${t.dark.ramp}-${t.dark.step}`,
+          },
+          ...(t.pairWith && t.lightRatio !== undefined && t.darkRatio !== undefined
+            ? {
+                contrast: {
+                  against: t.pairWith,
+                  light: round2(t.lightRatio),
+                  dark: round2(t.darkRatio),
+                },
+              }
+            : {}),
         },
       ]),
     ),
@@ -169,23 +222,59 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     lines.push(`  ${r.name}:`)
     lines.push(`    ${STEPS.map((s) => `${s}=${getSwatch(r, s).hex}`).join("  ")}`)
   }
-  lines.push("", "SEMANTIC TOKENS (token · light · dark · role)")
-  let category = ""
+  lines.push("", "SEMANTIC TOKENS (token · light · dark · ramp step · contrast · role)")
+  // Grouped rather than emitted in declaration order: the inverse tokens are
+  // declared last but belong to the Background and Text categories, which in
+  // source order would print those two headers a second time. Anything parsing
+  // this into a dict keyed by group would drop the first of each pair.
+  const byCategory = new Map<string, typeof tokens>()
   for (const t of tokens) {
-    if (t.category !== category) {
-      category = t.category
-      lines.push(`  [${category}]`)
+    const group = byCategory.get(t.category)
+    if (group) group.push(t)
+    else byCategory.set(t.category, [t])
+  }
+  for (const [category, group] of byCategory) {
+    lines.push(`  [${category}]`)
+    for (const t of group) {
+      // The step is what lets a reader extend the system consistently — it says
+      // which rung of which ramp a token came from, not just its value. Both
+      // modes are shown ("neutral-900/100") since the resolver moves them
+      // independently; the ramp is always the same in each.
+      const step =
+        t.light.step === t.dark.step
+          ? `${t.light.ramp}-${t.light.step}`
+          : `${t.light.ramp}-${t.light.step}/${t.dark.step}`
+      const ratios =
+        t.pairWith && t.lightRatio !== undefined && t.darkRatio !== undefined
+          ? `${round2(t.lightRatio)}:1/${round2(t.darkRatio)}:1 vs ${t.pairWith}`
+          : "—"
+      lines.push(
+        `    ${t.token.padEnd(20)} ${t.lightHex}  ${t.darkHex}  ${step.padEnd(18)} ${ratios.padEnd(30)} ${t.role}`,
+      )
     }
-    lines.push(`    ${t.token.padEnd(20)} ${t.lightHex}  ${t.darkHex}  ${t.role}`)
   }
   lines.push("", "NOTES")
   for (const n of notes) lines.push(`  - ${n}`)
+  // The URL contract, spelled out rather than linked. This is the only place a
+  // cold-start reader — one that was told the tool's name but handed no link —
+  // can learn how to ask for a palette of its own.
   lines.push(
     "",
     "REGENERATE WITH DIFFERENT INPUTS",
-    `  ${origin}/?b=<brand hex, no #>&m=full|basic&s=complementary|analogous|triadic|split|monochromatic&c=AA|AAA`,
-    `  JSON: ${origin}/api/palette?b=<brand hex, no #>`,
-    `  Full contract: ${origin}/llms.txt`,
+    `  ${origin}/?b=<brand hex, no #>&m=<scope>&s=<scheme>&c=<wcag>`,
+    "",
+    "    b   brand color, 6-digit hex without the leading # (required; defaults to 3d7dff)",
+    "    a   pin the secondary accent, hex without # (optional; derived from the scheme otherwise)",
+    "    a2  pin the tertiary accent, hex without # (optional; derived otherwise)",
+    "    m   scope: full | basic                                    (default full)",
+    "    s   scheme: complementary | analogous | triadic | split | monochromatic (default complementary)",
+    "    c   WCAG target: AA | AAA                                  (default AA)",
+    "    f   notation: oklch | hex | rgb | hsl                      (default oklch)",
+    "    xr  ramps to omit, dot-separated names, e.g. xr=accent-2.info",
+    "    xt  tokens to omit, dot-separated names, e.g. xt=bg-info.text-info",
+    "",
+    `  Same palette as JSON: ${origin}/api/palette?b=<brand hex, no #>`,
+    `  Full machine-readable contract, including every token name: ${origin}/llms.txt`,
   )
 
   return { state, json, text: lines.join("\n") }
