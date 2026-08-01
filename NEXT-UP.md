@@ -32,15 +32,22 @@ to it. Every absolute URL in the codebase must match — see the note in
 5. ~~Verify the domain in Google Search Console.~~ **Done 2026-08-01.** Set up
    as a **Domain property** on `ramps.studio` (covers the apex, `www`, and any
    subdomain), verified by a root TXT record alongside the existing SPF record.
-   **Still to do:** submit `https://www.ramps.studio/sitemap.xml` in the Search
-   Console UI. The site was `noindex` for its whole life under Figma Make, so
-   it has never been crawled — expect indexing to take days, not hours.
+6. ~~Submit the sitemap.~~ **Done 2026-08-01.** The site was `noindex` for its
+   whole life under Figma Make, so it has never been crawled — expect indexing
+   to take days, not hours.
+
+Nothing outside the codebase is outstanding.
 
 ## Known gaps / deliberate omissions
 
-- **`og:title`, `twitter:title` and the JSON-LD `name` still say "Ramp
-  Generator"** while the tab title says "Color Ramp & Semantics Generator".
-  Flagged, not actioned — decide on one name and apply it in `index.html`.
+- **Naming is settled at three levels** — don't reintroduce a fourth. "Ramps
+  Studio" is the brand (`og:site_name`, `llms.txt`, the agent payload, the
+  share-image eyebrow); "Color Ramp Generator" is the product (the in-app
+  header, the share-image headline); "Color Ramp & Semantics Generator" is the
+  descriptive title (`<title>`, `og:title`, `twitter:title`, JSON-LD `name`).
+  The README H1 still says plain "Ramp Generator" — left alone deliberately,
+  since renaming it to "Ramps Studio" would duplicate the link on the line
+  below. Change it to "Color Ramp Generator" if you want it to match the app.
 - **At AAA the status fills darken substantially.** Pairing labels to them means
   the resolver moves the fill when a label can't reach 7:1 from either end of
   the ramp; on `?b=3d7dff&c=AAA` the status fills drop 2–3 steps in light and
