@@ -85,6 +85,23 @@ Two non-obvious constraints, both easy to undo by accident:
 Anything touching `api/`, `agent.ts`, or `params.ts` must be verified with a real
 no-JavaScript fetch — a browser check proves nothing here.
 
+**Two Vercel gotchas this cost a deploy each — don't relearn them:**
+
+1. **A `vercel.json` rewrite on `/` never fires.** Rewrites are evaluated after
+   the filesystem check, and `index.html` already satisfies `/`. Routing
+   Middleware runs before that check, which is why `middleware.ts` exists.
+2. **Functions transpile, they don't bundle.** With `"type": "module"`, Node ESM
+   needs explicit extensions on relative imports or the function dies at runtime
+   with `ERR_MODULE_NOT_FOUND`. Everything in `src/lib` and `api` therefore
+   imports with `.js`; Vite and TS `bundler` resolution map that back to `.ts`.
+
+**Verified live:** a plain fetch of a palette URL returns 15,090 bytes with the
+full palette (was 4,871 with none). The bare homepage is untouched at 4,871
+bytes / ~200 ms — middleware only diverts URLs carrying `?b=`. Canonical,
+`og:url`, and the description are rewritten per palette. An agent fetch that
+previously returned only the page title now returns the brand color, the WCAG
+level, and exact light/dark hex values.
+
 ### 2026-08-01 — Per-row export selection
 
 - **Checkboxes on all 45 rows** (8 ramps + 37 tokens), plus mixed-state toggles
