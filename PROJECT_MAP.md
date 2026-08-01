@@ -10,7 +10,7 @@
 | File | What it does |
 | --- | --- |
 | `index.html` | The page shell Vite builds around. Holds the real `<title>`, description, canonical URL, Open Graph tags, and the JSON-LD block that describes the tool to search engines and agents. |
-| `vercel.json` | Routes `/` to `api/render` only when the URL carries `?b=`, leaving the bare homepage a static asset. |
+| `middleware.ts` | Sends `/` to `api/render` when the URL carries `?b=`, leaving the bare homepage a static asset. Must be middleware rather than a `vercel.json` rewrite — rewrites are evaluated after the filesystem check, which `index.html` already satisfies. |
 | `vite.config.ts` | Build config. React + Tailwind plugins, the `@` → `src/` alias, and React deduping. |
 | `tsconfig.json` | TypeScript settings. Strict mode on, no emit (Vite handles the build). |
 | `package.json` | Dependencies and scripts. |

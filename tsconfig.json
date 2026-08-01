@@ -19,5 +19,5 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "api", "vite.config.ts"]
+  "include": ["src", "api", "middleware.ts", "vite.config.ts"]
 }

@@ -73,7 +73,9 @@ palette as plain text in the DOM. Don't move that content behind an interaction.
 The site is client-rendered, so a plain fetch of a share link returns an empty
 `#root` — nothing readable unless the agent executes JavaScript, which most
 link-following agents don't. `api/render.ts` fixes that by injecting the palette
-into the HTML for any URL carrying `?b=`; `api/palette.ts` serves the same data
+into the HTML for any URL carrying `?b=` (routed there by `middleware.ts` — a
+`vercel.json` rewrite cannot work, because rewrites run after the filesystem
+check and `index.html` already satisfies `/`); `api/palette.ts` serves the same data
 as JSON; `public/llms.txt` documents the contract.
 
 Two non-obvious constraints hold this together:
