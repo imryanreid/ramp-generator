@@ -34,6 +34,23 @@ artificially vivid. Every generated ramp is then gamut-clamped back into sRGB.
 | **Status** | Success, warning, error, and info anchored at conventional hues, then nudged away from your palette's own hues if they collide — so "error" never reads as "brand". |
 | **Semantic tokens** | Usage-first names (surface, border, text, interactive states) mapped onto ramp steps, resolved separately for light and dark. |
 
+## Contrast is enforced, not just reported
+
+Pick `AA` (4.5:1) or `AAA` (7:1) and the tokens *move* to satisfy it, rather than
+showing you a red badge and leaving the fix to you.
+
+For each paired foreground the resolver first walks that token along its own ramp
+to the nearest step that clears the target. If the foreground runs out of ramp,
+the background moves too — but only action fills (`bg-brand`, `bg-accent`), never
+page surfaces, so the page keeps its character while a button darkens to keep its
+label legible. When a fill moves, its `-hover` and `-active` siblings move with
+it, so the interaction ladder stays ordered.
+
+Candidate pairs are scored by how far *both* colors travel from their authored
+steps, so the result stays as close to the designed palette as the target allows.
+If a ramp genuinely cannot reach the target, the tool takes the best contrast
+available and badges the shortfall honestly instead of faking a pass.
+
 ## Export formats
 
 | Format | Output |
@@ -43,13 +60,16 @@ artificially vivid. Every generated ramp is then gamut-clamped back into sRGB.
 | **Figma variables** | W3C DTCG token JSON, one file per mode — import via Figma's native variable import, one import per mode. |
 | **JSON** | The whole palette as structured data. |
 
+The export dialog opens on a choice: take the tokens as code, or copy a prompt
+pointing an agent at this exact palette.
+
 ## Share links
 
 The entire palette is a pure function of four inputs, so a link needs no
 database — the inputs fit in the query string:
 
 ```
-https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary
+https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 ```
 
 | Param | Meaning |
@@ -58,6 +78,7 @@ https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary
 | `a` | Accent hex, no `#`. Optional — omit to auto-derive from the scheme. |
 | `m` | Scope: `full` or `basic`. |
 | `s` | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic` |
+| `c` | Contrast target: `AA` (4.5:1) or `AAA` (7:1). |
 
 Malformed params are dropped individually, so a bad link degrades to defaults
 rather than erroring.
@@ -75,6 +96,9 @@ The page is built to be read by machines as well as people:
   to reach the values.
 - **Construct a URL, read the result.** Because state lives entirely in the
   query string, an agent can request an arbitrary palette by building a link.
+- **A prepared prompt.** The export dialog can hand you a ready-to-paste prompt
+  containing the link to your palette plus the constraints an agent needs to
+  apply it correctly.
 
 ## Local development
 

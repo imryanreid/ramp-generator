@@ -5,6 +5,7 @@
 // ==============================================
 import { useCopy } from "../lib/clipboard"
 import { cn } from "../lib/utils"
+import { Copy, Check } from "@phosphor-icons/react"
 
 type Props = {
   value: string
@@ -30,31 +31,20 @@ export default function CopyButton({ value, title, className = "" }: Props) {
         className,
       )}
     >
-      {/* Copy icon */}
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 16 16"
-        fill="none"
+      <Copy
+        size={13}
+        weight="regular"
         aria-hidden="true"
         className="absolute transition-all duration-200 ease-out"
         style={{ opacity: copied ? 0 : 1, transform: copied ? "scale(0.7)" : "none" }}
-      >
-        <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M3.5 10.5H3a1 1 0 01-1-1V3a1 1 0 011-1h6.5a1 1 0 011 1v0.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-      {/* Check icon */}
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 16 16"
-        fill="none"
+      />
+      <Check
+        size={13}
+        weight="bold"
         aria-hidden="true"
         className="absolute text-emerald-600 transition-all duration-200 ease-out"
         style={{ opacity: copied ? 1 : 0, transform: copied ? "none" : "scale(0.7)" }}
-      >
-        <path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      />
     </button>
   )
 }

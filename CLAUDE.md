@@ -10,8 +10,9 @@
 
 A single-page tool at [ramps.studio](https://www.ramps.studio) that turns one brand
 color into a full design-system palette — OKLCH ramps, derived accents, a
-matched neutral, status colors, and semantic tokens — exportable as CSS
-variables, a Tailwind v4 theme, Figma variables (W3C DTCG), or JSON.
+matched neutral, status colors, and semantic tokens tuned to a chosen WCAG
+level — exportable as CSS variables, a Tailwind v4 theme, Figma variables
+(W3C DTCG), or JSON, or as a prompt for a coding agent.
 Public, open source (MIT), and a portfolio piece.
 
 ## Stack
@@ -55,7 +56,7 @@ the JSON-LD `url` and `urlTemplate`), `src/lib/site.ts` (`SITE_URL`, which build
 every share link), `public/sitemap.xml`, and `public/robots.txt`. If the primary
 domain ever flips in Vercel, change all of them together.
 
-**1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=` are a public API. They're
+**1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=`, `?c=` are a public API. They're
 documented in `README.md`, in the JSON-LD block in `index.html`, and in the
 on-page legend in `App.tsx`. Changing a param name or a scheme id breaks every
 link anyone has shared. If you change one, update all four places.
@@ -64,6 +65,15 @@ link anyone has shared. If you change one, update all four places.
 nice-to-have. That means: `robots.txt` stays permissive, the JSON-LD block stays
 accurate, and the "Machine-readable palette" section keeps rendering the full
 palette as plain text in the DOM. Don't move that content behind an interaction.
+
+## Contrast resolution
+
+`resolveTokens` in `src/lib/semantics.ts` is the most subtle code here. It moves
+token steps to satisfy the selected WCAG target, in three stages: foreground
+only, then action fills (never page surfaces), then best-effort with an honest
+badge. Candidates are scored by combined travel from the authored steps — that
+scoring is load-bearing. Ranking on the background alone lets a tie flip a brand
+button from light to dark text, which looks like a bug even though it passes.
 
 ## Ask before
 

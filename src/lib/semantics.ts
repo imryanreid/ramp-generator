@@ -140,16 +140,170 @@ function hexAt(index: Record<string, Ramp>, ramp: string, step: Step, fallback =
   return r ? getSwatch(r, step).hex : "#808080"
 }
 
-export function resolveTokens(palette: Palette, mode: DsMode = "full"): ResolvedToken[] {
+// ---------- Contrast compliance ----------
+
+export type Compliance = "AA" | "AAA"
+
+/** WCAG 2.1 contrast minimums for normal-size text. */
+export const CONTRAST_TARGET: Record<Compliance, number> = { AA: 4.5, AAA: 7 }
+
+/**
+ * Backgrounds that define the page's character. These are never moved to chase
+ * a contrast target — repainting the canvas to fix one label would change the
+ * whole design. Action fills (bg-brand, bg-accent, …) may move.
+ */
+const FIXED_BACKGROUNDS = new Set([
+  "bg-canvas",
+  "bg-surface",
+  "bg-surface-raised",
+  "bg-muted",
+])
+
+/**
+ * When an action fill moves, its hover/active siblings move by the same number
+ * of steps, so the interaction ladder keeps its order and spacing.
+ */
+const FILL_FAMILY: Record<string, string[]> = {
+  "bg-brand": ["bg-brand", "bg-brand-hover", "bg-brand-active"],
+  "bg-accent": ["bg-accent", "bg-accent-hover", "bg-accent-active"],
+}
+
+const STEP_INDEX = new Map<Step, number>(STEPS.map((s, i) => [s, i]))
+const stepAt = (i: number): Step => STEPS[Math.max(0, Math.min(STEPS.length - 1, i))]
+
+/** Every step, ordered by distance from `from` — so fixes stay near the authored value. */
+function stepsByProximity(from: Step): Step[] {
+  const origin = STEP_INDEX.get(from) ?? 0
+  return [...STEPS].sort(
+    (a, b) =>
+      Math.abs((STEP_INDEX.get(a) ?? 0) - origin) -
+      Math.abs((STEP_INDEX.get(b) ?? 0) - origin),
+  )
+}
+
+type Placement = { ramp: string; step: Step }
+type Working = { light: Placement; dark: Placement }
+
+/** Move an action fill to `newStep`, carrying its hover/active siblings along. */
+function shiftFamily(
+  place: Record<string, Working>,
+  anchor: string,
+  colorMode: "light" | "dark",
+  newStep: Step,
+) {
+  const current = place[anchor]?.[colorMode]
+  if (!current) return
+  const delta = (STEP_INDEX.get(newStep) ?? 0) - (STEP_INDEX.get(current.step) ?? 0)
+  if (delta === 0) return
+  for (const sibling of FILL_FAMILY[anchor] ?? [anchor]) {
+    const p = place[sibling]?.[colorMode]
+    if (!p) continue
+    p.step = stepAt((STEP_INDEX.get(p.step) ?? 0) + delta)
+  }
+}
+
+/**
+ * Resolve the token contract against a palette, nudging steps as needed so every
+ * paired foreground clears the selected WCAG target.
+ *
+ * The search is deliberately conservative, in three stages:
+ *   1. Move the foreground alone, to the step nearest its authored value that
+ *      clears the bar. Most pairs are fixed here.
+ *   2. If the foreground runs out of ramp, move the background too — but only
+ *      when it's an action fill, never a page surface.
+ *   3. If nothing reaches the target, take the highest contrast available and
+ *      let the badge report the shortfall honestly rather than faking a pass.
+ */
+export function resolveTokens(
+  palette: Palette,
+  mode: DsMode = "full",
+  compliance: Compliance = "AA",
+): ResolvedToken[] {
   const index = rampIndex(palette)
+  const defs = tokensForMode(mode)
+  const target = CONTRAST_TARGET[compliance]
+
+  // Working placements, seeded from the static contract and nudged below.
+  const place: Record<string, Working> = {}
+  for (const d of defs) place[d.token] = { light: { ...d.light }, dark: { ...d.dark } }
+
+  const hexOf = (p: Placement) => hexAt(index, p.ramp, p.step)
+
+  for (const d of defs) {
+    if (!d.pairWith) continue
+    const background = place[d.pairWith]
+    if (!background) continue
+
+    for (const colorMode of ["light", "dark"] as const) {
+      const fg = place[d.token][colorMode]
+      const bg = background[colorMode]
+      if (contrast(hexOf(fg), hexOf(bg)) >= target) continue
+
+      const nearestFirst = stepsByProximity(fg.step)
+
+      // 1. Foreground only.
+      const fgFix = nearestFirst.find(
+        (s) => contrast(hexAt(index, fg.ramp, s), hexOf(bg)) >= target,
+      )
+      if (fgFix !== undefined) {
+        fg.step = fgFix
+        continue
+      }
+
+      // 2. Foreground is maxed out — move the fill, if it's allowed to move.
+      //    Score every workable (fill, foreground) pair by how far *both* have
+      //    travelled from their authored steps and take the cheapest. Ranking on
+      //    the fill alone would let a tie be broken arbitrarily: a brand button
+      //    could lighten by one step and flip its label from light to dark,
+      //    when darkening by one step keeps the authored light label.
+      if (!FIXED_BACKGROUNDS.has(d.pairWith)) {
+        const fgOrigin = STEP_INDEX.get(fg.step) ?? 0
+        const bgOrigin = STEP_INDEX.get(bg.step) ?? 0
+        let bestPair: { bgStep: Step; fgStep: Step; cost: number } | null = null
+
+        for (const bgStep of STEPS) {
+          const bgHex = hexAt(index, bg.ramp, bgStep)
+          const bgCost = Math.abs((STEP_INDEX.get(bgStep) ?? 0) - bgOrigin)
+          if (bestPair && bgCost >= bestPair.cost) continue
+          for (const fgStep of nearestFirst) {
+            if (contrast(hexAt(index, fg.ramp, fgStep), bgHex) < target) continue
+            const cost = bgCost + Math.abs((STEP_INDEX.get(fgStep) ?? 0) - fgOrigin)
+            if (!bestPair || cost < bestPair.cost) bestPair = { bgStep, fgStep, cost }
+            break // nearestFirst is sorted, so this is the cheapest fg for this fill
+          }
+        }
+
+        if (bestPair) {
+          shiftFamily(place, d.pairWith, colorMode, bestPair.bgStep)
+          fg.step = bestPair.fgStep
+          continue
+        }
+      }
+
+      // 3. Unreachable — settle for the best contrast this ramp can offer.
+      let best = fg.step
+      let bestRatio = -1
+      for (const s of STEPS) {
+        const ratio = contrast(hexAt(index, fg.ramp, s), hexOf(bg))
+        if (ratio > bestRatio) {
+          bestRatio = ratio
+          best = s
+        }
+      }
+      fg.step = best
+    }
+  }
+
   const hexes: Record<string, { light: string; dark: string }> = {}
-  const resolved: ResolvedToken[] = tokensForMode(mode).map((t) => {
-    const lightHex = hexAt(index, t.light.ramp, t.light.step)
-    const darkHex = hexAt(index, t.dark.ramp, t.dark.step)
-    hexes[t.token] = { light: lightHex, dark: darkHex }
-    return { ...t, lightHex, darkHex }
+  const resolved: ResolvedToken[] = defs.map((d) => {
+    const p = place[d.token]
+    const lightHex = hexOf(p.light)
+    const darkHex = hexOf(p.dark)
+    hexes[d.token] = { light: lightHex, dark: darkHex }
+    return { ...d, light: p.light, dark: p.dark, lightHex, darkHex }
   })
-  // Second pass: compute contrast ratios now that all hexes are known.
+
+  // Final pass: contrast ratios, now that every placement has settled.
   return resolved.map((t) => {
     if (!t.pairWith) return t
     const against = hexes[t.pairWith]
@@ -174,9 +328,13 @@ function allRamps(palette: Palette): Ramp[] {
   ]
 }
 
-export function toCss(palette: Palette, mode: DsMode = "full"): string {
+export function toCss(
+  palette: Palette,
+  mode: DsMode = "full",
+  compliance: Compliance = "AA",
+): string {
   const ramps = allRamps(palette)
-  const tokens = resolveTokens(palette, mode)
+  const tokens = resolveTokens(palette, mode, compliance)
   const rampLines = ramps.flatMap((r) =>
     STEPS.map((s) => `  --${r.name}-${s}: ${getSwatch(r, s).hex};`),
   )
@@ -197,12 +355,16 @@ export function toCss(palette: Palette, mode: DsMode = "full"): string {
   ].join("\n")
 }
 
-export function toTailwind(palette: Palette, mode: DsMode = "full"): string {
+export function toTailwind(
+  palette: Palette,
+  mode: DsMode = "full",
+  compliance: Compliance = "AA",
+): string {
   const ramps = allRamps(palette)
   const rampLines = ramps.flatMap((r) =>
     STEPS.map((s) => `  --color-${r.name}-${s}: ${getSwatch(r, s).hex};`),
   )
-  const tokens = resolveTokens(palette, mode)
+  const tokens = resolveTokens(palette, mode, compliance)
   const semLines = tokens.map((t) => `  --color-${t.token}: ${t.lightHex};`)
   return ["@theme {", ...rampLines, "", ...semLines, "}"].join("\n")
 }
@@ -342,6 +504,7 @@ export function toFigma(
   palette: Palette,
   mode: DsMode = "full",
   colorMode: "light" | "dark" = "light",
+  compliance: Compliance = "AA",
 ): string {
   const names = rampNameMap(palette)
   const ramps: Record<string, Record<string, FigmaColorToken>> = {}
@@ -357,7 +520,7 @@ export function toFigma(
   }
 
   // Semantic tokens, grouped by usage type and aliased to the ramp steps above.
-  for (const t of resolveTokens(palette, mode)) {
+  for (const t of resolveTokens(palette, mode, compliance)) {
     const loc = colorMode === "dark" ? t.dark : t.light
     const group = names[loc.ramp] ? loc.ramp : "neutral"
     const alias: FigmaAliasToken = {
@@ -370,7 +533,11 @@ export function toFigma(
   return JSON.stringify({ [RAMPS_GROUP]: ramps, [SEMANTICS_GROUP]: semantics }, null, 2)
 }
 
-export function toJson(palette: Palette, mode: DsMode = "full"): string {
+export function toJson(
+  palette: Palette,
+  mode: DsMode = "full",
+  compliance: Compliance = "AA",
+): string {
   const ramps = allRamps(palette)
   const out: Record<string, unknown> = {}
   for (const r of ramps) {
@@ -381,7 +548,7 @@ export function toJson(palette: Palette, mode: DsMode = "full"): string {
     out[r.name] = scale
   }
   const semantic: Record<string, { $value: string; $type: string }> = {}
-  for (const t of resolveTokens(palette, mode)) {
+  for (const t of resolveTokens(palette, mode, compliance)) {
     semantic[t.token] = { $value: t.lightHex, $type: "color" }
   }
   out.semantic = semantic

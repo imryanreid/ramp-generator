@@ -8,6 +8,7 @@
 import { type ReactNode } from "react"
 import { useCopy } from "../lib/clipboard"
 import { cn } from "../lib/utils"
+import { Check } from "@phosphor-icons/react"
 
 type Props = {
   value: string
@@ -33,15 +34,7 @@ export default function CopyText({ value, children, className = "", title, swapO
     >
       {swapOnCopy && copied ? (
         <span className="inline-flex items-center gap-1">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path
-              d="M3 8.5l3.2 3.2L13 5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Check size={12} weight="bold" aria-hidden="true" />
           copied
         </span>
       ) : (

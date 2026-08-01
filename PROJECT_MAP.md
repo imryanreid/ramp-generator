@@ -31,7 +31,7 @@
 | File | What it does |
 | --- | --- |
 | `main.tsx` | Entry point. Mounts `App` into `#root`, loads the stylesheet, attaches Vercel Analytics and Speed Insights. |
-| `App.tsx` | The whole page: holds the four pieces of state everything derives from, syncs the URL and document title, and lays out the controls, ramps, tokens, and footer. Also contains the small local components — icon buttons, theme toggle, share button, export modal, and the machine-readable palette block for agents. |
+| `App.tsx` | The whole page: holds the five pieces of state everything derives from, syncs the URL and document title, and lays out the controls, ramps, tokens, and footer. Also contains the small local components — icon buttons, theme toggle, share button, export modal, and the machine-readable palette block for agents. |
 | `index.css` | Global stylesheet. Imports the self-hosted fonts, defines the Tailwind v4 theme (`paper`/`ink`/`ash`/`line` color tokens), and flips those tokens for dark mode. |
 | `vite-env.d.ts` | Vite's ambient type declarations. |
 
@@ -41,8 +41,8 @@
 | --- | --- |
 | `color.ts` | The engine. Converts a hex to OKLCH and builds an 11-step ramp (50–950) using a fixed lightness curve and a bell-curve chroma multiplier, clamping each result back into sRGB. Also builds the tinted neutral ramp and computes contrast for the swatch labels. |
 | `recommend.ts` | Decides *which* colors to generate. Rotates the brand hue by the chosen scheme to derive accents, picks status hues, and pushes any status hue that lands too close to a palette hue out of the way. Exports `SCHEMES` and `buildPalette`. |
-| `semantics.ts` | Maps ramp steps onto usage-first token names (surface, border, text, interactive states) for both light and dark, then serializes the result — `toCss`, `toTailwind`, `toFigma` (W3C DTCG), and `toJson`. These exporters are the canonical output format; everything else renders from them. |
-| `share.ts` | Encodes the four inputs into a query string and decodes them back, validating each field independently so a malformed link falls back to defaults instead of breaking. |
+| `semantics.ts` | Maps ramp steps onto usage-first token names (surface, border, text, interactive states) for both light and dark, nudging steps as needed so every paired foreground clears the selected WCAG target, then serializes the result — `toCss`, `toTailwind`, `toFigma` (W3C DTCG), and `toJson`. These exporters are the canonical output format; everything else renders from them. |
+| `share.ts` | Encodes the five inputs into a query string and decodes them back, validating each field independently so a malformed link falls back to defaults instead of breaking. |
 | `site.ts` | The canonical site origin, used to build absolute share URLs. Overridable via `VITE_SITE_URL`. |
 | `clipboard.ts` | `copyToClipboard` plus the `useCopy` hook that drives the "Copied" confirmations. |
 | `utils.ts` | `cn()` — merges Tailwind class names via clsx + tailwind-merge. |
@@ -54,8 +54,8 @@
 | `ColorInput.tsx` | The brand and accent pickers: swatch, hex field, and the lock/reset behavior for overriding the auto-derived accent. |
 | `SchemeSelect.tsx` | The derivation dropdown (complementary, analogous, triadic, split, monochromatic) with its descriptions. |
 | `RampGroup.tsx` | Renders a titled group of ramps as rows of swatches. |
-| `SemanticTokens.tsx` | The semantic token table — token name, the ramp step it resolves to, and light/dark previews. |
-| `ExportPanel.tsx` | The contents of the export modal: a tab per output format (CSS variables, Tailwind v4, Figma variables, JSON) plus copy and download actions. The Figma tab emits one W3C DTCG file per mode. |
+| `SemanticTokens.tsx` | The semantic token table — token name, the ramp step it resolves to, light/dark previews, and a contrast badge whose pass threshold follows the selected WCAG level. |
+| `ExportPanel.tsx` | The contents of the export modal. Opens on a choice between taking the tokens as code and copying an agent prompt. The code branch has a tab per format (CSS variables, Tailwind v4, Figma variables, JSON) with copy and download; the Figma tab emits one W3C DTCG file per mode. |
 | `CopyButton.tsx` | Button that copies a value and crossfades to a checkmark. |
 | `CopyText.tsx` | Inline text that copies itself when clicked. |
 

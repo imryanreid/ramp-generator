@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from "react"
 import { SCHEMES, type Scheme } from "../lib/recommend"
 import { cn } from "../lib/utils"
+import { CaretDown, Check } from "@phosphor-icons/react"
 
 type Props = {
   scheme: Scheme
@@ -41,16 +42,12 @@ export default function SchemeSelect({ scheme, onChange }: Props) {
         className="flex w-full items-center justify-between gap-2 rounded-md border border-line bg-paper px-3 py-2 text-left text-sm transition-colors hover:border-ink/30"
       >
         <span className="font-medium text-ink">{current.label}</span>
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 16 16"
-          fill="none"
-          className={cn("shrink-0 text-ash transition-transform", open && "rotate-180")}
+        <CaretDown
+          size={12}
+          weight="bold"
           aria-hidden="true"
-        >
-          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+          className={cn("shrink-0 text-ash transition-transform", open && "rotate-180")}
+        />
       </button>
 
       {open && (
@@ -75,15 +72,7 @@ export default function SchemeSelect({ scheme, onChange }: Props) {
                     {s.label}
                   </span>
                   {selected && (
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                      <path
-                        d="M3 8.5l3.2 3.2L13 5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+<Check size={12} weight="bold" aria-hidden="true" className="text-ink" />
                   )}
                 </div>
                 <p className="mt-0.5 text-xs leading-snug text-ash">{s.blurb}</p>

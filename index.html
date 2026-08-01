@@ -46,7 +46,7 @@
         "url": "https://www.ramps.studio/",
         "applicationCategory": "DesignApplication",
         "operatingSystem": "Any (web browser)",
-        "description": "Generates a complete design-system color palette from a single brand color: perceptually-even OKLCH ramps (50-950), scheme-derived accents, a chroma-matched neutral, collision-avoided status colors, and usage-first semantic tokens for light and dark themes. Exports to CSS custom properties, a Tailwind v4 theme block, W3C DTCG token files for Figma variables, or JSON.",
+        "description": "Generates a complete design-system color palette from a single brand color: perceptually-even OKLCH ramps (50-950), scheme-derived accents, a chroma-matched neutral, collision-avoided status colors, and usage-first semantic tokens for light and dark themes with enforced WCAG AA or AAA contrast. Exports to CSS custom properties, a Tailwind v4 theme block, W3C DTCG token files for Figma variables, or JSON.",
         "isAccessibleForFree": true,
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "author": {
@@ -60,19 +60,22 @@
           "Chroma-matched neutral ramp tinted toward the brand hue",
           "Status colors (success, warning, error, info) with hue-collision avoidance",
           "Usage-first semantic tokens mapped for light and dark themes",
+          "Enforced WCAG AA (4.5:1) or AAA (7:1) contrast — token steps are adjusted automatically to meet the selected level, not merely flagged",
           "Export to CSS custom properties, a Tailwind v4 theme block, W3C DTCG tokens for Figma variables, or JSON",
+          "A copyable prompt that hands the palette to a coding agent",
           "Shareable permalinks that encode the full palette in the URL"
         ],
         "potentialAction": {
           "@type": "SearchAction",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "https://www.ramps.studio/?b={brand_hex_without_hash}&m={scope}&s={scheme}"
+            "urlTemplate": "https://www.ramps.studio/?b={brand_hex_without_hash}&m={scope}&s={scheme}&c={wcag_level}"
           },
           "query-input": [
             "required name=brand_hex_without_hash",
             "required name=scope",
-            "required name=scheme"
+            "required name=scheme",
+            "required name=wcag_level"
           ]
         }
       }

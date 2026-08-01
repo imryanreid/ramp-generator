@@ -7,15 +7,32 @@
 // ==============================================
 import { useState } from "react"
 import { motion } from "motion/react"
-import { resolveTokens, rampAliasNames, type ResolvedToken, type DsMode } from "../lib/semantics"
+import {
+  resolveTokens,
+  rampAliasNames,
+  CONTRAST_TARGET,
+  type ResolvedToken,
+  type DsMode,
+  type Compliance,
+} from "../lib/semantics"
 import type { Palette } from "../lib/recommend"
 import { cn } from "../lib/utils"
 import CopyButton from "./CopyButton"
+import { Square, TextT, Selection, Target } from "@phosphor-icons/react"
 
 type ValueView = "hex" | "ramp"
 
-export default function SemanticTokens({ palette, mode }: { palette: Palette; mode: DsMode }) {
-  const tokens = resolveTokens(palette, mode)
+export default function SemanticTokens({
+  palette,
+  mode,
+  compliance,
+}: {
+  palette: Palette
+  mode: DsMode
+  compliance: Compliance
+}) {
+  const tokens = resolveTokens(palette, mode, compliance)
+  const target = CONTRAST_TARGET[compliance]
   const rampNames = rampAliasNames(palette)
   const [view, setView] = useState<ValueView>("hex")
 
@@ -44,12 +61,19 @@ export default function SemanticTokens({ palette, mode }: { palette: Palette; mo
               <th className="py-2 pr-4 font-medium">Role</th>
               <th className="py-2 pr-4 font-medium">Light</th>
               <th className="py-2 pr-4 font-medium">Dark</th>
-              <th className="py-2 font-medium">AA</th>
+              <th className="py-2 font-medium">{compliance}</th>
             </tr>
           </thead>
           <tbody>
             {groups.map((g) => (
-              <GroupBlock key={g.category} category={g.category} rows={g.rows} view={view} rampNames={rampNames} />
+              <GroupBlock
+                key={g.category}
+                category={g.category}
+                rows={g.rows}
+                view={view}
+                rampNames={rampNames}
+                target={target}
+              />
             ))}
           </tbody>
         </table>
@@ -98,11 +122,13 @@ function GroupBlock({
   rows,
   view,
   rampNames,
+  target,
 }: {
   category: string
   rows: ResolvedToken[]
   view: ValueView
   rampNames: Record<string, string>
+  target: number
 }) {
   return (
     <>
@@ -115,7 +141,7 @@ function GroupBlock({
         </td>
       </tr>
       {rows.map((t) => (
-        <Row key={t.token} t={t} view={view} rampNames={rampNames} />
+        <Row key={t.token} t={t} view={view} rampNames={rampNames} target={target} />
       ))}
     </>
   )
@@ -130,10 +156,12 @@ function Row({
   t,
   view,
   rampNames,
+  target,
 }: {
   t: ResolvedToken
   view: ValueView
   rampNames: Record<string, string>
+  target: number
 }) {
   const lightLabel = view === "ramp" ? rampRef(rampNames, t.light.ramp, t.light.step) : t.lightHex
   const darkLabel = view === "ramp" ? rampRef(rampNames, t.dark.ramp, t.dark.step) : t.darkHex
@@ -159,7 +187,7 @@ function Row({
         </CopyCell>
       </td>
       <td className="py-2">
-        <AA light={t.lightRatio} dark={t.darkRatio} />
+        <AA light={t.lightRatio} dark={t.darkRatio} target={target} />
       </td>
     </tr>
   )
@@ -179,54 +207,23 @@ function CopyCell({ value, children }: { value: string; children: React.ReactNod
 }
 
 /** Small usage glyph per token category. */
+/** A small glyph per token category, so the table scans by shape as well as text. */
 function CategoryIcon({ category }: { category: string }) {
-  const common = {
-    width: 14,
-    height: 14,
-    viewBox: "0 0 16 16",
-    fill: "none",
-    "aria-hidden": true,
-    className: "shrink-0 text-ash",
-  } as const
+  const common = { size: 14, "aria-hidden": true, className: "shrink-0 text-ash" } as const
   switch (category) {
     case "Background":
-      return (
-        <svg {...common}>
-          <rect x="2.5" y="2.5" width="11" height="11" rx="2.5" fill="currentColor" opacity="0.9" />
-        </svg>
-      )
+      return <Square {...common} weight="fill" />
     case "Text":
-      return (
-        <svg {...common}>
-          <path d="M4 4h8M8 4v9M6.2 13h3.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-      )
+      return <TextT {...common} weight="bold" />
     case "Border":
-      return (
-        <svg {...common}>
-          <rect
-            x="2.8"
-            y="2.8"
-            width="10.4"
-            height="10.4"
-            rx="2.4"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeDasharray="2.4 2"
-          />
-        </svg>
-      )
+      return <Selection {...common} weight="bold" />
     case "Focus":
-      return (
-        <svg {...common}>
-          <circle cx="8" cy="8" r="5.2" stroke="currentColor" strokeWidth="1.6" opacity="0.5" />
-          <circle cx="8" cy="8" r="2" fill="currentColor" />
-        </svg>
-      )
+      return <Target {...common} weight="regular" />
     default:
       return null
   }
 }
+
 
 /**
  * A hex value shown inside its intended context: the Light column always renders
@@ -258,16 +255,16 @@ function Chip({ hex, label, mode }: { hex: string; label: string; mode: "light" 
   )
 }
 
-function AA({ light, dark }: { light?: number; dark?: number }) {
+function AA({ light, dark, target }: { light?: number; dark?: number; target: number }) {
   if (light === undefined && dark === undefined) {
     return <span className="font-mono text-[11px] text-line">—</span>
   }
   const badge = (ratio?: number, label?: string) => {
     if (ratio === undefined) return null
-    const pass = ratio >= 4.5
+    const pass = ratio >= target
     return (
       <span
-        title={`${label}: ${ratio.toFixed(2)}:1`}
+        title={`${label}: ${ratio.toFixed(2)}:1 (needs ${target}:1)`}
         className={cn(
           "rounded px-1 py-px font-mono text-[10px]",
           pass ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700",

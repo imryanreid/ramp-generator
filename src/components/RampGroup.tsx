@@ -6,6 +6,7 @@
 // a swatch copies its hex.
 // ==============================================
 import { readableText, type Ramp } from "../lib/color"
+import { Check } from "@phosphor-icons/react"
 import CopyText from "./CopyText"
 
 type Props = {
@@ -58,23 +59,13 @@ function RampRow({ ramp }: { ramp: Ramp }) {
                       >
                         {s.step}
                       </span>
-                      <svg
-                        width="11"
-                        height="11"
-                        viewBox="0 0 16 16"
-                        fill="none"
+                      <Check
+                        size={11}
+                        weight="bold"
                         aria-hidden="true"
                         className="absolute left-0 transition-all duration-200 ease-out"
                         style={{ opacity: copied ? 1 : 0, transform: copied ? "none" : "translateY(2px)" }}
-                      >
-                        <path
-                          d="M3 8.5l3.2 3.2L13 5"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                      />
                     </span>
                     {s.isSource && (
                       <span

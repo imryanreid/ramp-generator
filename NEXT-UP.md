@@ -53,6 +53,34 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — Contrast enforcement, agent prompt export, Phosphor icons
+
+- **WCAG AA/AAA toggle** on the controls row, wired through to a new `c=` share
+  param. Selecting a level doesn't just re-badge — `resolveTokens` moves token
+  steps until every paired foreground clears the target. Foreground first, then
+  action fills (never page surfaces), then honest best-effort. Fill families
+  (`bg-brand` + hover + active) shift together to keep the interaction ladder
+  ordered. Verified: at AAA on the default palette, 15 tokens move and **zero**
+  remain below 7:1.
+- **The scoring detail that matters**: candidate (fill, foreground) pairs are
+  ranked by *combined* travel from their authored steps. Ranking on the fill
+  alone made `bg-brand` lighten one step and flip its label to dark text — same
+  distance, but a much bigger visual change than darkening one step and keeping
+  the authored light label.
+- **Export flow is now two-step**: choose "Export code" (the four format tabs)
+  or "Copy agent prompt" — a ready-to-paste prompt carrying the share URL plus
+  the constraints an agent needs (prefer semantic tokens, don't substitute
+  colors into contrast-checked pairs, keep the hex values exact).
+- **Icons**: all 17 inline SVGs replaced with Phosphor (MIT), regular weight.
+  Costs ~41 KB raw / ~10 KB gzipped — each Phosphor icon bundles all six
+  weights, so the per-icon cost is real even after tree-shaking.
+- **Fixed a latent bug**: `CANONICAL_TITLE` was a module-level
+  `const = document.title`. Correct in production, but Vite HMR re-executes the
+  module and would capture a palette-specific title as "canonical", so the
+  landing page never restored its real title in dev. Now stashed on `window`
+  and captured once per page load.
+
+
 ### 2026-08-01 — Migration off Figma Make
 
 Took the exported Figma Make project and made it self-hostable.

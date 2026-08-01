@@ -4,8 +4,14 @@
 // a shareable link needs no backend — the inputs fit
 // in a query string. This encodes them, decodes them
 // defensively on load, and builds the absolute URL.
+//
+// These param names are a public API — they are
+// documented in README.md, in the JSON-LD block in
+// index.html, and in the on-page legend in App.tsx.
+// Changing one breaks every link already shared.
 // ==============================================
 import { SCHEMES, type DsMode, type Scheme } from "./recommend"
+import type { Compliance } from "./semantics"
 import { SITE_URL } from "./site"
 
 /** The full, deterministic input state that reproduces a palette. */
@@ -14,17 +20,19 @@ export type ShareState = {
   accentOverride: string | null
   mode: DsMode
   scheme: Scheme
+  compliance: Compliance
 }
 
 const HEX = /^[0-9a-fA-F]{6}$/
 
-/** Serialize the four inputs into a compact query string (no leading "?"). */
+/** Serialize the inputs into a compact query string (no leading "?"). */
 export function encodeShareState(s: ShareState): string {
   const p = new URLSearchParams()
   p.set("b", s.brand.replace("#", ""))
   if (s.accentOverride) p.set("a", s.accentOverride.replace("#", ""))
   p.set("m", s.mode)
   p.set("s", s.scheme)
+  p.set("c", s.compliance)
   return p.toString()
 }
 
@@ -49,6 +57,9 @@ export function decodeShareState(search: string): Partial<ShareState> {
 
   const s = p.get("s")
   if (s && SCHEMES.some((x) => x.id === s)) out.scheme = s as Scheme
+
+  const c = p.get("c")
+  if (c === "AA" || c === "AAA") out.compliance = c
 
   return out
 }

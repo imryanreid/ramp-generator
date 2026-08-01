@@ -1,10 +1,10 @@
 // ==============================================
 // APP
-// The whole page. Holds the four inputs everything
+// The whole page. Holds the five inputs everything
 // else is derived from — brand color, optional
-// accent override, scope, and derivation scheme —
-// and keeps the URL and document title in sync with
-// them. Below the controls it renders the ramps,
+// accent override, scope, derivation scheme, and
+// WCAG level — and keeps the URL and document title
+// in sync with them. Below the controls it renders the ramps,
 // the semantic token table, a machine-readable dump
 // of the palette for agents, and the footer.
 //
@@ -22,18 +22,33 @@ import ExportPanel from "./components/ExportPanel"
 import SchemeSelect from "./components/SchemeSelect"
 import { buildPalette, deriveAccentHex, type DsMode, type Scheme, type Palette } from "./lib/recommend"
 import { readInitialShareState, encodeShareState, shareUrl, type ShareState } from "./lib/share"
-import { toCss, toJson } from "./lib/semantics"
+import { toCss, toJson, type Compliance } from "./lib/semantics"
 import { useCopy } from "./lib/clipboard"
 import { cn } from "./lib/utils"
+import { DownloadSimple, Sun, Moon, LinkSimple, Check, X, CaretRight } from "@phosphor-icons/react"
 import avatarUrl from "./assets/avatar-ryan.webp"
 import studioLogo from "./assets/logo-tktk.webp"
 
-// The title and description authored in index.html. Captured once at load so
-// the effect below can restore them when the user returns to the default
-// palette, rather than leaving a stale palette-specific title in the tab.
-const CANONICAL_TITLE = document.title
-const CANONICAL_DESCRIPTION =
-  document.querySelector('meta[name="description"]')?.getAttribute("content") ?? ""
+/**
+ * The title and description authored in index.html, so the effect below can
+ * restore them when the user returns to the default palette rather than leaving
+ * a stale palette-specific title in the tab.
+ *
+ * Stashed on `window` rather than a plain module constant: a hot reload
+ * re-executes this module while a palette-specific title is already live, and a
+ * bare `const = document.title` would capture *that* as the canonical value.
+ */
+const CANONICAL = (() => {
+  const w = window as typeof window & {
+    __rampCanonicalHead?: { title: string; description: string }
+  }
+  w.__rampCanonicalHead ??= {
+    title: document.title,
+    description:
+      document.querySelector('meta[name="description"]')?.getAttribute("content") ?? "",
+  }
+  return w.__rampCanonicalHead
+})()
 
 /** The palette shown to a first-time visitor with no share params in the URL. */
 const DEFAULT_STATE: ShareState = {
@@ -41,6 +56,7 @@ const DEFAULT_STATE: ShareState = {
   accentOverride: null,
   mode: "full",
   scheme: "complementary",
+  compliance: "AA",
 }
 
 export default function App() {
@@ -52,6 +68,9 @@ export default function App() {
   )
   const [mode, setMode] = useState<DsMode>(initial.mode ?? DEFAULT_STATE.mode)
   const [scheme, setScheme] = useState<Scheme>(initial.scheme ?? DEFAULT_STATE.scheme)
+  const [compliance, setCompliance] = useState<Compliance>(
+    initial.compliance ?? DEFAULT_STATE.compliance,
+  )
   const [exportOpen, setExportOpen] = useState(false)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
@@ -68,17 +87,18 @@ export default function App() {
     brand === DEFAULT_STATE.brand &&
     accentOverride === DEFAULT_STATE.accentOverride &&
     mode === DEFAULT_STATE.mode &&
-    scheme === DEFAULT_STATE.scheme
+    scheme === DEFAULT_STATE.scheme &&
+    compliance === DEFAULT_STATE.compliance
 
   // Keep the address bar in sync so a copy/paste of the URL also reproduces state.
   useEffect(() => {
     try {
-      const qs = encodeShareState({ brand, accentOverride, mode, scheme })
+      const qs = encodeShareState({ brand, accentOverride, mode, scheme, compliance })
       window.history.replaceState(null, "", isDefault ? "/" : `?${qs}`)
     } catch {
       // Ignore — some browsers disallow history writes in restricted contexts.
     }
-  }, [brand, accentOverride, mode, scheme, isDefault])
+  }, [brand, accentOverride, mode, scheme, compliance, isDefault])
 
   // Apply + persist the page theme by toggling `.dark` on <html>.
   useEffect(() => {
@@ -96,13 +116,17 @@ export default function App() {
   // version search engines should index for the site itself.
   useEffect(() => {
     if (isDefault) {
-      document.title = CANONICAL_TITLE
-      setMeta("name", "description", CANONICAL_DESCRIPTION)
+      document.title = CANONICAL.title
+      setMeta("name", "description", CANONICAL.description)
       return
     }
-    document.title = `Ramp Generator — brand ${brand} · ${scheme} · ${mode}`
-    setMeta("name", "description", describePalette({ brand, accentOverride, mode, scheme }))
-  }, [brand, accentOverride, mode, scheme, isDefault])
+    document.title = `Ramp Generator — brand ${brand} · ${scheme} · ${mode} · ${compliance}`
+    setMeta(
+      "name",
+      "description",
+      describePalette({ brand, accentOverride, mode, scheme, compliance }),
+    )
+  }, [brand, accentOverride, mode, scheme, compliance, isDefault])
 
   return (
     <MotionConfig reducedMotion="user">
@@ -110,7 +134,12 @@ export default function App() {
         <AnimatePresence>
           {exportOpen && (
             <ExportModal key="export" onClose={() => setExportOpen(false)}>
-              <ExportPanel palette={palette} mode={mode} />
+              <ExportPanel
+                palette={palette}
+                mode={mode}
+                compliance={compliance}
+                shareHref={shareUrl({ brand, accentOverride, mode, scheme, compliance })}
+              />
             </ExportModal>
           )}
         </AnimatePresence>
@@ -127,29 +156,21 @@ export default function App() {
                 Ramp Generator
               </h1>
               <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ash">
-                Pick a brand color, and the tool does the rest—all ready to use with
-                agents.
+                Generate agent-optimized, accessible color ramps in just a few
+                clicks.
               </p>
             </header>
 
             {/* Top-right action stack — theme, share, export (icon-only). */}
             <div className="flex items-center gap-2">
               <ThemeToggle theme={theme} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
-              <ShareButton state={{ brand, accentOverride, mode, scheme }} />
+              <ShareButton state={{ brand, accentOverride, mode, scheme, compliance }} />
               <IconButton
                 onClick={() => setExportOpen(true)}
                 title="Export tokens"
                 variant="solid"
               >
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path
-                    d="M10 3v9m0 0l-3.2-3.2M10 12l3.2-3.2M4 15.5h12"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <DownloadSimple size={18} weight="regular" aria-hidden="true" />
               </IconButton>
             </div>
           </div>
@@ -176,6 +197,11 @@ export default function App() {
               <SectionLabel>Scope</SectionLabel>
               <ModeToggle mode={mode} onChange={setMode} />
             </div>
+
+            <div>
+              <SectionLabel>Contrast</SectionLabel>
+              <ComplianceToggle compliance={compliance} onChange={setCompliance} />
+            </div>
           </div>
         </section>
 
@@ -185,8 +211,12 @@ export default function App() {
           <RampGroup title="Accents" ramps={palette.accents} />
           <RampGroup title="Neutral" ramps={[palette.neutral]} />
           <RampGroup title="Status" ramps={palette.status} />
-          <SemanticTokens palette={palette} mode={mode} />
-          <AgentData palette={palette} mode={mode} state={{ brand, accentOverride, mode, scheme }} />
+          <SemanticTokens palette={palette} mode={mode} compliance={compliance} />
+          <AgentData
+            palette={palette}
+            mode={mode}
+            state={{ brand, accentOverride, mode, scheme, compliance }}
+          />
           <Attribution />
         </main>
         </div>
@@ -209,7 +239,7 @@ function setMeta(attr: "name" | "property", key: string, content: string) {
 /** A one-line, agent-friendly summary of the current palette. */
 function describePalette(s: ShareState): string {
   const accent = s.accentOverride ? `accent ${s.accentOverride}` : "auto-derived accent"
-  return `Design-system palette generated from brand color ${s.brand} (${accent}), ${s.scheme} derivation, ${s.mode} scope. Perceptually-even OKLCH ramps plus usage-first semantic tokens for light and dark. Full token values are listed on the page.`
+  return `Design-system palette generated from brand color ${s.brand} (${accent}), ${s.scheme} derivation, ${s.mode} scope, tuned to WCAG ${s.compliance} contrast. Perceptually-even OKLCH ramps plus usage-first semantic tokens for light and dark. Full token values are listed on the page.`
 }
 
 /**
@@ -226,21 +256,25 @@ function AgentData({
   mode: DsMode
   state: ShareState
 }) {
+  const { compliance } = state
   const legend = [
     "# Ramp Generator — machine-readable palette",
     "# Deterministically derived from the URL query string:",
     "#   b = brand hex (no #)   a = accent hex (optional, omit for auto)",
     "#   m = scope: full | basic",
     "#   s = derivation: complementary | analogous | triadic | split | monochromatic",
+    "#   c = contrast target: AA (4.5:1) | AAA (7:1)",
     `# This palette: b=${state.brand.replace("#", "")}` +
       `${state.accentOverride ? ` a=${state.accentOverride.replace("#", "")}` : ""}` +
-      ` m=${state.mode} s=${state.scheme}`,
+      ` m=${state.mode} s=${state.scheme} c=${state.compliance}`,
     "# Ramps are 50–950 OKLCH steps; semantic tokens are listed for :root (light) and .dark.",
+    `# Token steps are auto-adjusted so paired foregrounds meet WCAG ${state.compliance}.`,
   ].join("\n")
 
   const [format, setFormat] = useState<"css" | "json">("json")
   const { copied, copy } = useCopy(1400)
-  const code = format === "css" ? toCss(palette, mode) : toJson(palette, mode)
+  const code =
+    format === "css" ? toCss(palette, mode, compliance) : toJson(palette, mode, compliance)
   const formats: { id: "css" | "json"; label: string }[] = [
     { id: "json", label: "JSON" },
     { id: "css", label: "CSS" },
@@ -250,8 +284,15 @@ function AgentData({
     <section className="mb-12" aria-label="Machine-readable palette for agents">
       <details className="group rounded-lg border border-line">
         <summary className="cursor-pointer list-none px-4 py-3 font-mono text-xs text-ash transition-colors hover:text-ink">
-          <span className="inline-block transition-transform duration-200 group-open:rotate-90">▸</span>{" "}
-          Machine-readable palette (for agents)
+          <span className="inline-flex items-center gap-1.5">
+            <CaretRight
+              size={12}
+              weight="bold"
+              aria-hidden="true"
+              className="transition-transform duration-200 group-open:rotate-90"
+            />
+            Machine-readable palette (for agents)
+          </span>
         </summary>
         <div className="border-t border-line">
           {/* Legend stays outside the copyable block so the copied code is valid. */}
@@ -355,41 +396,21 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
     <IconButton onClick={onToggle} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
       <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
         {/* Sun (shown in dark mode → click for light) */}
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 20 20"
-          fill="none"
+        <Sun
+          size={18}
+          weight="regular"
           aria-hidden="true"
           className="absolute transition-all duration-300 ease-out"
           style={{ opacity: dark ? 1 : 0, transform: dark ? "none" : "rotate(-90deg) scale(0.6)" }}
-        >
-          <circle cx="10" cy="10" r="3.4" stroke="currentColor" strokeWidth="1.6" />
-          <path
-            d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-          />
-        </svg>
+        />
         {/* Moon (shown in light mode → click for dark) */}
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 20 20"
-          fill="none"
+        <Moon
+          size={18}
+          weight="regular"
           aria-hidden="true"
           className="absolute transition-all duration-300 ease-out"
           style={{ opacity: dark ? 0 : 1, transform: dark ? "rotate(90deg) scale(0.6)" : "none" }}
-        >
-          <path
-            d="M16.5 12.42A7 7 0 017.58 3.5a7 7 0 108.92 8.92z"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-        </svg>
+        />
       </span>
     </IconButton>
   )
@@ -404,39 +425,20 @@ function ShareButton({ state }: { state: ShareState }) {
     >
       <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
         {/* Link icon → check crossfade on copy. */}
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 20 20"
-          fill="none"
+        <LinkSimple
+          size={18}
+          weight="regular"
           aria-hidden="true"
           className="absolute transition-all duration-200 ease-out"
           style={{ opacity: copied ? 0 : 1, transform: copied ? "scale(0.7)" : "none" }}
-        >
-          <path
-            d="M8.2 11.8l3.6-3.6M8.7 5.6l1-1a3 3 0 014.2 4.2l-1 1M11.3 14.4l-1 1a3 3 0 01-4.2-4.2l1-1"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-          />
-        </svg>
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 20 20"
-          fill="none"
+        />
+        <Check
+          size={18}
+          weight="bold"
           aria-hidden="true"
           className="absolute text-emerald-500 transition-all duration-200 ease-out"
           style={{ opacity: copied ? 1 : 0, transform: copied ? "none" : "scale(0.7)" }}
-        >
-          <path
-            d="M4.5 10.5l3.8 3.8L15.5 6.5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        />
       </span>
     </IconButton>
   )
@@ -523,14 +525,7 @@ function ExportModal({
             aria-label="Close"
             className="rounded p-1.5 text-ash transition-colors hover:bg-ink/[0.06] hover:text-ink"
           >
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path
-                d="M5 5l10 10M15 5L5 15"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            </svg>
+            <X size={18} weight="regular" aria-hidden="true" />
           </button>
         </div>
         {children}
@@ -544,6 +539,53 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-ash">
       {children}
     </h2>
+  )
+}
+
+/**
+ * WCAG contrast target. Changing this re-resolves every semantic token: paired
+ * foregrounds walk their ramp until they clear the ratio, and action fills move
+ * too when a foreground runs out of ramp. See `resolveTokens` in lib/semantics.
+ */
+function ComplianceToggle({
+  compliance,
+  onChange,
+}: {
+  compliance: Compliance
+  onChange: (c: Compliance) => void
+}) {
+  const options: { id: Compliance; label: string; title: string }[] = [
+    { id: "AA", label: "AA", title: "WCAG AA — 4.5:1 minimum for normal text" },
+    { id: "AAA", label: "AAA", title: "WCAG AAA — 7:1 minimum for normal text" },
+  ]
+  return (
+    <div className="inline-flex rounded-md border border-line p-0.5">
+      {options.map((o) => {
+        const active = compliance === o.id
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            title={o.title}
+            aria-pressed={active}
+            className={cn(
+              "relative rounded px-3 py-1.5 font-mono text-xs transition-colors",
+              active ? "text-paper" : "text-ash hover:text-ink",
+            )}
+          >
+            {active && (
+              <motion.span
+                layoutId="compliance-pill"
+                className="absolute inset-0 rounded bg-ink"
+                transition={{ type: "spring", stiffness: 480, damping: 38 }}
+              />
+            )}
+            <span className="relative z-10">{o.label}</span>
+          </button>
+        )
+      })}
+    </div>
   )
 }
 
