@@ -39,7 +39,15 @@ export type TokenDef = {
   full?: boolean
 }
 
+/** A token that ended up sharing a value with a sibling it should differ from. */
+export type TokenWarning = {
+  mode: "light" | "dark"
+  sameAs: string[]
+  reason: string
+}
+
 export type ResolvedToken = TokenDef & {
+  warnings?: TokenWarning[]
   lightHex: string
   darkHex: string
   lightRatio?: number
@@ -236,6 +244,59 @@ function hexAt(
   return r ? getSwatch(r, step).hex : "#808080"
 }
 
+/**
+ * Pairs that share a value on purpose, so they never raise a warning.
+ * Light mode has no step above 50, so a raised surface can't sit above a plain
+ * one — elevation reads through shadow there instead.
+ */
+const INTENTIONAL_MATCHES = new Set(["bg-surface|bg-surface-raised|light"])
+
+/**
+ * Tokens in the same category that ended up on the same value.
+ *
+ * Two of these are genuinely unavoidable rather than mistakes, so the message
+ * says which: a near-grey brand leaves derivation no hue to rotate, and at AAA
+ * only the darkest few steps clear 7:1, so a three-level text hierarchy has
+ * nowhere to spread out.
+ */
+function collisionsFor(
+  token: ResolvedToken,
+  all: ResolvedToken[],
+  palette: Palette,
+  compliance: Compliance,
+): TokenWarning[] {
+  const brand = palette.primaries[0]
+  const brandChroma = brand ? (toOklch(getSwatch(brand, 500).hex)?.c ?? 0) : 0
+  const out: TokenWarning[] = []
+
+  for (const mode of ["light", "dark"] as const) {
+    const mine = mode === "light" ? token.lightHex : token.darkHex
+    const sameAs = all
+      .filter((o) => o.token !== token.token && o.category === token.category)
+      .filter((o) => (mode === "light" ? o.lightHex : o.darkHex) === mine)
+      .filter(
+        (o) =>
+          !INTENTIONAL_MATCHES.has(`${token.token}|${o.token}|${mode}`) &&
+          !INTENTIONAL_MATCHES.has(`${o.token}|${token.token}|${mode}`),
+      )
+      .map((o) => o.token)
+    if (!sameAs.length) continue
+
+    let reason: string
+    if (brandChroma < 0.02) {
+      reason =
+        "This brand color is almost grey, so the derived hues land on the same place. Pick a more saturated brand color to separate them."
+    } else if (compliance === "AAA" && token.category === "Text") {
+      reason =
+        "At AAA only the darkest steps clear 7:1, so these text levels have nowhere to spread out. They separate again at AA."
+    } else {
+      reason = "These resolve to the same value, so they won't be distinguishable in use."
+    }
+    out.push({ mode, sameAs, reason })
+  }
+  return out
+}
+
 // ---------- Contrast compliance ----------
 
 export type Compliance = "AA" | "AAA"
@@ -394,7 +455,7 @@ export function resolveTokens(
   })
 
   // Final pass: contrast ratios, now that every placement has settled.
-  return resolved.map((t) => {
+  const withRatios = resolved.map((t) => {
     if (!t.pairWith) return t
     const against = hexes[t.pairWith]
     if (!against) return t
@@ -403,6 +464,11 @@ export function resolveTokens(
       lightRatio: contrast(t.lightHex, against.light),
       darkRatio: contrast(t.darkHex, against.dark),
     }
+  })
+
+  return withRatios.map((t) => {
+    const warnings = collisionsFor(t, withRatios, palette, compliance)
+    return warnings.length ? { ...t, warnings } : t
   })
 }
 

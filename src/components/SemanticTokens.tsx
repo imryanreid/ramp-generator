@@ -20,7 +20,7 @@ import { formatColor, type ColorFormat } from "../lib/color"
 import { cn } from "../lib/utils"
 import CopyButton from "./CopyButton"
 import RowToggle from "./RowToggle"
-import { Square, TextT, Selection, Target } from "@phosphor-icons/react"
+import { Square, TextT, Selection, Target, Warning } from "@phosphor-icons/react"
 
 type ValueView = "hex" | "ramp"
 
@@ -230,6 +230,7 @@ function Row({
             {t.token}
           </span>
         </CopyCell>
+        <CollisionWarning token={t} />
       </td>
       <td className={cn("text-ash py-2 pr-4 transition-opacity", !included && "opacity-40")}>
         {t.role}
@@ -346,5 +347,29 @@ function AA({ light, dark, target }: { light?: number; dark?: number; target: nu
       {badge(light, "L")}
       {badge(dark, "D")}
     </div>
+  )
+}
+
+/**
+ * Flags a token that shares its value with a sibling it ought to differ from.
+ *
+ * Both causes are constraints rather than bugs — an achromatic brand, or AAA
+ * squeezing a three-level text hierarchy into the few steps that clear 7:1 —
+ * so this explains the situation rather than implying something is broken.
+ */
+function CollisionWarning({ token }: { token: ResolvedToken }) {
+  if (!token.warnings?.length) return null
+  const summary = token.warnings
+    .map((w) => `Same as ${w.sameAs.join(", ")} in ${w.mode} mode. ${w.reason}`)
+    .join("\n\n")
+  return (
+    <span
+      title={summary}
+      role="img"
+      aria-label={summary}
+      className="ml-1.5 inline-flex shrink-0 cursor-help align-middle text-amber-500"
+    >
+      <Warning size={14} weight="fill" aria-hidden="true" />
+    </span>
   )
 }

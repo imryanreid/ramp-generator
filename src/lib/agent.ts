@@ -91,6 +91,19 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     "Prefer the semantic tokens over raw ramp steps; they already carry the light/dark mapping.",
     "Ramps are OKLCH-derived and perceptually even. Use these hex values verbatim rather than re-deriving them.",
   ]
+  // An agent applying two identical tokens should know they're identical.
+  const collided = tokens.filter((t) => t.warnings?.length)
+  if (collided.length) {
+    const pairs = new Set<string>()
+    for (const t of collided) {
+      for (const w of t.warnings!) {
+        for (const other of w.sameAs) pairs.add([t.token, other].sort().join(" and "))
+      }
+    }
+    notes.push(
+      `These tokens resolve to the same value and won't be distinguishable in use: ${[...pairs].join("; ")}. ${collided[0].warnings![0].reason}`,
+    )
+  }
   if (state.excludedRamps.length || state.excludedTokens.length) {
     notes.push(
       `The author deselected ${state.excludedRamps.length} ramp(s) and ${state.excludedTokens.length} token(s). What is listed here is the complete intended palette — do not add colors back to fill gaps.`,
