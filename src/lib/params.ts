@@ -15,6 +15,7 @@
 // origin lives in share.ts instead.
 // ==============================================
 import { SCHEMES, type DsMode, type Scheme } from "./recommend.js"
+import { COLOR_FORMATS, type ColorFormat } from "./color.js"
 import type { Compliance } from "./semantics.js"
 
 /** The full, deterministic input state that reproduces a palette. */
@@ -24,6 +25,8 @@ export type ShareState = {
   mode: DsMode
   scheme: Scheme
   compliance: Compliance
+  /** Notation for displayed and exported colors. */
+  format: ColorFormat
   /** Ramp names deselected for export, e.g. "accent-2". Empty is the default. */
   excludedRamps: string[]
   /** Semantic token names deselected for export, e.g. "bg-info". */
@@ -37,6 +40,7 @@ export const DEFAULT_STATE: ShareState = {
   mode: "full",
   scheme: "complementary",
   compliance: "AA",
+  format: "hex",
   excludedRamps: [],
   excludedTokens: [],
 }
@@ -76,6 +80,7 @@ export function encodeShareState(s: ShareState): string {
   p.set("m", s.mode)
   p.set("s", s.scheme)
   p.set("c", s.compliance)
+  if (s.format !== "hex") p.set("f", s.format)
   if (s.excludedRamps.length) p.set("xr", encodeNames(s.excludedRamps))
   if (s.excludedTokens.length) p.set("xt", encodeNames(s.excludedTokens))
   return p.toString()
@@ -100,6 +105,9 @@ export function decodeShareState(search: string): Partial<ShareState> {
 
   const c = p.get("c")
   if (c === "AA" || c === "AAA") out.compliance = c
+
+  const f = p.get("f")
+  if (f && COLOR_FORMATS.some((x) => x.id === f)) out.format = f as ColorFormat
 
   const xr = decodeNames(p.get("xr"))
   if (xr) out.excludedRamps = xr

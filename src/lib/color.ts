@@ -14,6 +14,7 @@
 import {
   oklch,
   rgb,
+  hsl,
   formatHex,
   parse,
   clampChroma,
@@ -22,6 +23,48 @@ import {
 } from "culori"
 
 export const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const
+
+/** How a color is written wherever the app shows or exports one. */
+export type ColorFormat = "hex" | "oklch" | "rgb" | "hsl"
+
+export const COLOR_FORMATS: { id: ColorFormat; label: string }[] = [
+  { id: "hex", label: "Hex" },
+  { id: "oklch", label: "OKLCH" },
+  { id: "rgb", label: "RGB" },
+  { id: "hsl", label: "HSL" },
+]
+
+const round = (n: number, places = 0) => {
+  const f = 10 ** places
+  return Math.round((n + Number.EPSILON) * f) / f
+}
+
+/**
+ * Write a hex color in the requested notation.
+ *
+ * Always derives from the hex rather than from the ramp's stored OKLCH string,
+ * so a ramp step and a semantic token that resolve to the same color always
+ * render identically. Falls back to the input if it can't be parsed.
+ */
+export function formatColor(hex: string, format: ColorFormat = "hex"): string {
+  if (format === "hex") return hex
+  const parsed = parse(hex)
+  if (!parsed) return hex
+
+  if (format === "oklch") {
+    const c = oklch(parsed)
+    if (!c) return hex
+    return `oklch(${round((c.l ?? 0) * 100, 1)}% ${round(c.c ?? 0, 3)} ${round(c.h ?? 0, 1)})`
+  }
+  if (format === "rgb") {
+    const c = rgb(parsed)
+    if (!c) return hex
+    return `rgb(${round((c.r ?? 0) * 255)} ${round((c.g ?? 0) * 255)} ${round((c.b ?? 0) * 255)})`
+  }
+  const c = hsl(parsed)
+  if (!c) return hex
+  return `hsl(${round(c.h ?? 0, 1)} ${round((c.s ?? 0) * 100, 1)}% ${round((c.l ?? 0) * 100, 1)}%)`
+}
 export type Step = (typeof STEPS)[number]
 
 // OKLCH lightness targets per step, tuned to feel like Tailwind's ramps.

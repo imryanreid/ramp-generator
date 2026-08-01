@@ -16,6 +16,7 @@ import {
   type Compliance,
 } from "../lib/semantics"
 import type { Palette } from "../lib/recommend"
+import { formatColor, type ColorFormat } from "../lib/color"
 import { cn } from "../lib/utils"
 import CopyButton from "./CopyButton"
 import RowToggle from "./RowToggle"
@@ -27,6 +28,7 @@ export default function SemanticTokens({
   palette,
   mode,
   compliance,
+  format,
   excluded,
   onToggle,
   onSetMany,
@@ -34,6 +36,7 @@ export default function SemanticTokens({
   palette: Palette
   mode: DsMode
   compliance: Compliance
+  format: ColorFormat
   excluded: ReadonlySet<string>
   onToggle: (name: string) => void
   onSetMany: (names: string[], off: boolean) => void
@@ -81,6 +84,7 @@ export default function SemanticTokens({
                 view={view}
                 rampNames={rampNames}
                 target={target}
+                format={format}
                 excluded={excluded}
                 onToggle={onToggle}
                 onSetMany={onSetMany}
@@ -134,6 +138,7 @@ function GroupBlock({
   view,
   rampNames,
   target,
+  format,
   excluded,
   onToggle,
   onSetMany,
@@ -143,6 +148,7 @@ function GroupBlock({
   view: ValueView
   rampNames: Record<string, string>
   target: number
+  format: ColorFormat
   excluded: ReadonlySet<string>
   onToggle: (name: string) => void
   onSetMany: (names: string[], off: boolean) => void
@@ -174,6 +180,7 @@ function GroupBlock({
           view={view}
           rampNames={rampNames}
           target={target}
+          format={format}
           included={!excluded.has(t.token)}
           onToggle={() => onToggle(t.token)}
         />
@@ -192,6 +199,7 @@ function Row({
   view,
   rampNames,
   target,
+  format,
   included,
   onToggle,
 }: {
@@ -199,11 +207,14 @@ function Row({
   view: ValueView
   rampNames: Record<string, string>
   target: number
+  format: ColorFormat
   included: boolean
   onToggle: () => void
 }) {
-  const lightLabel = view === "ramp" ? rampRef(rampNames, t.light.ramp, t.light.step) : t.lightHex
-  const darkLabel = view === "ramp" ? rampRef(rampNames, t.dark.ramp, t.dark.step) : t.darkHex
+  const lightLabel =
+    view === "ramp" ? rampRef(rampNames, t.light.ramp, t.light.step) : formatColor(t.lightHex, format)
+  const darkLabel =
+    view === "ramp" ? rampRef(rampNames, t.dark.ramp, t.dark.step) : formatColor(t.darkHex, format)
   return (
     <tr className="border-t border-line-soft">
       {/* Only the content dims — the checkbox stays at full strength so an
@@ -300,7 +311,8 @@ function Chip({ hex, label, mode }: { hex: string; label: string; mode: "light" 
             : "inset 0 0 0 1px rgba(0,0,0,0.12)",
         }}
       />
-      <span className="font-mono text-xs uppercase">{label}</span>
+      {/* Uppercase suits a bare hex; it would mangle `oklch(...)`. */}
+      <span className={cn("font-mono text-xs", label.startsWith("#") && "uppercase")}>{label}</span>
     </span>
   )
 }

@@ -52,7 +52,7 @@ don't execute JavaScript.
 
 | File | What it does |
 | --- | --- |
-| `color.ts` | The engine. Converts a hex to OKLCH and builds an 11-step ramp (50–950) using a fixed lightness curve and a bell-curve chroma multiplier, clamping each result back into sRGB. Also builds the tinted neutral ramp and computes contrast for the swatch labels. |
+| `color.ts` | The engine. Also holds `formatColor`, which writes any hex as hex/oklch/rgb/hsl for both display and export. Converts a hex to OKLCH and builds an 11-step ramp (50–950) using a fixed lightness curve and a bell-curve chroma multiplier, clamping each result back into sRGB. Also builds the tinted neutral ramp and computes contrast for the swatch labels. |
 | `recommend.ts` | Decides *which* colors to generate. Rotates the brand hue by the chosen scheme to derive accents, picks status hues, and pushes any status hue that lands too close to a palette hue out of the way. Exports `SCHEMES` and `buildPalette`. |
 | `semantics.ts` | Maps ramp steps onto usage-first token names (surface, border, text, interactive states) for both light and dark, nudging steps as needed so every paired foreground clears the selected WCAG target, then serializes the result — `toCss`, `toTailwind`, `toFigma` (W3C DTCG), and `toJson`. These exporters are the canonical output format; everything else renders from them. |
 | `params.ts` | The URL contract: encode/decode the inputs that reproduce a palette, validating each field independently so a malformed link falls back to defaults. Deliberately free of browser and Vite globals so the functions in `api/` can import it. |
@@ -66,7 +66,7 @@ don't execute JavaScript.
 
 | File | What it does |
 | --- | --- |
-| `ColorInput.tsx` | The brand and accent pickers: swatch, hex field, and the lock/reset behavior for overriding the auto-derived accent. |
+| `ColorInput.tsx` | The brand and accent pickers: a swatch that opens a react-colorful popover, a hex field, and the lock/reset behaviour for overriding the auto-derived accent. |
 | `SchemeSelect.tsx` | The derivation dropdown (complementary, analogous, triadic, split, monochromatic) with its descriptions. |
 | `RampGroup.tsx` | Renders a titled group of ramps as rows of swatches, each with an include/exclude checkbox beside its name. |
 | `SemanticTokens.tsx` | The semantic token table — token name, the ramp step it resolves to, light/dark previews, and a contrast badge whose pass threshold follows the selected WCAG level. |

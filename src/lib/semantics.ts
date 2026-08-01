@@ -11,7 +11,17 @@
 // the page both render from them. Don't add a
 // fourth serialization elsewhere.
 // ==============================================
-import { STEPS, getSwatch, contrast, hexToSrgbComponents, toOklch, type Ramp, type Step } from "./color.js"
+import {
+  STEPS,
+  getSwatch,
+  contrast,
+  hexToSrgbComponents,
+  toOklch,
+  formatColor,
+  type Ramp,
+  type Step,
+  type ColorFormat,
+} from "./color.js"
 import type { Palette } from "./recommend.js"
 
 export type DsMode = "full" | "basic"
@@ -336,6 +346,11 @@ export type ExportOptions = {
   excludedTokens?: ReadonlySet<string>
   /** Figma only — that format carries one color mode per file. */
   colorMode?: "light" | "dark"
+  /**
+   * Notation for CSS/Tailwind/JSON output. Figma is unaffected: W3C DTCG
+   * specifies a structured sRGB value, not a CSS color string.
+   */
+  format?: ColorFormat
 }
 
 const NONE: ReadonlySet<string> = new Set()
@@ -417,11 +432,12 @@ export function missingContrastReferences(
 export function toCss(palette: Palette, o: ExportOptions = {}): string {
   const ramps = selectedRamps(palette, o)
   const tokens = selectedTokens(palette, o)
+  const fmt = (hex: string) => formatColor(hex, o.format ?? "hex")
   const rampLines = ramps.flatMap((r) =>
-    STEPS.map((s) => `  --${r.name}-${s}: ${getSwatch(r, s).hex};`),
+    STEPS.map((s) => `  --${r.name}-${s}: ${fmt(getSwatch(r, s).hex)};`),
   )
-  const lightSem = tokens.map((t) => `  --color-${t.token}: ${t.lightHex};`)
-  const darkSem = tokens.map((t) => `  --color-${t.token}: ${t.darkHex};`)
+  const lightSem = tokens.map((t) => `  --color-${t.token}: ${fmt(t.lightHex)};`)
+  const darkSem = tokens.map((t) => `  --color-${t.token}: ${fmt(t.darkHex)};`)
   return [
     ":root {",
     "  /* Ramps */",
@@ -439,11 +455,12 @@ export function toCss(palette: Palette, o: ExportOptions = {}): string {
 
 export function toTailwind(palette: Palette, o: ExportOptions = {}): string {
   const ramps = selectedRamps(palette, o)
+  const fmt = (hex: string) => formatColor(hex, o.format ?? "hex")
   const rampLines = ramps.flatMap((r) =>
-    STEPS.map((s) => `  --color-${r.name}-${s}: ${getSwatch(r, s).hex};`),
+    STEPS.map((s) => `  --color-${r.name}-${s}: ${fmt(getSwatch(r, s).hex)};`),
   )
   const tokens = selectedTokens(palette, o)
-  const semLines = tokens.map((t) => `  --color-${t.token}: ${t.lightHex};`)
+  const semLines = tokens.map((t) => `  --color-${t.token}: ${fmt(t.lightHex)};`)
   return ["@theme {", ...rampLines, "", ...semLines, "}"].join("\n")
 }
 
@@ -616,13 +633,13 @@ export function toJson(palette: Palette, o: ExportOptions = {}): string {
   for (const r of ramps) {
     const scale: Record<string, { $value: string; $type: string }> = {}
     for (const s of STEPS) {
-      scale[String(s)] = { $value: getSwatch(r, s).hex, $type: "color" }
+      scale[String(s)] = { $value: formatColor(getSwatch(r, s).hex, o.format ?? "hex"), $type: "color" }
     }
     out[r.name] = scale
   }
   const semantic: Record<string, { $value: string; $type: string }> = {}
   for (const t of selectedTokens(palette, o)) {
-    semantic[t.token] = { $value: t.lightHex, $type: "color" }
+    semantic[t.token] = { $value: formatColor(t.lightHex, o.format ?? "hex"), $type: "color" }
   }
   out.semantic = semantic
   return JSON.stringify(out, null, 2)

@@ -76,6 +76,27 @@ body {
   background: var(--color-line);
 }
 
+/* react-colorful ships its own base styles; these only resize it and round the
+   corners so the picker reads as part of the app rather than a dropped-in
+   widget. Scoped to .ramp-picker so nothing else is affected. */
+.ramp-picker .react-colorful {
+  width: 208px;
+  height: 170px;
+  gap: 10px;
+}
+.ramp-picker .react-colorful__saturation {
+  border-radius: 6px;
+  border-bottom: none;
+}
+.ramp-picker .react-colorful__hue {
+  height: 12px;
+  border-radius: 999px;
+}
+.ramp-picker .react-colorful__pointer {
+  width: 16px;
+  height: 16px;
+}
+
 /* Reference the theme vars so selection inverts correctly in dark mode. */
 ::selection {
   background: var(--color-ink);

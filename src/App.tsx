@@ -13,7 +13,7 @@
 // the bottom of this file; anything reused lives in
 // components/.
 // ==============================================
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
 import ColorInput from "./components/ColorInput"
 import RampGroup from "./components/RampGroup"
@@ -29,6 +29,7 @@ import {
   type ShareState,
 } from "./lib/share"
 import { toCss, toJson, allRamps, type Compliance, type ExportOptions } from "./lib/semantics"
+import { COLOR_FORMATS, type ColorFormat } from "./lib/color"
 import { useCopy } from "./lib/clipboard"
 import { cn } from "./lib/utils"
 import {
@@ -39,6 +40,7 @@ import {
   Check,
   X,
   CaretRight,
+  CaretDown,
   ArrowCounterClockwise,
 } from "@phosphor-icons/react"
 import avatarUrl from "./assets/avatar-ryan.webp"
@@ -77,6 +79,7 @@ export default function App() {
   const [compliance, setCompliance] = useState<Compliance>(
     initial.compliance ?? DEFAULT_STATE.compliance,
   )
+  const [format, setFormat] = useState<ColorFormat>(initial.format ?? DEFAULT_STATE.format)
   // Deselected rows. Kept as Sets for cheap lookups while rendering ~45 rows;
   // serialized to sorted arrays for the URL so the link is stable.
   const [excludedRamps, setExcludedRamps] = useState<Set<string>>(
@@ -100,11 +103,18 @@ export default function App() {
     mode,
     scheme,
     compliance,
+    format,
     excludedRamps: [...excludedRamps],
     excludedTokens: [...excludedTokens],
   }
 
-  const exportOptions: ExportOptions = { mode, compliance, excludedRamps, excludedTokens }
+  const exportOptions: ExportOptions = {
+    mode,
+    compliance,
+    format,
+    excludedRamps,
+    excludedTokens,
+  }
 
   /**
    * Back to the bare URL. Everything the visitor chose is derived from the five
@@ -118,6 +128,7 @@ export default function App() {
     setMode(DEFAULT_STATE.mode)
     setScheme(DEFAULT_STATE.scheme)
     setCompliance(DEFAULT_STATE.compliance)
+    setFormat(DEFAULT_STATE.format)
     setExcludedRamps(new Set())
     setExcludedTokens(new Set())
   }
@@ -137,6 +148,7 @@ export default function App() {
     mode === DEFAULT_STATE.mode &&
     scheme === DEFAULT_STATE.scheme &&
     compliance === DEFAULT_STATE.compliance &&
+    format === DEFAULT_STATE.format &&
     excludedRamps.size === 0 &&
     excludedTokens.size === 0
 
@@ -148,7 +160,7 @@ export default function App() {
       // Ignore — some browsers disallow history writes in restricted contexts.
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
-  }, [brand, accentOverride, mode, scheme, compliance, excludedRamps, excludedTokens, isDefault])
+  }, [brand, accentOverride, mode, scheme, compliance, format, excludedRamps, excludedTokens, isDefault])
 
   // Apply + persist the page theme by toggling `.dark` on <html>.
   useEffect(() => {
@@ -210,9 +222,7 @@ export default function App() {
             {/* Top-right action stack — theme, share, export (icon-only). */}
             <div className="flex items-center gap-2">
               <ThemeToggle theme={theme} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
-              <IconButton onClick={reset} title="Reset to defaults" variant="danger">
-                <ArrowCounterClockwise size={18} weight="regular" aria-hidden="true" />
-              </IconButton>
+              <ResetButton onReset={reset} />
               <ShareButton state={shareState} />
               <IconButton
                 onClick={() => setExportOpen(true)}
@@ -251,6 +261,11 @@ export default function App() {
               <SectionLabel>Contrast</SectionLabel>
               <ComplianceToggle compliance={compliance} onChange={setCompliance} />
             </div>
+
+            <div>
+              <SectionLabel>Format</SectionLabel>
+              <FormatSelect format={format} onChange={setFormat} />
+            </div>
           </div>
         </section>
 
@@ -268,6 +283,7 @@ export default function App() {
               key={title}
               title={title}
               ramps={ramps}
+              format={format}
               excluded={excludedRamps}
               onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
               onSetMany={(names, off) =>
@@ -283,6 +299,7 @@ export default function App() {
             palette={palette}
             mode={mode}
             compliance={compliance}
+            format={format}
             excluded={excludedTokens}
             onToggle={(name) => setExcludedTokens((prev) => toggle(prev, name))}
             onSetMany={(names, off) =>
@@ -503,6 +520,47 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
   )
 }
 
+/**
+ * Reset, with the same brief checkmark the share button uses — otherwise
+ * clearing an already-default palette looks like a dead click.
+ */
+function ResetButton({ onReset }: { onReset: () => void }) {
+  const [done, setDone] = useState(false)
+  const timer = useRef<number | null>(null)
+
+  useEffect(() => () => window.clearTimeout(timer.current ?? undefined), [])
+
+  return (
+    <IconButton
+      onClick={() => {
+        onReset()
+        setDone(true)
+        window.clearTimeout(timer.current ?? undefined)
+        timer.current = window.setTimeout(() => setDone(false), 1400)
+      }}
+      title="Reset to defaults"
+      variant="danger"
+    >
+      <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
+        <ArrowCounterClockwise
+          size={18}
+          weight="regular"
+          aria-hidden="true"
+          className="absolute transition-all duration-200 ease-out"
+          style={{ opacity: done ? 0 : 1, transform: done ? "scale(0.7)" : "none" }}
+        />
+        <Check
+          size={18}
+          weight="bold"
+          aria-hidden="true"
+          className="absolute text-emerald-500 transition-all duration-200 ease-out"
+          style={{ opacity: done ? 1 : 0, transform: done ? "none" : "scale(0.7)" }}
+        />
+      </span>
+    </IconButton>
+  )
+}
+
 function ShareButton({ state }: { state: ShareState }) {
   const { copied, copy } = useCopy(1400)
   return (
@@ -672,6 +730,42 @@ function ComplianceToggle({
           </button>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * Notation for every colour the app shows or exports. OKLCH is the form the
+ * ramps are actually built in, so exporting it preserves the wide-gamut intent
+ * that hex quietly discards.
+ */
+function FormatSelect({
+  format,
+  onChange,
+}: {
+  format: ColorFormat
+  onChange: (f: ColorFormat) => void
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={format}
+        onChange={(e) => onChange(e.target.value as ColorFormat)}
+        aria-label="Color notation"
+        className="cursor-pointer appearance-none rounded-md border border-line bg-paper py-1.5 pl-3 pr-8 font-mono text-xs text-ink transition-colors hover:border-ink/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+      >
+        {COLOR_FORMATS.map((f) => (
+          <option key={f.id} value={f.id}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+      <CaretDown
+        size={12}
+        weight="bold"
+        aria-hidden="true"
+        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ash"
+      />
     </div>
   )
 }

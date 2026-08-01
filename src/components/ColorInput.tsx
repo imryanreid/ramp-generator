@@ -5,7 +5,8 @@
 // accent stays auto-derived until the user types or
 // picks one, which locks it.
 // ==============================================
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { HexColorPicker } from "react-colorful"
 import { normalizeHex } from "../lib/color"
 import { cn } from "../lib/utils"
 
@@ -96,19 +97,14 @@ function HexField({
 
   return (
     <div className={cn("flex items-center gap-2", muted && "opacity-70")}>
-      <label className="relative h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-md ring-1 ring-inset ring-ink/15">
-        <span className="block h-full w-full" style={{ backgroundColor: color }} />
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => {
-            onCommit(e.target.value)
-            setDraft(e.target.value.replace("#", ""))
-            setInvalid(false)
-          }}
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-        />
-      </label>
+      <SwatchPicker
+        color={color}
+        onChange={(hex) => {
+          onCommit(hex)
+          setDraft(hex.replace("#", ""))
+          setInvalid(false)
+        }}
+      />
       <div
         className={cn(
           "flex flex-1 items-center rounded-md border bg-paper px-2.5 py-1.5 font-mono text-sm",
@@ -127,6 +123,58 @@ function HexField({
           className="w-full bg-transparent uppercase outline-none"
         />
       </div>
+    </div>
+  )
+}
+
+/**
+ * The colour swatch, and the picker it opens.
+ *
+ * Replaces the browser's native colour chrome, which looks like the OS rather
+ * than the app. The hex field beside it stays the precise input — this is for
+ * exploring. Closes on outside click or Escape, mirroring SchemeSelect.
+ */
+function SwatchPicker({
+  color,
+  onChange,
+}: {
+  color: string
+  onChange: (hex: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("mousedown", onDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={`Choose color, currently ${color}`}
+        aria-expanded={open}
+        className="block h-9 w-9 rounded-md ring-1 ring-inset ring-ink/15 transition-transform hover:scale-[1.04]"
+        style={{ backgroundColor: color }}
+      />
+      {open && (
+        <div className="ramp-picker absolute left-0 top-full z-30 mt-2 rounded-lg border border-line bg-paper p-2.5 shadow-xl">
+          <HexColorPicker color={color} onChange={onChange} />
+        </div>
+      )}
     </div>
   )
 }

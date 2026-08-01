@@ -59,6 +59,28 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — Header copy, share images, picker, colour formats
+
+- **Header copy** now reads ramps.studio / Color Ramp Generator / "Generate
+  agent-optimized, accessible color ramps in a few clicks."
+- **Per-palette share images** (`api/og.tsx`) rendered with @vercel/og from the
+  same `buildPalette` + `readableText` the site uses, so a link unfurls with its
+  own colours. Satori needs TTF/OTF and both Inter and JetBrains Mono ship
+  WOFF2-only, so the image uses Geist + Geist Mono (SIL OFL, licence in
+  `public/fonts/`). Display face matches exactly; body face is a near neighbour.
+- **Reset control** between theme and share, red on hover, with the same
+  checkmark confirmation the share button uses. Clears the inputs and both
+  exclusion sets; the URL effect then strips the query string.
+- **Ramp checkboxes** moved right of their labels, matching the section headings.
+- **Colour picker** is now react-colorful in a popover (2.8 KB, MIT, no deps)
+  instead of the OS colour chrome. The hex field remains the precise input.
+- **Format selector** (`f=` param): hex / oklch / rgb / hsl, driving the swatch
+  labels, token table, copied values, and the CSS/Tailwind/JSON exports. Figma
+  deliberately stays structured sRGB — W3C DTCG specifies a structured colour
+  value, not a CSS string. The agent payload and `/api/palette` stay hex so
+  machine consumers keep one canonical, universally parseable format.
+  Watch out: labels are only uppercased for hex, since `OKLCH(...)` reads wrong.
+
 ### 2026-08-01 — Server-rendered palettes for agents
 
 **The audit finding that drove this:** the site is client-rendered, so a plain

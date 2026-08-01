@@ -79,6 +79,7 @@ https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 | `m` | Scope: `full` or `basic`. |
 | `s` | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic` |
 | `c` | Contrast target: `AA` (4.5:1) or `AAA` (7:1). |
+| `f` | Colour notation: `hex` (default), `oklch`, `rgb`, `hsl`. Drives display and the CSS/Tailwind/JSON exports. |
 | `xr` | Ramps left out of the export, dot-separated — e.g. `accent-2.info`. |
 | `xt` | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`. |
 

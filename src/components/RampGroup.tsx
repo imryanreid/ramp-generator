@@ -10,7 +10,7 @@
 // copyable — it just dims and drops out of the
 // export and the agent block.
 // ==============================================
-import { readableText, type Ramp } from "../lib/color"
+import { readableText, formatColor, type Ramp, type ColorFormat } from "../lib/color"
 import { Check } from "@phosphor-icons/react"
 import { cn } from "../lib/utils"
 import CopyText from "./CopyText"
@@ -19,13 +19,14 @@ import RowToggle from "./RowToggle"
 type Props = {
   title: string
   ramps: readonly Ramp[]
+  format: ColorFormat
   excluded: ReadonlySet<string>
   onToggle: (name: string) => void
   onSetMany: (names: string[], off: boolean) => void
 }
 
 /** Renders a titled section of one or more 11-step ramps. */
-export default function RampGroup({ title, ramps, excluded, onToggle, onSetMany }: Props) {
+export default function RampGroup({ title, ramps, format, excluded, onToggle, onSetMany }: Props) {
   if (ramps.length === 0) return null
   const names = ramps.map((r) => r.name)
   const on = names.filter((n) => !excluded.has(n)).length
@@ -48,6 +49,7 @@ export default function RampGroup({ title, ramps, excluded, onToggle, onSetMany 
           <RampRow
             key={ramp.name}
             ramp={ramp}
+            format={format}
             included={!excluded.has(ramp.name)}
             onToggle={() => onToggle(ramp.name)}
           />
@@ -59,10 +61,12 @@ export default function RampGroup({ title, ramps, excluded, onToggle, onSetMany 
 
 function RampRow({
   ramp,
+  format,
   included,
   onToggle,
 }: {
   ramp: Ramp
+  format: ColorFormat
   included: boolean
   onToggle: () => void
 }) {
@@ -92,11 +96,12 @@ function RampRow({
       >
         {ramp.swatches.map((s) => {
           const fg = readableText(s.hex)
+          const value = formatColor(s.hex, format)
           return (
             <CopyText
               key={s.step}
-              value={s.hex}
-              title={`Copy ${ramp.name}-${s.step} · ${s.hex}`}
+              value={value}
+              title={`Copy ${ramp.name}-${s.step} · ${value}`}
               className="group min-w-0 flex-1 basis-0"
             >
               {(copied) => (
@@ -130,8 +135,14 @@ function RampRow({
                       </span>
                     )}
                   </div>
-                  <span className="truncate font-mono text-[10px] uppercase opacity-0 transition-opacity group-hover:opacity-100">
-                    {s.hex.replace("#", "")}
+                  {/* Uppercase suits a bare hex; it would mangle `oklch(...)`. */}
+                  <span
+                    className={cn(
+                      "truncate font-mono text-[10px] opacity-0 transition-opacity group-hover:opacity-100",
+                      format === "hex" && "uppercase",
+                    )}
+                  >
+                    {format === "hex" ? s.hex.replace("#", "") : value}
                   </span>
                 </div>
               )}

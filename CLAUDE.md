@@ -58,7 +58,7 @@ the JSON-LD `url` and `urlTemplate`), `src/lib/site.ts` (`SITE_URL`, which build
 every share link), `public/sitemap.xml`, and `public/robots.txt`. If the primary
 domain ever flips in Vercel, change all of them together.
 
-**1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=`, `?c=`, `?xr=`, `?xt=` are a public API. They're
+**1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=`, `?c=`, `?f=`, `?xr=`, `?xt=` are a public API. They're
 documented in `README.md`, in the JSON-LD block in `index.html`, and in the
 on-page legend in `App.tsx`. Changing a param name or a scheme id breaks every
 link anyone has shared. If you change one, update all four places.
