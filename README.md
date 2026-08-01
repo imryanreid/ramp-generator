@@ -76,7 +76,7 @@ https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 
 | Param | Meaning                                                                                                                                                               |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `b`   | Brand hex, no `#`. Required.                                                                                                                                          |
+| `b`   | Brand hex, no `#`. Omit it and you get the default `3d7dff`, plus a note saying so.                                                                                   |
 | `a`   | Accent hex, no `#`. Optional — omit to auto-derive from the scheme.                                                                                                   |
 | `a2`  | Tertiary accent hex, no `#`. Optional — omit to derive it from the scheme.                                                                                            |
 | `m`   | Scope: `full` or `basic`.                                                                                                                                             |

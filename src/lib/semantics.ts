@@ -153,6 +153,35 @@ const TOKENS: TokenDef[] = [
     pairWith: "bg-accent",
     full: true,
   }),
+  // Every action fill needs a stated label color. Left unpaired, a consumer
+  // reaches for white — which fails AA on roughly half of these, and the right
+  // answer inverts between light and dark (white on error in light, near-black
+  // in dark), so it can't be inferred from the fill alone. Each ships in
+  // whichever scope its background does.
+  t(
+    "text-on-tertiary",
+    "Label on a tertiary button",
+    TEXT,
+    ["accent-2", 50],
+    ["accent-2", 950],
+    {
+      pairWith: "bg-tertiary",
+      full: true,
+    },
+  ),
+  t("text-on-success", "Label on a success badge", TEXT, ["success", 50], ["success", 950], {
+    pairWith: "bg-success",
+  }),
+  t("text-on-warning", "Label on a warning badge", TEXT, ["warning", 50], ["warning", 950], {
+    pairWith: "bg-warning",
+  }),
+  t("text-on-error", "Label on a destructive button", TEXT, ["error", 50], ["error", 950], {
+    pairWith: "bg-error",
+  }),
+  t("text-on-info", "Label on an info badge", TEXT, ["info", 50], ["info", 950], {
+    pairWith: "bg-info",
+    full: true,
+  }),
   t("text-success", "Saved confirmation", TEXT, ["success", 700], ["success", 400], {
     pairWith: "bg-canvas",
     full: true,
@@ -298,6 +327,11 @@ const FIXED_BACKGROUNDS = new Set(["bg-canvas", "bg-surface", "bg-surface-raised
 const FILL_FAMILY: Record<string, string[]> = {
   "bg-brand": ["bg-brand", "bg-brand-hover", "bg-brand-active"],
   "bg-accent": ["bg-accent", "bg-accent-hover", "bg-accent-active"],
+  "bg-tertiary": ["bg-tertiary", "bg-tertiary-hover"],
+  // The status fills have no hover/active siblings, so they fall through to the
+  // `?? [anchor]` default and move alone. Their `-subtle` banner counterparts
+  // are deliberately not listed: those are a separate surface, not a step on
+  // the same interaction ladder, and dragging them along would wreck them.
 }
 
 const STEP_INDEX = new Map<Step, number>(STEPS.map((s, i) => [s, i]))

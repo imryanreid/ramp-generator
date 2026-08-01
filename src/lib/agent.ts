@@ -14,7 +14,7 @@
 // Imported by the Vercel Functions in /api, so this
 // file must stay free of browser and Vite globals.
 // ==============================================
-import { STEPS, getSwatch } from "./color.js"
+import { STEPS, getSwatch, contrast, toOklch, type Ramp } from "./color.js"
 import { buildPalette } from "./recommend.js"
 import {
   resolveTokens,
@@ -23,7 +23,13 @@ import {
   CONTRAST_TARGET,
   type ContrastReference,
 } from "./semantics.js"
-import { resolveShareState, encodeShareState, type ShareState } from "./params.js"
+import {
+  resolveShareState,
+  decodeShareState,
+  encodeShareState,
+  DEFAULT_STATE,
+  type ShareState,
+} from "./params.js"
 
 /**
  * The public origin for a request. Vercel invokes functions with an internal
@@ -39,6 +45,33 @@ export function publicOrigin(request: Request): string {
 
 /** Contrast ratios read as "12.4:1"; more precision than that is noise. */
 const round2 = (n: number) => Math.round(n * 100) / 100
+
+/**
+ * The step of a ramp perceptually closest to a given color.
+ *
+ * Used only to explain where an input landed. Distance is measured in OKLCH's
+ * rectangular form, so hue is weighted by chroma the way perception is — a hue
+ * difference between two near-greys barely counts, which is right.
+ */
+function nearestStep(ramp: Ramp, hex: string): { step: string; hex: string } | null {
+  const target = toOklch(hex)
+  if (!target) return null
+  let best: { step: string; hex: string; d: number } | null = null
+  for (const step of STEPS) {
+    const swatch = getSwatch(ramp, step)
+    const o = toOklch(swatch.hex)
+    if (!o) continue
+    const rad = (deg: number) => (deg * Math.PI) / 180
+    const d =
+      ((target.l ?? 0) - (o.l ?? 0)) ** 2 +
+      ((target.c ?? 0) * Math.cos(rad(target.h ?? 0)) - (o.c ?? 0) * Math.cos(rad(o.h ?? 0))) **
+        2 +
+      ((target.c ?? 0) * Math.sin(rad(target.h ?? 0)) - (o.c ?? 0) * Math.sin(rad(o.h ?? 0))) **
+        2
+    if (!best || d < best.d) best = { step: `${ramp.name}-${step}`, hex: swatch.hex, d }
+  }
+  return best && { step: best.step, hex: best.hex }
+}
 
 export type AgentPayload = {
   state: ShareState
@@ -139,6 +172,52 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     "Prefer the semantic tokens over raw ramp steps; they already carry the light/dark mapping.",
     "Ramps are OKLCH-derived and perceptually even. Use these hex values verbatim rather than re-deriving them.",
   ]
+  // ---- Notes that explain output which is correct but reads as a mistake ----
+
+  // No brand was asked for, so one was chosen. Saying so out loud is the
+  // difference between a deliberate default and a website that quietly ships
+  // in a blue nobody picked.
+  if (decodeShareState(search).brand === undefined) {
+    notes.push(
+      `No brand color was supplied, so this palette uses the default ${DEFAULT_STATE.brand}. If you are building something that needs its own identity, request a palette with your own color instead: ${origin}/?b=<6-digit hex, no #>.`,
+    )
+  }
+
+  // The input hex almost never appears verbatim — it gets pulled onto the
+  // ramp's fixed lightness curve. Without this, an agent told "use the brand
+  // color" finds a near-miss and can't tell whether it's a bug.
+  const primary = palette.primaries[0]
+  const nearest = primary && nearestStep(primary, state.brand)
+  if (nearest && nearest.hex !== state.brand) {
+    notes.push(
+      `The brand color ${state.brand} does not appear verbatim in these ramps. Inputs are placed on a fixed lightness curve so the scale stays perceptually even, which moves the input slightly; the nearest step is ${nearest.step} (${nearest.hex}). This is expected — use the ramp values, not the original input.`,
+    )
+  }
+
+  const byToken = new Map(tokens.map((t) => [t.token, t]))
+
+  // Correct but counterintuitive: light mode has no step above neutral-50, so a
+  // raised surface can't sit above a plain one and elevation reads through
+  // shadow instead. Flagged so it isn't read as a duplicate-value bug.
+  const surface = byToken.get("bg-surface")
+  const raised = byToken.get("bg-surface-raised")
+  if (surface && raised && surface.lightHex === raised.lightHex) {
+    notes.push(
+      `bg-surface and bg-surface-raised are the same value in light mode (${surface.lightHex}) and differ in dark. That is deliberate: the light ramp has no step above neutral-50, so elevation reads through shadow rather than tone. Use a shadow to separate a raised surface in light mode.`,
+    )
+  }
+
+  // text-disabled is below the contrast minimum on purpose — WCAG exempts
+  // disabled controls. The blanket compliance note above would otherwise read
+  // as licence to use it as ordinary low-emphasis text, where it isn't exempt.
+  const disabled = byToken.get("text-disabled")
+  const canvas = byToken.get("bg-canvas")
+  if (disabled && canvas) {
+    notes.push(
+      `text-disabled is deliberately below the WCAG minimum (${round2(contrast(disabled.lightHex, canvas.lightHex))}:1 light, ${round2(contrast(disabled.darkHex, canvas.darkHex))}:1 dark). WCAG exempts disabled controls, so this is correct — but the exemption does not extend to ordinary text. Use text-tertiary for low-emphasis copy that is still readable.`,
+    )
+  }
+
   // An agent applying two identical tokens should know they're identical.
   const collided = tokens.filter((t) => t.warnings?.length)
   if (collided.length) {
@@ -159,7 +238,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
   }
   for (const r of references) {
     notes.push(
-      `${r.token} is not part of this palette, but ${r.measures.join(", ")} were measured against it (${r.light} light / ${r.dark} dark). If you use a different background behind those, re-check the contrast yourself — the WCAG ${state.compliance} claim above only holds against these values.`,
+      `${r.token} is not part of this palette, but ${r.measures.join(", ")} ${r.measures.length === 1 ? "was" : "were"} measured against it (${r.light} light / ${r.dark} dark). If you use a different background behind those, re-check the contrast yourself — the WCAG ${state.compliance} claim above only holds against these values.`,
     )
   }
 

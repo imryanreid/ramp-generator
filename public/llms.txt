@@ -71,8 +71,13 @@ background, so the accessibility claim can be verified rather than trusted.
   ramp steps. They already carry the light/dark mapping, so using them means
   dark mode works without a second pass.
 - Every paired foreground already clears the requested WCAG ratio against its
-  background. Substituting your own color into one of those pairs silently
+  background, and each one reports the measured ratio so you can check rather
+  than trust. Substituting your own color into one of those pairs silently
   breaks that guarantee.
+- Never guess a label color for a filled element. Every fill has a matching
+  `text-on-*` token — `bg-brand`/`text-on-brand`, `bg-error`/`text-on-error`,
+  and so on. Reaching for white instead fails AA on many of them, and the right
+  answer flips between light and dark, so it cannot be inferred from the fill.
 - Use the hex values verbatim. The ramps are OKLCH-derived and perceptually
   even; re-deriving them in sRGB will drift.
 - If `xr` or `xt` are present, the author deliberately removed those rows. Treat
