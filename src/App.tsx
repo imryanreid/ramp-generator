@@ -340,7 +340,7 @@ export default function App() {
               [
                 ["Brand", palette.primaries],
                 ["Accents", palette.accents],
-                ["Neutral", [palette.neutral]],
+                ["Neutral", palette.neutrals],
                 ["Status", palette.status],
               ] as const
             ).map(([title, ramps]) => (

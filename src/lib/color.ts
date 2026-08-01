@@ -196,12 +196,40 @@ export function buildRamp(name: string, baseInput: string): Ramp | null {
   return { name, swatches, sourceStep }
 }
 
-/** Build a low-chroma neutral ramp that carries a hint of the given hue. */
-export function buildNeutralRamp(name: string, hue: number, tint = 0.008): Ramp {
+/**
+ * A low-chroma neutral carrying a hint of the given hue.
+ *
+ * `variant: "dark"` builds the neutral a dark theme actually wants rather than
+ * reusing the light one's far end:
+ *
+ * - **More chroma.** Near-neutral greys that look refined on white read as flat
+ *   and dead on a dark screen, so the tint is doubled.
+ * - **Compressed range.** Dark themes rarely want near-black or pure white —
+ *   the darkest surface stops short of black and the lightest text stops short
+ *   of white, which is what keeps a dark UI from feeling like a hole punched in
+ *   the screen.
+ *
+ * Steps still run 50 (lightest) to 950 (darkest) in both, matching every other
+ * ramp, so `neutral-dark-950` is the darkest dark-theme value rather than an
+ * inverted index.
+ */
+export function buildNeutralRamp(
+  name: string,
+  hue: number,
+  tint = 0.008,
+  variant: "light" | "dark" = "light",
+): Ramp {
+  const dark = variant === "dark"
+  const chroma = dark ? tint * 2 : tint
+
+  // Remap [0.235, 0.972] onto [0.28, 0.93] — same shape, less extreme ends.
+  const compress = (l: number) =>
+    0.28 + ((l - LIGHTNESS[950]) / (LIGHTNESS[50] - LIGHTNESS[950])) * (0.93 - 0.28)
+
   const swatches: Swatch[] = STEPS.map((step) => {
-    const l = LIGHTNESS[step]
+    const l = dark ? compress(LIGHTNESS[step]) : LIGHTNESS[step]
     // A touch more tint in the mid/dark steps reads as a cohesive gray.
-    const c = tint * (0.5 + CHROMA_CURVE[step] * 0.8)
+    const c = chroma * (0.5 + CHROMA_CURVE[step] * 0.8)
     return {
       step,
       hex: oklchToHex(l, c, hue),

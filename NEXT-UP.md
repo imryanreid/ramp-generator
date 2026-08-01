@@ -59,6 +59,26 @@ to it. Every absolute URL in the codebase must match — see the note in
 
 ## Session log
 
+### 2026-08-01 — Split neutrals and inverse tokens
+
+- **`neutral` became `neutral-light` + `neutral-dark`.** Dark carries double the
+  chroma and a lightness range compressed onto [0.28, 0.93] — greys tuned
+  against white read flat on a dark screen, and dark themes rarely want true
+  black. `bg-canvas` in dark went from `#1c1e22` to `#252931`, so this is a
+  visible change rather than a rename.
+- All 11 neutral-backed tokens resolve light to `neutral-light`, dark to
+  `neutral-dark`.
+- **New `bg-inverse` / `text-inverse`** (full scope). The inverted surface pulls
+  from the _other_ mode's neutral, so a light theme gets a properly-built dark
+  grey instead of the far end of its own ramp — that's the payoff of the split.
+  Resolves at 9.0:1 light / 10.6:1 dark.
+- Both neutrals would have collided on the display name "Neutral", so
+  `NAME_OVERRIDES` in semantics.ts names them explicitly.
+
+**URL contract note:** `xr=neutral` no longer matches anything, since the names
+are now `neutral-light` / `neutral-dark`. A shared link that excluded the neutral
+ramp silently stops excluding it. Narrow enough to accept, but it is a real break.
+
 ### 2026-08-01 — OKLCH by default; accent/derivation pairing
 
 - **OKLCH is now the default notation.** The ramps are built in OKLCH, so hex
