@@ -330,7 +330,7 @@ export default function App() {
                     accentLocked ? "bg-transparent" : "bg-line",
                   )}
                 />
-                <div className="min-w-[180px] flex-1">
+                <div className="w-full sm:w-[196px] sm:shrink-0">
                   <SectionLabel>Derivation</SectionLabel>
                   <div
                     className={cn("transition-opacity", accentLocked && "opacity-45")}

@@ -25,7 +25,7 @@ export function BrandField({
   onBrandChange: (hex: string) => void
 }) {
   return (
-    <div className="min-w-[128px] flex-1">
+    <div className="max-w-[268px] min-w-[180px] flex-1">
       <div className="mb-1.5 flex h-4 items-center">
         <FieldLabel>Brand</FieldLabel>
       </div>
@@ -60,7 +60,7 @@ export function AccentField({
   const locked = accentOverride !== null || accent2Override !== null
 
   return (
-    <div className={cn("flex-1", showAccent2 ? "min-w-[248px]" : "min-w-[128px]")}>
+    <div className={cn(showAccent2 ? "min-w-[300px] flex-[3]" : "min-w-[128px] flex-1")}>
       <div className="mb-1.5 flex h-4 items-center justify-between gap-2">
         <FieldLabel>Accent</FieldLabel>
         <button
