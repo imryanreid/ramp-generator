@@ -68,7 +68,7 @@ export default function SemanticTokens({
           <thead>
             <tr className="text-left font-mono text-[11px] uppercase tracking-wide text-ash">
               <th className="py-2 pr-4 font-medium">Token</th>
-              <th className="py-2 pr-4 font-medium">Role</th>
+              <th className="py-2 pr-4 font-medium">Example</th>
               <th className="py-2 pr-4 font-medium">Light</th>
               <th className="py-2 pr-4 font-medium">Dark</th>
               <th className="py-2 pr-4 font-medium">{compliance}</th>
