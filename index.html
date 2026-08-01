@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Ramp Generator — OKLCH color ramps and semantic tokens from one brand color</title>
+    <meta
+      name="description"
+      content="Pick one brand color and get a complete design system: perceptually-even OKLCH ramps, derived accents, a matched neutral, status colors, and usage-first semantic tokens for light and dark. Export to CSS, Tailwind v4, Figma variables, or JSON."
+    />
+    <link rel="canonical" href="https://ramps.studio/" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Ryan Reid" />
+    <meta name="theme-color" content="#fdfdfc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#131210" media="(prefers-color-scheme: dark)" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!-- Social unfurls -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ramp Generator" />
+    <meta property="og:url" content="https://ramps.studio/" />
+    <meta property="og:title" content="Ramp Generator — OKLCH color ramps and semantic tokens" />
+    <meta
+      property="og:description"
+      content="Pick one brand color and get a complete design system: OKLCH ramps, derived accents, a matched neutral, status colors, and semantic tokens for light and dark."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Ramp Generator — OKLCH color ramps and semantic tokens" />
+    <meta
+      name="twitter:description"
+      content="Pick one brand color and get a complete design system, ready to export as CSS, Tailwind, Figma variables, or JSON."
+    />
+
+    <!--
+      Structured data. Describes the tool to search engines and to agents that
+      parse the page without executing JavaScript. `potentialAction` documents
+      the URL API so an agent can construct a palette request directly.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Ramp Generator",
+        "url": "https://ramps.studio/",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Any (web browser)",
+        "description": "Generates a complete design-system color palette from a single brand color: perceptually-even OKLCH ramps (50-950), scheme-derived accents, a chroma-matched neutral, collision-avoided status colors, and usage-first semantic tokens for light and dark themes. Exports to CSS custom properties, a Tailwind v4 theme block, W3C DTCG token files for Figma variables, or JSON.",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": {
+          "@type": "Person",
+          "name": "Ryan Reid",
+          "url": "https://www.linkedin.com/in/imryanreid/"
+        },
+        "featureList": [
+          "Perceptually-even OKLCH ramps at 11 steps (50-950)",
+          "Accent derivation by color scheme: complementary, analogous, triadic, split-complementary, monochromatic",
+          "Chroma-matched neutral ramp tinted toward the brand hue",
+          "Status colors (success, warning, error, info) with hue-collision avoidance",
+          "Usage-first semantic tokens mapped for light and dark themes",
+          "Export to CSS custom properties, a Tailwind v4 theme block, W3C DTCG tokens for Figma variables, or JSON",
+          "Shareable permalinks that encode the full palette in the URL"
+        ],
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://ramps.studio/?b={brand_hex_without_hash}&m={scope}&s={scheme}"
+          },
+          "query-input": [
+            "required name=brand_hex_without_hash",
+            "required name=scope",
+            "required name=scheme"
+          ]
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

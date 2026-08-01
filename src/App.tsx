@@ -1,0 +1,588 @@
+// ==============================================
+// APP
+// The whole page. Holds the four inputs everything
+// else is derived from — brand color, optional
+// accent override, scope, and derivation scheme —
+// and keeps the URL and document title in sync with
+// them. Below the controls it renders the ramps,
+// the semantic token table, a machine-readable dump
+// of the palette for agents, and the footer.
+//
+// The small pieces used only here (icon buttons,
+// theme toggle, share button, export modal) live at
+// the bottom of this file; anything reused lives in
+// components/.
+// ==============================================
+import { useEffect, useMemo, useState } from "react"
+import { AnimatePresence, motion, MotionConfig } from "motion/react"
+import ColorInput from "./components/ColorInput"
+import RampGroup from "./components/RampGroup"
+import SemanticTokens from "./components/SemanticTokens"
+import ExportPanel from "./components/ExportPanel"
+import SchemeSelect from "./components/SchemeSelect"
+import { buildPalette, deriveAccentHex, type DsMode, type Scheme, type Palette } from "./lib/recommend"
+import { readInitialShareState, encodeShareState, shareUrl, type ShareState } from "./lib/share"
+import { toCss, toJson } from "./lib/semantics"
+import { useCopy } from "./lib/clipboard"
+import { cn } from "./lib/utils"
+import avatarUrl from "./assets/avatar-ryan.webp"
+import studioLogo from "./assets/logo-tktk.webp"
+
+// The title and description authored in index.html. Captured once at load so
+// the effect below can restore them when the user returns to the default
+// palette, rather than leaving a stale palette-specific title in the tab.
+const CANONICAL_TITLE = document.title
+const CANONICAL_DESCRIPTION =
+  document.querySelector('meta[name="description"]')?.getAttribute("content") ?? ""
+
+/** The palette shown to a first-time visitor with no share params in the URL. */
+const DEFAULT_STATE: ShareState = {
+  brand: "#3d7dff",
+  accentOverride: null,
+  mode: "full",
+  scheme: "complementary",
+}
+
+export default function App() {
+  // Hydrate initial state from a shared link, if present.
+  const initial = readInitialShareState()
+  const [brand, setBrand] = useState(initial.brand ?? DEFAULT_STATE.brand)
+  const [accentOverride, setAccentOverride] = useState<string | null>(
+    initial.accentOverride ?? DEFAULT_STATE.accentOverride,
+  )
+  const [mode, setMode] = useState<DsMode>(initial.mode ?? DEFAULT_STATE.mode)
+  const [scheme, setScheme] = useState<Scheme>(initial.scheme ?? DEFAULT_STATE.scheme)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+
+  const autoAccent = useMemo(() => deriveAccentHex(brand, scheme), [brand, scheme])
+  const palette = useMemo(
+    () => buildPalette(brand, accentOverride, mode, scheme),
+    [brand, accentOverride, mode, scheme],
+  )
+
+  // True while the visitor is still looking at the untouched default palette.
+  // Used to keep the bare landing page clean: no query string in the address
+  // bar and no palette-specific <title>, so that's what crawlers index.
+  const isDefault =
+    brand === DEFAULT_STATE.brand &&
+    accentOverride === DEFAULT_STATE.accentOverride &&
+    mode === DEFAULT_STATE.mode &&
+    scheme === DEFAULT_STATE.scheme
+
+  // Keep the address bar in sync so a copy/paste of the URL also reproduces state.
+  useEffect(() => {
+    try {
+      const qs = encodeShareState({ brand, accentOverride, mode, scheme })
+      window.history.replaceState(null, "", isDefault ? "/" : `?${qs}`)
+    } catch {
+      // Ignore — some browsers disallow history writes in restricted contexts.
+    }
+  }, [brand, accentOverride, mode, scheme, isDefault])
+
+  // Apply + persist the page theme by toggling `.dark` on <html>.
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark")
+    try {
+      localStorage.setItem("theme", theme)
+    } catch {
+      // Ignore storage failures (private mode / sandbox).
+    }
+  }, [theme])
+
+  // Keep document title + description in sync so agents (and link unfurlers)
+  // that read the rendered head see what this specific palette is. On the
+  // default palette we leave index.html's canonical copy in place — that's the
+  // version search engines should index for the site itself.
+  useEffect(() => {
+    if (isDefault) {
+      document.title = CANONICAL_TITLE
+      setMeta("name", "description", CANONICAL_DESCRIPTION)
+      return
+    }
+    document.title = `Ramp Generator — brand ${brand} · ${scheme} · ${mode}`
+    setMeta("name", "description", describePalette({ brand, accentOverride, mode, scheme }))
+  }, [brand, accentOverride, mode, scheme, isDefault])
+
+  return (
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen">
+        <AnimatePresence>
+          {exportOpen && (
+            <ExportModal key="export" onClose={() => setExportOpen(false)}>
+              <ExportPanel palette={palette} mode={mode} />
+            </ExportModal>
+          )}
+        </AnimatePresence>
+
+        <div className="mx-auto max-w-[1400px] px-6 py-10 lg:px-10 lg:py-14">
+        {/* Controls — top row */}
+        <section className="mb-12 border-b border-line pb-10">
+          <div className="mb-8 flex items-start justify-between gap-4">
+            <header>
+              <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ash">
+                Design system
+              </p>
+              <h1 className="font-display text-3xl font-semibold leading-none tracking-tight">
+                Ramp Generator
+              </h1>
+              <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ash">
+                Pick a brand color, and the tool does the rest—all ready to use with
+                agents.
+              </p>
+            </header>
+
+            {/* Top-right action stack — theme, share, export (icon-only). */}
+            <div className="flex items-center gap-2">
+              <ThemeToggle theme={theme} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
+              <ShareButton state={{ brand, accentOverride, mode, scheme }} />
+              <IconButton
+                onClick={() => setExportOpen(true)}
+                title="Export tokens"
+                variant="solid"
+              >
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M10 3v9m0 0l-3.2-3.2M10 12l3.2-3.2M4 15.5h12"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </IconButton>
+            </div>
+          </div>
+
+          {/* Controls — single row */}
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
+            <div className="min-w-[280px] flex-1">
+              <ColorInput
+                brand={brand}
+                onBrandChange={setBrand}
+                accentOverride={accentOverride}
+                autoAccent={autoAccent}
+                onAccentChange={setAccentOverride}
+                onAccentReset={() => setAccentOverride(null)}
+              />
+            </div>
+
+            <div className="min-w-[180px]">
+              <SectionLabel>Derivation</SectionLabel>
+              <SchemeSelect scheme={scheme} onChange={setScheme} />
+            </div>
+
+            <div>
+              <SectionLabel>Scope</SectionLabel>
+              <ModeToggle mode={mode} onChange={setMode} />
+            </div>
+          </div>
+        </section>
+
+        {/* Output — new section */}
+        <main className="min-w-0">
+          <RampGroup title="Brand" ramps={palette.primaries} />
+          <RampGroup title="Accents" ramps={palette.accents} />
+          <RampGroup title="Neutral" ramps={[palette.neutral]} />
+          <RampGroup title="Status" ramps={palette.status} />
+          <SemanticTokens palette={palette} mode={mode} />
+          <AgentData palette={palette} mode={mode} state={{ brand, accentOverride, mode, scheme }} />
+          <Attribution />
+        </main>
+        </div>
+      </div>
+    </MotionConfig>
+  )
+}
+
+/** Upsert a <meta> tag by attribute so runtime updates stay in sync. */
+function setMeta(attr: "name" | "property", key: string, content: string) {
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`)
+  if (!el) {
+    el = document.createElement("meta")
+    el.setAttribute(attr, key)
+    document.head.appendChild(el)
+  }
+  el.setAttribute("content", content)
+}
+
+/** A one-line, agent-friendly summary of the current palette. */
+function describePalette(s: ShareState): string {
+  const accent = s.accentOverride ? `accent ${s.accentOverride}` : "auto-derived accent"
+  return `Design-system palette generated from brand color ${s.brand} (${accent}), ${s.scheme} derivation, ${s.mode} scope. Perceptually-even OKLCH ramps plus usage-first semantic tokens for light and dark. Full token values are listed on the page.`
+}
+
+/**
+ * A visible-but-collapsed, plain-text dump of the entire palette so agents that
+ * read the rendered DOM get every ramp step and semantic token (light + dark)
+ * without hovering or interacting. Reuses the CSS exporter as the canonical form.
+ */
+function AgentData({
+  palette,
+  mode,
+  state,
+}: {
+  palette: Palette
+  mode: DsMode
+  state: ShareState
+}) {
+  const legend = [
+    "# Ramp Generator — machine-readable palette",
+    "# Deterministically derived from the URL query string:",
+    "#   b = brand hex (no #)   a = accent hex (optional, omit for auto)",
+    "#   m = scope: full | basic",
+    "#   s = derivation: complementary | analogous | triadic | split | monochromatic",
+    `# This palette: b=${state.brand.replace("#", "")}` +
+      `${state.accentOverride ? ` a=${state.accentOverride.replace("#", "")}` : ""}` +
+      ` m=${state.mode} s=${state.scheme}`,
+    "# Ramps are 50–950 OKLCH steps; semantic tokens are listed for :root (light) and .dark.",
+  ].join("\n")
+
+  const [format, setFormat] = useState<"css" | "json">("json")
+  const { copied, copy } = useCopy(1400)
+  const code = format === "css" ? toCss(palette, mode) : toJson(palette, mode)
+  const formats: { id: "css" | "json"; label: string }[] = [
+    { id: "json", label: "JSON" },
+    { id: "css", label: "CSS" },
+  ]
+
+  return (
+    <section className="mb-12" aria-label="Machine-readable palette for agents">
+      <details className="group rounded-lg border border-line">
+        <summary className="cursor-pointer list-none px-4 py-3 font-mono text-xs text-ash transition-colors hover:text-ink">
+          <span className="inline-block transition-transform duration-200 group-open:rotate-90">▸</span>{" "}
+          Machine-readable palette (for agents)
+        </summary>
+        <div className="border-t border-line">
+          {/* Legend stays outside the copyable block so the copied code is valid. */}
+          <pre className="whitespace-pre-wrap px-4 pt-3 font-mono text-[11px] leading-relaxed text-ash">
+            {legend}
+          </pre>
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <div className="inline-flex rounded-md border border-line p-0.5">
+              {formats.map((f) => {
+                const active = format === f.id
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFormat(f.id)}
+                    className={cn(
+                      "relative rounded px-2.5 py-1 font-mono text-[11px] transition-colors",
+                      active ? "text-paper" : "text-ash hover:text-ink",
+                    )}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="agent-format-pill"
+                        className="absolute inset-0 rounded bg-ink"
+                        transition={{ type: "spring", stiffness: 480, damping: 38 }}
+                      />
+                    )}
+                    <span className="relative z-10">{f.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => copy(code)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-ink/20 px-3 py-1.5 font-mono text-[11px] text-ink transition-colors hover:bg-ink/[0.04]"
+            >
+              {copied ? "Copied" : `Copy ${format.toUpperCase()}`}
+            </button>
+          </div>
+          <pre className="overflow-x-auto border-t border-line px-4 py-3 font-mono text-[11px] leading-relaxed text-ink">
+            {code}
+          </pre>
+        </div>
+      </details>
+    </section>
+  )
+}
+
+type Theme = "light" | "dark"
+
+/** Initial theme: stored preference, else the OS setting, else light. */
+function getInitialTheme(): Theme {
+  try {
+    const saved = localStorage.getItem("theme")
+    if (saved === "light" || saved === "dark") return saved
+  } catch {
+    // Ignore storage failures.
+  }
+  if (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+    return "dark"
+  }
+  return "light"
+}
+
+/** Shared icon-button chrome for the top-right action stack. */
+function IconButton({
+  onClick,
+  title,
+  variant = "outline",
+  children,
+}: {
+  onClick: () => void
+  title: string
+  variant?: "outline" | "solid"
+  children: React.ReactNode
+}) {
+  const chrome =
+    variant === "solid"
+      ? "bg-ink text-paper hover:-translate-y-0.5 shadow-sm"
+      : "border border-ink/20 text-ink hover:-translate-y-0.5 hover:border-ink/40 hover:bg-ink/[0.04]"
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={cn(
+        "inline-flex h-10 w-10 items-center justify-center rounded-md transition-all",
+        chrome,
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
+  const dark = theme === "dark"
+  return (
+    <IconButton onClick={onToggle} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
+      <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
+        {/* Sun (shown in dark mode → click for light) */}
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          aria-hidden="true"
+          className="absolute transition-all duration-300 ease-out"
+          style={{ opacity: dark ? 1 : 0, transform: dark ? "none" : "rotate(-90deg) scale(0.6)" }}
+        >
+          <circle cx="10" cy="10" r="3.4" stroke="currentColor" strokeWidth="1.6" />
+          <path
+            d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </svg>
+        {/* Moon (shown in light mode → click for dark) */}
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          aria-hidden="true"
+          className="absolute transition-all duration-300 ease-out"
+          style={{ opacity: dark ? 0 : 1, transform: dark ? "rotate(90deg) scale(0.6)" : "none" }}
+        >
+          <path
+            d="M16.5 12.42A7 7 0 017.58 3.5a7 7 0 108.92 8.92z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        </svg>
+      </span>
+    </IconButton>
+  )
+}
+
+function ShareButton({ state }: { state: ShareState }) {
+  const { copied, copy } = useCopy(1400)
+  return (
+    <IconButton
+      onClick={() => copy(shareUrl(state))}
+      title="Copy a shareable link to this palette"
+    >
+      <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
+        {/* Link icon → check crossfade on copy. */}
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          aria-hidden="true"
+          className="absolute transition-all duration-200 ease-out"
+          style={{ opacity: copied ? 0 : 1, transform: copied ? "scale(0.7)" : "none" }}
+        >
+          <path
+            d="M8.2 11.8l3.6-3.6M8.7 5.6l1-1a3 3 0 014.2 4.2l-1 1M11.3 14.4l-1 1a3 3 0 01-4.2-4.2l1-1"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </svg>
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          aria-hidden="true"
+          className="absolute text-emerald-500 transition-all duration-200 ease-out"
+          style={{ opacity: copied ? 1 : 0, transform: copied ? "none" : "scale(0.7)" }}
+        >
+          <path
+            d="M4.5 10.5l3.8 3.8L15.5 6.5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    </IconButton>
+  )
+}
+
+function Attribution() {
+  return (
+    <footer className="mt-12 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line pt-6 text-sm text-ash">
+      <span>Built by</span>
+      <a
+        href="https://www.linkedin.com/in/imryanreid/"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-ink/30 hover:bg-ink/[0.04]"
+      >
+        <img
+          src={avatarUrl}
+          alt="Ryan Reid"
+          className="h-6 w-6 rounded-full object-cover"
+        />
+        <span className="font-medium text-ink">Ryan Reid</span>
+      </a>
+      <span>at</span>
+      <a
+        href="https://www.tktk.studio/"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-ink/30 hover:bg-ink/[0.04]"
+      >
+        <img
+          src={studioLogo}
+          alt="tktk studio"
+          className="h-6 w-6 rounded-full object-cover"
+        />
+        <span className="font-medium text-ink">tktk studio</span>
+      </a>
+    </footer>
+  )
+}
+
+function ExportModal({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", onKey)
+    document.body.style.overflow = "hidden"
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      document.body.style.overflow = ""
+    }
+  }, [onClose])
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-8"
+      onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
+      <motion.div
+        className="mt-6 w-full max-w-3xl rounded-xl border border-line bg-paper p-5 shadow-xl sm:mt-10 sm:p-6"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.985 }}
+        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-semibold tracking-tight">
+            Export
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded p-1.5 text-ash transition-colors hover:bg-ink/[0.06] hover:text-ink"
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M5 5l10 10M15 5L5 15"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+        {children}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-ash">
+      {children}
+    </h2>
+  )
+}
+
+function ModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: DsMode
+  onChange: (m: DsMode) => void
+}) {
+  const options: { id: DsMode; label: string }[] = [
+    { id: "full", label: "Full" },
+    { id: "basic", label: "Lite" },
+  ]
+  return (
+    <div className="inline-flex rounded-md border border-line p-0.5">
+      {options.map((o) => {
+        const active = mode === o.id
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            className={cn(
+              "relative rounded px-3 py-1.5 font-mono text-xs transition-colors",
+              active ? "text-paper" : "text-ash hover:text-ink",
+            )}
+          >
+            {active && (
+              <motion.span
+                layoutId="mode-pill"
+                className="absolute inset-0 rounded bg-ink"
+                transition={{ type: "spring", stiffness: 480, damping: 38 }}
+              />
+            )}
+            <span className="relative z-10">{o.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
