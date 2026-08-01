@@ -128,15 +128,29 @@ export default function App() {
    * the URL effect then strips the query string on its own. Theme is left alone;
    * it's a viewing preference, not part of the palette.
    */
+  /** Drive every input from one state object — used by both reset and undo. */
+  const applyState = (next: ShareState) => {
+    setBrand(next.brand)
+    setAccentOverride(next.accentOverride)
+    setMode(next.mode)
+    setScheme(next.scheme)
+    setCompliance(next.compliance)
+    setFormat(next.format)
+    setExcludedRamps(new Set(next.excludedRamps))
+    setExcludedTokens(new Set(next.excludedTokens))
+  }
+
+  // What reset threw away, kept just long enough to offer it back.
+  const undoSnapshot = useRef<ShareState | null>(null)
+
   const reset = () => {
-    setBrand(DEFAULT_STATE.brand)
-    setAccentOverride(DEFAULT_STATE.accentOverride)
-    setMode(DEFAULT_STATE.mode)
-    setScheme(DEFAULT_STATE.scheme)
-    setCompliance(DEFAULT_STATE.compliance)
-    setFormat(DEFAULT_STATE.format)
-    setExcludedRamps(new Set())
-    setExcludedTokens(new Set())
+    undoSnapshot.current = shareState
+    applyState(DEFAULT_STATE)
+  }
+
+  const undoReset = () => {
+    if (undoSnapshot.current) applyState(undoSnapshot.current)
+    undoSnapshot.current = null
   }
 
   const accentLocked = accentOverride !== null
@@ -256,7 +270,7 @@ export default function App() {
                   theme={theme}
                   onToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
                 />
-                <ResetButton onReset={reset} />
+                <ResetButton onReset={reset} onUndo={undoReset} />
                 <ShareButton state={shareState} />
                 <IconButton
                   onClick={() => setExportOpen(true)}
@@ -598,42 +612,49 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
 }
 
 /**
- * Reset, with the same brief checkmark the share button uses — otherwise
- * clearing an already-default palette looks like a dead click.
+ * Reset, with a short window to take it back.
+ *
+ * The reset is destructive and one click away, so for a few seconds afterwards
+ * the button becomes the undo. That doubles as the confirmation — you can see
+ * something happened — which is why there's no separate checkmark.
  */
-function ResetButton({ onReset }: { onReset: () => void }) {
-  const [done, setDone] = useState(false)
+function ResetButton({ onReset, onUndo }: { onReset: () => void; onUndo: () => void }) {
+  const [undoable, setUndoable] = useState(false)
   const timer = useRef<number | null>(null)
 
-  useEffect(() => () => window.clearTimeout(timer.current ?? undefined), [])
+  const stopTimer = () => window.clearTimeout(timer.current ?? undefined)
+  useEffect(() => stopTimer, [])
+
+  if (undoable) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          stopTimer()
+          setUndoable(false)
+          onUndo()
+        }}
+        title="Restore the palette you had before resetting"
+        className="border-ink/20 text-ink hover:border-ink/40 hover:bg-ink/[0.04] inline-flex h-10 items-center gap-1.5 rounded-md border px-3 font-mono text-xs transition-all hover:-translate-y-0.5"
+      >
+        <ArrowCounterClockwise size={14} weight="bold" aria-hidden="true" />
+        Undo?
+      </button>
+    )
+  }
 
   return (
     <IconButton
       onClick={() => {
         onReset()
-        setDone(true)
-        window.clearTimeout(timer.current ?? undefined)
-        timer.current = window.setTimeout(() => setDone(false), 1400)
+        setUndoable(true)
+        stopTimer()
+        timer.current = window.setTimeout(() => setUndoable(false), 3500)
       }}
       title="Reset to defaults"
       variant="danger"
     >
-      <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
-        <ArrowCounterClockwise
-          size={18}
-          weight="regular"
-          aria-hidden="true"
-          className="absolute transition-all duration-200 ease-out"
-          style={{ opacity: done ? 0 : 1, transform: done ? "scale(0.7)" : "none" }}
-        />
-        <Check
-          size={18}
-          weight="bold"
-          aria-hidden="true"
-          className="absolute text-emerald-500 transition-all duration-200 ease-out"
-          style={{ opacity: done ? 1 : 0, transform: done ? "none" : "scale(0.7)" }}
-        />
-      </span>
+      <ArrowCounterClockwise size={18} weight="regular" aria-hidden="true" />
     </IconButton>
   )
 }
