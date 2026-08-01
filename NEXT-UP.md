@@ -8,27 +8,28 @@
 
 ## Current state
 
-The app is fully decoupled from Figma Make and ready to self-host on Vercel.
-It builds clean, typechecks clean, and runs with no console errors.
+Live on Vercel at **https://www.ramps.studio**, fully decoupled from Figma Make.
+Source at **https://github.com/imryanreid/ramp-generator** (public, MIT), `main`
+tracking `origin/main`. Builds clean, typechecks clean, no console errors.
 
-Source lives at **https://github.com/imryanreid/ramp-generator** (public, MIT),
-`main` tracking `origin/main`.
+**The canonical host is `www.ramps.studio`, not the bare apex.** Vercel is
+configured with `www` as the primary domain and `ramps.studio` 308-redirecting
+to it. Every absolute URL in the codebase must match — see the note in
+[`CLAUDE.md`](CLAUDE.md).
 
-**Not done yet — the remaining steps are all outside the codebase:**
+**Remaining — all outside the codebase:**
 
 1. ~~Create the public GitHub repo and push.~~ **Done 2026-08-01.**
-2. **Create the Vercel project** and connect it to the repo above. Framework
-   preset: Vite. Build command `pnpm build`, output directory `dist` — both
-   should be auto-detected. No environment variables are required.
-3. **Move `ramps.studio` off Figma Make.** The domain currently points at the
-   Figma Make deployment. Add it to the Vercel project, then update the DNS
-   records at the registrar. Expect a short window where the old deployment is
-   still cached.
+2. ~~Create the Vercel project.~~ **Done 2026-08-01.**
+3. ~~Move `ramps.studio` off Figma Make.~~ **Done 2026-08-01.** DNS cut over at
+   Squarespace: apex A → Vercel, `www` CNAME → the per-domain
+   `*.vercel-dns-016.com` target. The `v=spf1 -all` TXT record was deliberately
+   left in place; there are no MX or CAA records on the domain.
 4. **Turn on Vercel Analytics + Speed Insights** in the project dashboard. The
    client code is already wired in `src/main.tsx`; both no-op until enabled.
-5. **After DNS resolves**, submit `https://ramps.studio/sitemap.xml` to Google
-   Search Console. The site was `noindex` for its whole life under Figma Make,
-   so it has never been crawled.
+5. **Submit `https://www.ramps.studio/sitemap.xml`** to Google Search Console.
+   The site was `noindex` for its whole life under Figma Make, so it has never
+   been crawled. Verify ownership on the `www` host to match the canonical.
 
 ## Known gaps / deliberate omissions
 

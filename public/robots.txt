@@ -1,4 +1,4 @@
-# Ramp Generator — https://ramps.studio
+# Ramp Generator — https://www.ramps.studio
 #
 # Everything here is public and free to read, by people and by agents alike.
 # There is no private area, no login, and no rate-limited backend: every
@@ -8,4 +8,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ramps.studio/sitemap.xml
+Sitemap: https://www.ramps.studio/sitemap.xml

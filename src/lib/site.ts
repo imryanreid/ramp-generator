@@ -15,5 +15,5 @@
  * links). Falls back to production so a plain `pnpm build` is always correct.
  */
 export const SITE_URL: string = (
-  import.meta.env.VITE_SITE_URL ?? 'https://ramps.studio'
+  import.meta.env.VITE_SITE_URL ?? 'https://www.ramps.studio'
 ).replace(/\/+$/, '')

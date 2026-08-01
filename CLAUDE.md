@@ -8,7 +8,7 @@
 
 ## What this is
 
-A single-page tool at [ramps.studio](https://ramps.studio) that turns one brand
+A single-page tool at [ramps.studio](https://www.ramps.studio) that turns one brand
 color into a full design-system palette — OKLCH ramps, derived accents, a
 matched neutral, status colors, and semantic tokens — exportable as CSS
 variables, a Tailwind v4 theme, Figma variables (W3C DTCG), or JSON.
@@ -45,7 +45,15 @@ reintroduce Figma Make conventions.** If you find a leftover, remove it.
   agent-readable block on the page both render from them — don't create a third
   serialization.
 
-## The two things that are easy to break
+## The three things that are easy to break
+
+**0. The canonical host is `https://www.ramps.studio`** — with the `www`, because
+that's what Vercel serves as primary; the bare apex 308-redirects to it. Six
+places hardcode it and they must agree, or the canonical tag ends up naming a
+URL that redirects elsewhere: `index.html` (`<link rel="canonical">`, `og:url`,
+the JSON-LD `url` and `urlTemplate`), `src/lib/site.ts` (`SITE_URL`, which builds
+every share link), `public/sitemap.xml`, and `public/robots.txt`. If the primary
+domain ever flips in Vercel, change all of them together.
 
 **1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=` are a public API. They're
 documented in `README.md`, in the JSON-LD block in `index.html`, and in the

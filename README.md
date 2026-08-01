@@ -1,6 +1,6 @@
 # Ramp Generator
 
-**[ramps.studio](https://ramps.studio)**
+**[ramps.studio](https://www.ramps.studio)**
 
 Pick one brand color. Get a complete design system: perceptually-even OKLCH
 ramps, derived accents, a matched neutral, status colors, and usage-first
@@ -49,7 +49,7 @@ The entire palette is a pure function of four inputs, so a link needs no
 database — the inputs fit in the query string:
 
 ```
-https://ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary
+https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary
 ```
 
 | Param | Meaning |
