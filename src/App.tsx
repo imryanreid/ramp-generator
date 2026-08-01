@@ -31,7 +31,16 @@ import {
 import { toCss, toJson, allRamps, type Compliance, type ExportOptions } from "./lib/semantics"
 import { useCopy } from "./lib/clipboard"
 import { cn } from "./lib/utils"
-import { DownloadSimple, Sun, Moon, LinkSimple, Check, X, CaretRight } from "@phosphor-icons/react"
+import {
+  DownloadSimple,
+  Sun,
+  Moon,
+  LinkSimple,
+  Check,
+  X,
+  CaretRight,
+  ArrowCounterClockwise,
+} from "@phosphor-icons/react"
 import avatarUrl from "./assets/avatar-ryan.webp"
 import studioLogo from "./assets/logo-tktk.webp"
 
@@ -96,6 +105,22 @@ export default function App() {
   }
 
   const exportOptions: ExportOptions = { mode, compliance, excludedRamps, excludedTokens }
+
+  /**
+   * Back to the bare URL. Everything the visitor chose is derived from the five
+   * inputs plus the two exclusion sets, so clearing those is the whole reset —
+   * the URL effect then strips the query string on its own. Theme is left alone;
+   * it's a viewing preference, not part of the palette.
+   */
+  const reset = () => {
+    setBrand(DEFAULT_STATE.brand)
+    setAccentOverride(DEFAULT_STATE.accentOverride)
+    setMode(DEFAULT_STATE.mode)
+    setScheme(DEFAULT_STATE.scheme)
+    setCompliance(DEFAULT_STATE.compliance)
+    setExcludedRamps(new Set())
+    setExcludedTokens(new Set())
+  }
 
   const autoAccent = useMemo(() => deriveAccentHex(brand, scheme), [brand, scheme])
   const palette = useMemo(
@@ -185,6 +210,9 @@ export default function App() {
             {/* Top-right action stack — theme, share, export (icon-only). */}
             <div className="flex items-center gap-2">
               <ThemeToggle theme={theme} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
+              <IconButton onClick={reset} title="Reset to defaults" variant="danger">
+                <ArrowCounterClockwise size={18} weight="regular" aria-hidden="true" />
+              </IconButton>
               <ShareButton state={shareState} />
               <IconButton
                 onClick={() => setExportOpen(true)}
@@ -423,13 +451,16 @@ function IconButton({
 }: {
   onClick: () => void
   title: string
-  variant?: "outline" | "solid"
+  variant?: "outline" | "solid" | "danger"
   children: React.ReactNode
 }) {
   const chrome =
     variant === "solid"
       ? "bg-ink text-paper hover:-translate-y-0.5 shadow-sm"
-      : "border border-ink/20 text-ink hover:-translate-y-0.5 hover:border-ink/40 hover:bg-ink/[0.04]"
+      : variant === "danger"
+        ? // Destructive-ish: reset throws away whatever the visitor built up.
+          "border border-ink/20 text-ink hover:-translate-y-0.5 hover:border-red-500 hover:text-red-500 hover:bg-red-500/[0.06]"
+        : "border border-ink/20 text-ink hover:-translate-y-0.5 hover:border-ink/40 hover:bg-ink/[0.04]"
   return (
     <button
       type="button"

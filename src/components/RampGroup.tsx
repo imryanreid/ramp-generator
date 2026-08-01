@@ -68,15 +68,16 @@ function RampRow({
 }) {
   return (
     <div>
+      {/* Label first, then its toggle — matching the section headings above. */}
       <div className="mb-1.5 flex items-center gap-2">
+        <span className={cn("font-mono text-xs transition-colors", included ? "text-ash" : "text-line")}>
+          {ramp.name}
+        </span>
         <RowToggle
           checked={included}
           onChange={onToggle}
           label={`${included ? "Exclude" : "Include"} the ${ramp.name} ramp in exports`}
         />
-        <span className={cn("font-mono text-xs transition-colors", included ? "text-ash" : "text-line")}>
-          {ramp.name}
-        </span>
         {!included && (
           <span className="font-mono text-[10px] uppercase tracking-wide text-line">
             not exported
