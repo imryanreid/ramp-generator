@@ -71,7 +71,7 @@ export async function GET(request: Request): Promise<Response> {
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            width: 636,
+            width: 664,
             flexShrink: 0,
             paddingLeft: 72,
             paddingRight: 28,
@@ -92,9 +92,9 @@ export async function GET(request: Request): Promise<Response> {
             style={{
               fontFamily: "Geist",
               fontWeight: 600,
-              fontSize: 57,
+              fontSize: 52,
               lineHeight: 1.05,
-              letterSpacing: -1.9,
+              letterSpacing: -1.7,
               color: INK,
               marginBottom: 24,
               whiteSpace: "nowrap",
@@ -102,7 +102,7 @@ export async function GET(request: Request): Promise<Response> {
           >
             Color Ramp Generator
           </div>
-          <div style={{ fontSize: 21, lineHeight: 1.4, color: ASH, whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: 21, lineHeight: 1.4, color: ASH, maxWidth: 520 }}>
             Generate agent-optimized, accessible color ramps in a few clicks.
           </div>
         </div>
@@ -126,7 +126,7 @@ export async function GET(request: Request): Promise<Response> {
                     key={step}
                     style={{
                       display: "flex",
-                      width: 132,
+                      width: 126,
                       height: 122,
                       borderRadius: 12,
                       background: swatch.hex,
