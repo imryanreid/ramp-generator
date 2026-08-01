@@ -19,12 +19,18 @@
 
     <!-- Social unfurls -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Ramp Generator" />
+    <!--
+      og:site_name is the brand; og:title matches the <title> exactly. The two
+      are deliberately different — an unfurl shows both, so repeating the same
+      words twice wastes the card. The value proposition lives in
+      og:description below rather than in a title tail, which would collide
+      with "Semantics Generator" saying much the same thing.
+      Note "&amp;" here but a bare "&" in the JSON-LD block: attribute values
+      are HTML-parsed, the contents of a ld+json script are not.
+    -->
+    <meta property="og:site_name" content="Ramps Studio" />
     <meta property="og:url" content="https://www.ramps.studio/" />
-    <meta
-      property="og:title"
-      content="Ramp Generator — OKLCH color ramps and semantic tokens"
-    />
+    <meta property="og:title" content="Color Ramp &amp; Semantics Generator" />
     <meta
       property="og:description"
       content="Pick one brand color and get a complete design system: OKLCH ramps, derived accents, a matched neutral, status colors, and semantic tokens for light and dark."
@@ -39,10 +45,7 @@
       content="Color Ramp Generator — perceptually-even OKLCH color ramps"
     />
     <meta name="twitter:image" content="https://www.ramps.studio/api/og" />
-    <meta
-      name="twitter:title"
-      content="Ramp Generator — OKLCH color ramps and semantic tokens"
-    />
+    <meta name="twitter:title" content="Color Ramp &amp; Semantics Generator" />
     <meta
       name="twitter:description"
       content="Pick one brand color and get a complete design system, ready to export as CSS, Tailwind, Figma variables, or JSON."
@@ -57,7 +60,7 @@
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "Ramp Generator",
+        "name": "Color Ramp & Semantics Generator",
         "url": "https://www.ramps.studio/",
         "applicationCategory": "DesignApplication",
         "operatingSystem": "Any (web browser)",

@@ -456,16 +456,23 @@ function AgentData({
   const { compliance } = state
   const omitted = state.excludedRamps.length + state.excludedTokens.length
   const legend = [
-    "# Ramp Generator — machine-readable palette",
+    "# Ramps Studio — machine-readable palette",
     "# Deterministically derived from the URL query string:",
-    "#   b = brand hex (no #)   a = accent hex (optional, omit for auto)",
+    "#   b = brand hex (no #)   a / a2 = accent hexes (optional, omit for auto)",
     "#   m = scope: full | basic",
     "#   s = derivation: complementary | analogous | triadic | split | monochromatic",
     "#   c = contrast target: AA (4.5:1) | AAA (7:1)",
+    "#   f = notation: oklch | hex | rgb | hsl",
     "#   xr / xt = dot-separated ramp / token names the author deselected",
+    // Mirrors encodeShareState: the optional params appear only when they are
+    // actually set, so this line stays a copy-pasteable reproduction of exactly
+    // what is rendered below — including a pinned tertiary accent and a
+    // non-default notation, both of which used to be silently dropped.
     `# This palette: b=${state.brand.replace("#", "")}` +
       `${state.accentOverride ? ` a=${state.accentOverride.replace("#", "")}` : ""}` +
-      ` m=${state.mode} s=${state.scheme} c=${state.compliance}`,
+      `${state.accent2Override ? ` a2=${state.accent2Override.replace("#", "")}` : ""}` +
+      ` m=${state.mode} s=${state.scheme} c=${state.compliance}` +
+      `${state.format !== DEFAULT_STATE.format ? ` f=${state.format}` : ""}`,
     "# Ramps are 50–950 OKLCH steps; semantic tokens are listed for :root (light) and .dark.",
     `# Token steps are auto-adjusted so paired foregrounds meet WCAG ${state.compliance}.`,
     ...(omitted
