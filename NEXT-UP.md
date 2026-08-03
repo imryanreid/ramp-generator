@@ -75,6 +75,30 @@ Nothing outside the codebase is outstanding.
 
 ## Session log
 
+### 2026-08-02 — Favicon in search results
+
+The search result was rendering the generic globe. The only icon declared was
+`favicon.svg` at an intrinsic 32x32, and Google's favicon documentation lists
+neither SVG among its supported formats nor anything at or below 48x48 as
+advisable — so there was nothing it was guaranteed to accept.
+
+- **`public/icon-192.png`** for search, **`public/apple-touch-icon.png`** (180px,
+  full-bleed square, since iOS applies its own mask) for iOS. Declared raster
+  first and SVG second so browsers that honour `type` still take the vector.
+- **`scripts/build-icons.py`** generates both from the shape in `favicon.svg`,
+  which stays the source of truth. Pure stdlib — zlib and struct are all a PNG
+  needs, and four rounded bars aren't worth a rasterizer dependency. **Re-run it
+  after editing the SVG or the PNGs drift.**
+- Verified live: both serve `image/png` at 200, and `Googlebot-Image` gets a 200
+  rather than a block.
+
+**Expect a lag.** Google's docs say favicon crawling takes days to weeks, and the
+result in the screenshot was already stale — it showed the pre-rename
+`og:title` ("Ramp Generator — OKLCH color ramps and semantic tokens") and an
+older subhead ("in just a few clicks"). So the index predates the 2026-08-01
+work entirely. Nothing more to do here but wait; if it still shows the globe in
+a few weeks, check the Search Console URL Inspection tool for the live fetch.
+
 ### 2026-08-01 — Agent-consumption audit fixes
 
 An audit of the live site fetched the way an agent actually reads it — plain
