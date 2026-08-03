@@ -15,7 +15,18 @@
     <meta name="theme-color" content="#fdfdfc" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#131210" media="(prefers-color-scheme: dark)" />
 
+    <!--
+      Raster first, SVG second: browsers that understand `type` take the SVG
+      and scale it perfectly, while everything else falls back to the PNG.
+      The PNG is not redundant — Google Search's favicon docs list neither SVG
+      among the supported formats nor anything at or below 48x48 as advisable,
+      and the SVG declares an intrinsic 32x32. Without a raster fallback a
+      search result gets the generic globe.
+      All three are generated from one shape by scripts/build-icons.py.
+    -->
+    <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- Social unfurls -->
     <meta property="og:type" content="website" />

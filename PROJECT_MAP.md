@@ -7,17 +7,17 @@
 
 ## Root
 
-| File             | What it does                                                                                                                                                                                                                                      |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.html`     | The page shell Vite builds around. Holds the real `<title>`, description, canonical URL, Open Graph tags, and the JSON-LD block that describes the tool to search engines and agents.                                                             |
-| `middleware.ts`  | Sends `/` to `api/render` when the URL carries `?b=`, leaving the bare homepage a static asset. Must be middleware rather than a `vercel.json` rewrite — rewrites are evaluated after the filesystem check, which `index.html` already satisfies. |
-| `vite.config.ts` | Build config. React + Tailwind plugins, the `@` → `src/` alias, and React deduping.                                                                                                                                                               |
-| `tsconfig.json`  | TypeScript settings. Strict mode on, no emit (Vite handles the build).                                                                                                                                                                            |
-| `package.json`   | Dependencies and scripts.                                                                                                                                                                                                                         |
-| `pnpm-lock.yaml` | Locked dependency versions. Commit changes to this.                                                                                                                                                                                               |
-| `.mise.toml`     | Pins the toolchain: Node 22, pnpm 10.                                                                                                                                                                                                             |
-| `.gitignore`     | Keeps `node_modules/`, `dist/`, and `.env*` out of git.                                                                                                                                                                                           |
-| `LICENSE`        | MIT.                                                                                                                                                                                                                                              |
+| File             | What it does                                                                                                                                                                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `index.html`     | The page shell Vite builds around. Holds the real `<title>`, description, canonical URL, Open Graph tags, and the JSON-LD block that describes the tool to search engines and agents.                                                                                                                        |
+| `middleware.ts`  | Sends every `/` request to `api/render`, including the bare homepage — that's the URL an agent lands on when it was told the tool's name but given no link. Must be middleware rather than a `vercel.json` rewrite: rewrites are evaluated after the filesystem check, which `index.html` already satisfies. |
+| `vite.config.ts` | Build config. React + Tailwind plugins, the `@` → `src/` alias, and React deduping.                                                                                                                                                                                                                          |
+| `tsconfig.json`  | TypeScript settings. Strict mode on, no emit (Vite handles the build).                                                                                                                                                                                                                                       |
+| `package.json`   | Dependencies and scripts.                                                                                                                                                                                                                                                                                    |
+| `pnpm-lock.yaml` | Locked dependency versions. Commit changes to this.                                                                                                                                                                                                                                                          |
+| `.mise.toml`     | Pins the toolchain: Node 22, pnpm 10.                                                                                                                                                                                                                                                                        |
+| `.gitignore`     | Keeps `node_modules/`, `dist/`, and `.env*` out of git.                                                                                                                                                                                                                                                      |
+| `LICENSE`        | MIT.                                                                                                                                                                                                                                                                                                         |
 
 ## `api/` — Vercel Functions
 
@@ -25,19 +25,30 @@ Pure functions of the query string. No state, no storage; responses cache
 indefinitely. They exist because the site is client-rendered and most agents
 don't execute JavaScript.
 
-| File         | What it does                                                                                                                                                                                                                                |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `render.ts`  | Serves `/` when the URL carries `?b=`. Fetches the built `index.html`, injects the palette as both JSON and plain text, and rewrites the canonical/description/og:url to describe that specific palette. The React app still boots over it. |
-| `palette.ts` | `GET /api/palette` — the same palette as JSON, for agents and scripts that want data rather than a page.                                                                                                                                    |
+| File         | What it does                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `render.ts`  | Serves every `/`. Fetches the built `index.html` and injects the palette as both JSON and plain text. Only URLs carrying `?b=` also get the canonical/description/og:url rewritten to describe that palette and marked `noindex` — the bare homepage keeps `index, follow` so routing it through here doesn't deindex the site's one indexable page. The React app still boots over it. |
+| `palette.ts` | `GET /api/palette` — the same palette as JSON, for agents and scripts that want data rather than a page.                                                                                                                                                                                                                                                                                |
 
 ## `public/` — copied to the site root verbatim
 
-| File          | What it does                                                                                       |
-| ------------- | -------------------------------------------------------------------------------------------------- |
-| `favicon.svg` | Tab icon: a five-step ramp of the default brand blue.                                              |
-| `robots.txt`  | Allows all crawlers and points at the sitemap.                                                     |
-| `sitemap.xml` | One entry — the site is a single page.                                                             |
-| `llms.txt`    | The URL contract written for agents: parameters, an example, and how to apply a palette correctly. |
+| File                   | What it does                                                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `favicon.svg`          | Tab icon and the source of truth for the icon shape: a five-step ramp of the default brand blue.                              |
+| `icon-192.png`         | Raster fallback of the same shape. Exists for Google Search, which documents neither SVG support nor sizes at or below 48x48. |
+| `apple-touch-icon.png` | The same shape, full-bleed and square — iOS applies its own rounding, so rounded corners here would read as a doubled edge.   |
+| `robots.txt`           | Allows all crawlers, points at the sitemap, and tells agents where `llms.txt` is.                                             |
+| `sitemap.xml`          | One entry — the site is a single page.                                                                                        |
+| `llms.txt`             | The URL contract written for agents: parameters, an example, and how to apply a palette correctly.                            |
+
+Both PNGs are generated — edit `favicon.svg`, then re-run `scripts/build-icons.py`
+or they drift from it.
+
+## `scripts/` — build-time helpers, run by hand
+
+| File             | What it does                                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `build-icons.py` | Renders `public/icon-192.png` and `public/apple-touch-icon.png` from the shape in `favicon.svg`. Pure stdlib — no rasterizer dependency to draw four rounded bars. |
 
 ## `src/` — application code
 
