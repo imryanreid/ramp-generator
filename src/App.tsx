@@ -50,8 +50,13 @@ import {
   CaretDown,
   ArrowCounterClockwise,
 } from "@phosphor-icons/react"
+import ToolSwitcher from "./shared/components/ToolSwitcher"
+import ToolDirectory from "./shared/components/ToolDirectory"
 import avatarUrl from "./assets/avatar-ryan.webp"
 import studioLogo from "./assets/logo-tktk.webp"
+
+/** Which entry in the shared tools manifest is this repo. */
+const TOOL_ID = "ramps"
 
 /**
  * The title and description authored in index.html, so the effect below can
@@ -267,9 +272,7 @@ export default function App() {
               title, rather than squeezing the header copy into a sliver. */}
             <div className="mb-8 flex flex-col-reverse items-start gap-5 sm:flex-row sm:justify-between sm:gap-4">
               <header>
-                <p className="text-ash mb-1 font-mono text-[11px] tracking-[0.2em] uppercase">
-                  ramps.studio
-                </p>
+                <ToolSwitcher current={TOOL_ID} />
                 <h1 className="font-display text-3xl leading-none font-semibold tracking-tight">
                   Color Ramp Generator
                 </h1>
@@ -414,6 +417,7 @@ export default function App() {
               }
             />
             <AgentData palette={palette} options={exportOptions} state={shareState} />
+            <ToolDirectory current={TOOL_ID} />
             <Attribution />
           </main>
         </div>
@@ -729,7 +733,9 @@ function ShareButton({ state }: { state: ShareState }) {
 
 function Attribution() {
   return (
-    <footer className="border-line text-ash mt-12 flex flex-wrap items-center gap-x-3 gap-y-2 border-t pt-6 text-sm">
+    // The tool directory above already draws the rule that separates the page
+    // from its colophon, so this no longer draws a second one.
+    <footer className="text-ash mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
       <span>Built by</span>
       <a
         href="https://www.linkedin.com/in/imryanreid/"
