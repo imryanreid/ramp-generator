@@ -1,4 +1,4 @@
-# CLAUDE.md — Color Ramp Generator
+# CLAUDE.md — Ramps Studio
 
 > **What this file is for:** How we work together on _this_ project — stack,
 > conventions, and the rules that are specific to it. Global preferences live in
@@ -47,21 +47,51 @@ reintroduce Figma Make conventions.** If you find a leftover, remove it.
 - **`src/lib/semantics.ts` exporters are canonical.** The export modal and the
   agent-readable block on the page both render from them — don't create a third
   serialization.
+- **Three names, and only three.** Four were once in circulation, so an unfurl
+  and a search result disagreed about what this is:
+  - **Ramps Studio** — the brand. `og:site_name`, `public/llms.txt`, the agent
+    payload, the share-image eyebrow, this file's title.
+  - **Color Ramp Generator** — the product. The in-app header and the
+    share-image headline.
+  - **Color Ramp & Semantics Generator** — the descriptive title. `<title>`,
+    `og:title`, `twitter:title`, the JSON-LD `name`.
+
+  Don't reintroduce a fourth, and don't collapse these into one — `og:site_name`
+  and `og:title` are deliberately different because an unfurl renders both, so
+  repeating the words wastes the card. Note the escaping: `&amp;` in HTML
+  attributes, a bare `&` inside the `ld+json` script, whose contents are not
+  HTML-parsed. The `README.md` H1 is deliberately left as "Ramp Generator" —
+  renaming it to the brand would duplicate the ramps.studio link directly below.
 
 ## The three things that are easy to break
 
 **0. The canonical host is `https://www.ramps.studio`** — with the `www`, because
 that's what Vercel serves as primary; the bare apex 308-redirects to it. Six
-places hardcode it and they must agree, or the canonical tag ends up naming a
-URL that redirects elsewhere: `index.html` (`<link rel="canonical">`, `og:url`,
-the JSON-LD `url` and `urlTemplate`), `src/lib/site.ts` (`SITE_URL`, which builds
-every share link), `public/sitemap.xml`, and `public/robots.txt`. If the primary
-domain ever flips in Vercel, change all of them together.
+files hardcode it and they must agree, or the canonical tag ends up naming a URL
+that redirects elsewhere:
 
-**1. The URL contract.** `?b=`, `?a=`, `?m=`, `?s=`, `?c=`, `?f=`, `?xr=`, `?xt=` are a public API. They're
-documented in `README.md`, in the JSON-LD block in `index.html`, and in the
-on-page legend in `App.tsx`. Changing a param name or a scheme id breaks every
-link anyone has shared. If you change one, update all four places.
+- `index.html` — `<link rel="canonical">`, `og:url`, the JSON-LD `url` and `urlTemplate`
+- `src/lib/site.ts` — `SITE_URL`, which builds every share link
+- `src/lib/agent.ts` — the payload's `$schema` and `generator` fields
+- `public/llms.txt`, `public/sitemap.xml`, `public/robots.txt`
+
+If the primary domain ever flips in Vercel, change all six together. Verify with
+`git grep -c "www\.ramps\.studio"` rather than by memory — this list has gone
+stale before.
+
+**1. The URL contract.** `?b=`, `?a=`, `?a2=`, `?m=`, `?s=`, `?c=`, `?f=`, `?xr=`,
+`?xt=` are a public API. Changing a param name or a scheme id breaks every link
+anyone has shared. Five places document them and must agree:
+
+- `README.md` — the share-links table
+- `public/llms.txt` — the parameter table
+- `index.html` — the JSON-LD `urlTemplate` and its `query-input` list
+- `src/App.tsx` — the on-page legend above the machine-readable palette
+- `src/lib/agent.ts` — the "REGENERATE WITH DIFFERENT INPUTS" block, which is the
+  only copy a no-JavaScript reader ever sees
+
+Adding a param is backward-compatible, but the docs still have to agree — `a2`
+and `f` shipped while four of these five said nothing about them.
 
 **2. Machine-readability.** Being consumable by agents is a stated goal, not a
 nice-to-have. That means: `robots.txt` stays permissive, the JSON-LD block stays

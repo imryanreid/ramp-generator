@@ -99,13 +99,16 @@
           "@type": "SearchAction",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "https://www.ramps.studio/?b={brand_hex_without_hash}&m={scope}&s={scheme}&c={wcag_level}&xr={excluded_ramps}&xt={excluded_tokens}"
+            "urlTemplate": "https://www.ramps.studio/?b={brand_hex_without_hash}&a={accent_hex_without_hash}&a2={tertiary_accent_hex_without_hash}&m={scope}&s={scheme}&c={wcag_level}&f={notation}&xr={excluded_ramps}&xt={excluded_tokens}"
           },
           "query-input": [
             "required name=brand_hex_without_hash",
-            "required name=scope",
-            "required name=scheme",
-            "required name=wcag_level",
+            "name=accent_hex_without_hash",
+            "name=tertiary_accent_hex_without_hash",
+            "name=scope",
+            "name=scheme",
+            "name=wcag_level",
+            "name=notation",
             "name=excluded_ramps",
             "name=excluded_tokens"
           ]

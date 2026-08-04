@@ -40,14 +40,13 @@ Nothing outside the codebase is outstanding.
 
 ## Known gaps / deliberate omissions
 
-- **Naming is settled at three levels** — don't reintroduce a fourth. "Ramps
-  Studio" is the brand (`og:site_name`, `llms.txt`, the agent payload, the
-  share-image eyebrow); "Color Ramp Generator" is the product (the in-app
-  header, the share-image headline); "Color Ramp & Semantics Generator" is the
-  descriptive title (`<title>`, `og:title`, `twitter:title`, JSON-LD `name`).
-  The README H1 still says plain "Ramp Generator" — left alone deliberately,
-  since renaming it to "Ramps Studio" would duplicate the link on the line
-  below. Change it to "Color Ramp Generator" if you want it to match the app.
+- **Naming is settled at three levels** — brand, product, descriptive title.
+  The rule moved to [`CLAUDE.md`](CLAUDE.md) under Conventions, where durable
+  rules belong; it was only ever here because that's where it got written down.
+  The one open item: the `README.md` H1 still says plain "Ramp Generator",
+  deliberately, since renaming it to the brand would duplicate the ramps.studio
+  link on the line below. Change it to "Color Ramp Generator" if you want it to
+  match the app.
 - **At AAA the status fills darken substantially.** Pairing labels to them means
   the resolver moves the fill when a label can't reach 7:1 from either end of
   the ramp; on `?b=3d7dff&c=AAA` the status fills drop 2–3 steps in light and
