@@ -46,28 +46,48 @@ export default function ToolSwitcher({ current }: { current: string }) {
   }, [open])
 
   return (
-    <div ref={ref} className="relative mb-1 inline-block print:hidden">
+    <div ref={ref} className="relative mb-2 inline-block print:hidden">
+      {/*
+        A bordered control, not bare text with a caret. As an unstyled wordmark
+        the affordance only landed if you were already looking for it — the
+        caret alone reads as decoration at 11px. This borrows the chrome of the
+        Derivation dropdown and the Format select so it is recognisable as the
+        same kind of thing, just smaller.
+
+        The box aligns its left edge to x=0 rather than its text, which indents
+        the wordmark by the border plus padding. That matches every control
+        below it — the Brand swatch and the Format select align by box too — and
+        the alternative hangs the border outside the page gutter.
+      */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
         title="Other tools in this family"
-        className="text-ash hover:text-ink -mx-1 inline-flex items-center gap-1.5 rounded px-1 py-0.5 font-mono text-[11px] tracking-[0.2em] uppercase transition-colors"
+        className={cn(
+          "bg-paper inline-flex items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors",
+          open
+            ? "border-ink/30 text-ink bg-ink/[0.03]"
+            : "border-line text-ash hover:border-ink/30 hover:text-ink",
+        )}
       >
         {here?.wordmark ?? current}
         <CaretDown
-          size={9}
+          size={11}
           weight="bold"
           aria-hidden="true"
-          className={cn("shrink-0 transition-transform duration-200", open && "rotate-180")}
+          className={cn(
+            "text-ash shrink-0 transition-transform duration-200",
+            open && "rotate-180",
+          )}
         />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="border-line bg-paper absolute top-full left-0 z-30 mt-2 w-[320px] overflow-hidden rounded-lg border shadow-xl"
+          className="border-line bg-paper absolute top-full left-0 z-30 mt-1.5 w-[320px] overflow-hidden rounded-md border shadow-xl"
         >
           {TOOLS.map((tool) => {
             const isCurrent = tool.id === current
