@@ -46,7 +46,9 @@ export default function ToolSwitcher({ current }: { current: string }) {
   }, [open])
 
   return (
-    <div ref={ref} className="relative mb-2 inline-block print:hidden">
+    // No outer margin: this now sits in a utility row the host page lays out,
+    // so spacing is the caller's business rather than baked in here.
+    <div ref={ref} className="relative inline-block print:hidden">
       {/*
         A bordered control, not bare text with a caret. As an unstyled wordmark
         the affordance only landed if you were already looking for it — the

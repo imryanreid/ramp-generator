@@ -268,21 +268,20 @@ export default function App() {
         <div className="mx-auto max-w-[1400px] px-6 py-10 lg:px-10 lg:py-14">
           {/* Controls — top row */}
           <section className="border-line mb-12 border-b pb-10">
-            {/* Narrow screens put the action stack on its own line above the
-              title, rather than squeezing the header copy into a sliver. */}
-            <div className="mb-8 flex flex-col-reverse items-start gap-5 sm:flex-row sm:justify-between sm:gap-4">
-              <header>
-                <ToolSwitcher current={TOOL_ID} />
-                <h1 className="font-display text-3xl leading-none font-semibold tracking-tight">
-                  Color Ramp Generator
-                </h1>
-                <p className="text-ash mt-3 max-w-[52ch] text-sm leading-relaxed">
-                  Generate agent-optimized, accessible color ramps in a few clicks.
-                </p>
-              </header>
+            {/*
+              Utility bar. Everything that acts on the page rather than
+              describing it — the family switcher on the left, the action stack
+              on the right — sits on one line across the full width, so the two
+              read as a pair of controls rather than as decoration attached to
+              the title. It also fixes the old narrow-screen layout, which used
+              flex-col-reverse to push the action stack above the header and
+              left four buttons floating with nothing to anchor them.
+            */}
+            <div className="mb-8 flex items-center justify-between gap-4 print:hidden">
+              <ToolSwitcher current={TOOL_ID} />
 
-              {/* Top-right action stack — theme, share, export (icon-only). */}
-              <div className="flex items-center gap-2 print:hidden">
+              {/* Theme, reset, share, export (icon-only). */}
+              <div className="flex items-center gap-2">
                 <ThemeToggle
                   theme={theme}
                   onToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -298,6 +297,16 @@ export default function App() {
                 </IconButton>
               </div>
             </div>
+
+            {/* What the page is. Its own row, below the controls that act on it. */}
+            <header className="mb-8">
+              <h1 className="font-display text-3xl leading-none font-semibold tracking-tight">
+                Color Ramp Generator
+              </h1>
+              <p className="text-ash mt-3 max-w-[52ch] text-sm leading-relaxed">
+                Generate agent-optimized, accessible color ramps in a few clicks.
+              </p>
+            </header>
 
             {/* Controls — single row */}
             <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
