@@ -69,8 +69,13 @@ export default function ToolShell({
               {actions && <div className="flex items-center gap-2">{actions}</div>}
             </div>
 
-            {/* What the page is. Its own row, below the controls that act on it. */}
-            <header className="mb-8">
+            {/*
+              What the page is. Its own row, below the controls that act on it.
+              The bottom margin belongs to the gap above the control band, so a
+              tool without controls doesn't pay for a band it hasn't got — that
+              left a tool-shaped hole of empty page above the rule.
+            */}
+            <header className={controls ? "mb-8" : undefined}>
               <h1 className="font-display text-3xl leading-none font-semibold tracking-tight">
                 {title}
               </h1>

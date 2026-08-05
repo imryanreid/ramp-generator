@@ -48,14 +48,16 @@ export default function ToolDirectory({ current }: { current: string }) {
                 >
                   {tool.name}
                 </span>
-                {isCurrent && (
+                {/* Mutually exclusive, matching the switcher menu. On the tool
+                    you're already looking at, "soon" is noise at best and a
+                    contradiction at worst — you are demonstrably on it. */}
+                {isCurrent ? (
                   <span className="text-ash font-mono text-[10px] lowercase">you are here</span>
-                )}
-                {soon && (
+                ) : soon ? (
                   <span className="border-line text-ash rounded-full border px-1.5 py-px font-mono text-[10px] lowercase">
                     soon
                   </span>
-                )}
+                ) : null}
               </span>
               <span className="text-ash mt-0.5 block text-xs leading-snug">{tool.title}</span>
             </>
