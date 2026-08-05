@@ -137,6 +137,27 @@ describe("GET / — the page an agent fetches", () => {
   })
 })
 
+describe("GET / — when the shell isn't ours", () => {
+  it("passes an interception through instead of injecting into it", async () => {
+    // Vercel Deployment Protection intercepts the function's own fetch of
+    // /index.html and answers with an SSO login page — at status 200, so
+    // `shell.ok` is true. Without a content check the palette gets grafted onto
+    // Vercel's login page, which is what the first preview of this branch
+    // actually served.
+    const login =
+      "<!DOCTYPE html><html><head><title>Login – Vercel</title></head><body>sso</body></html>"
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(login, { status: 200, headers: { "content-type": "text/html" } }),
+    )
+    const { status, html } = await render("/?b=3d7dff")
+    expect(status).toBe(200)
+    expect(html).toBe(login)
+    expect(html).not.toContain("agent-palette")
+  })
+})
+
 describe("GET /api/palette — the JSON endpoint", () => {
   it("returns the palette with permissive CORS", async () => {
     const res = paletteGET(new Request(`${ORIGIN}/api/palette?b=3d7dff`))

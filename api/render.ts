@@ -46,6 +46,26 @@ export async function GET(request: Request): Promise<Response> {
   }
   let html = await shell.text()
 
+  // Make sure what came back is actually our shell before injecting into it.
+  //
+  // `shell.ok` is not enough. With Vercel Deployment Protection on — which is
+  // the default for preview deployments — this internal fetch is intercepted
+  // and served Vercel's SSO login page with a 200, so the guard above passes
+  // and the palette gets grafted onto somebody else's document. Observed on
+  // the first preview of this branch: a 508 KB login page with a working
+  // palette bolted to the bottom of it.
+  //
+  // Production is unprotected, so this never fires there. It's here because
+  // silently wrapping the wrong page is a worse failure than not wrapping one,
+  // and because it makes protected previews behave sensibly — the auth
+  // redirect passes straight through instead of being disguised.
+  if (!html.includes('<div id="root">')) {
+    return new Response(html, {
+      status: shell.status,
+      headers: { "content-type": shell.headers.get("content-type") ?? "text/html" },
+    })
+  }
+
   let payload: ReturnType<typeof buildAgentPayload>
   try {
     payload = buildAgentPayload(url.search, origin)
