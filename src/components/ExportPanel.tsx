@@ -20,8 +20,8 @@ import {
   type ContrastReference,
 } from "../lib/semantics"
 import type { Palette } from "../lib/recommend"
-import { cn } from "../lib/utils"
-import CopyText from "./CopyText"
+import { cn } from "../shared/utils"
+import CopyText from "../shared/components/CopyText"
 import { ArrowLeft, Code, DownloadSimple, Sparkle, CaretRight } from "@phosphor-icons/react"
 
 type Stage = "choose" | "code" | "prompt"

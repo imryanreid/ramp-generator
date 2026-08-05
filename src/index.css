@@ -1,80 +1,11 @@
 /* ==============================================
-   GLOBAL STYLESHEET
-   Self-hosted fonts, the Tailwind v4 theme (which
-   defines every color token the UI references),
-   the light/dark palette, and base page styles.
+   RAMPS STYLESHEET
+   The shared foundation, plus the two things that are
+   only about this tool: the print rules behind the
+   PDF export, and the overrides that make
+   react-colorful look like part of the app.
    ============================================== */
-
-/* Self-hosted variable fonts (Fontsource). Roman weights only — the app
-   never uses italics, so the italic files are deliberately not imported.
-   Each file declares per-subset @font-face rules with unicode-range, so a
-   browser only downloads the subsets a page actually renders. */
-@import "@fontsource-variable/geist/wght.css";
-@import "@fontsource-variable/inter/wght.css";
-@import "@fontsource-variable/jetbrains-mono/wght.css";
-
-@import "tailwindcss";
-
-@theme {
-  --font-display: "Geist Variable", system-ui, sans-serif;
-  --font-sans: "Inter Variable", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
-
-  --color-paper: #fdfdfc;
-  --color-ink: #16150f;
-  --color-ash: #6b6a63;
-  --color-line: #e6e5df;
-  --color-line-soft: #f0efe9;
-}
-
-:root {
-  color-scheme: light;
-}
-
-/* Dark theme — override the design tokens; every `bg-paper`/`text-ink`/etc.
-   utility references these vars, so the whole page flips. */
-:root.dark {
-  color-scheme: dark;
-  --color-paper: #131210;
-  --color-ink: #f3f2ec;
-  --color-ash: #9a998f;
-  --color-line: #2d2b25;
-  --color-line-soft: #211f1a;
-}
-
-html {
-  scrollbar-gutter: stable;
-}
-
-body {
-  margin: 0;
-  background-color: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-/* Hide scrollbars until the user actually scrolls. */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-*:hover,
-*:focus-within {
-  scrollbar-color: var(--color-line) transparent;
-}
-*::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
-}
-*::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 999px;
-}
-*:hover::-webkit-scrollbar-thumb {
-  background: var(--color-line);
-}
+@import "./shared/tokens.css";
 
 /* react-colorful ships its own base styles; these only resize it and round the
    corners so the picker reads as part of the app rather than a dropped-in

@@ -1,0 +1,101 @@
+/* ==============================================
+   SHARED TOKENS
+   The family's whole visual foundation: self-hosted
+   fonts, the Tailwind v4 theme, the five color
+   tokens, their dark-mode values, and base page
+   styles.
+
+   Five tokens is the whole palette. Everything else
+   is an alpha of `ink`. Dark mode redefines these
+   five and nothing else — there is not one `dark:`
+   variant anywhere in the family, and there should
+   not be.
+
+   SHARED FILE. Authored in ramps-studio, copied
+   outward. Don't edit it downstream.
+   ============================================== */
+
+/* Self-hosted variable fonts (Fontsource). Roman weights only — the app
+   never uses italics, so the italic files are deliberately not imported.
+   Each file declares per-subset @font-face rules with unicode-range, so a
+   browser only downloads the subsets a page actually renders. */
+@import "@fontsource-variable/geist/wght.css";
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Geist Variable", system-ui, sans-serif;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  --color-paper: #fdfdfc;
+  --color-ink: #16150f;
+  --color-ash: #6b6a63;
+  --color-line: #e6e5df;
+  --color-line-soft: #f0efe9;
+}
+
+:root {
+  color-scheme: light;
+}
+
+/* Dark theme — override the design tokens; every `bg-paper`/`text-ink`/etc.
+   utility references these vars, so the whole page flips. */
+:root.dark {
+  color-scheme: dark;
+  --color-paper: #131210;
+  --color-ink: #f3f2ec;
+  --color-ash: #9a998f;
+  --color-line: #2d2b25;
+  --color-line-soft: #211f1a;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hide scrollbars until the user actually scrolls. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover,
+*:focus-within {
+  scrollbar-color: var(--color-line) transparent;
+}
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+}
+
+/* MotionConfig's reducedMotion="user" covers Motion components only. CSS
+   transitions need saying separately, or the hover lifts and crossfades keep
+   animating for someone who asked them not to. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

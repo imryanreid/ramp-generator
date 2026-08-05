@@ -8,7 +8,8 @@
 import { useEffect, useRef, useState } from "react"
 import { HexColorPicker } from "react-colorful"
 import { parseColorInput, formatColor, type ColorFormat } from "../lib/color"
-import { cn } from "../lib/utils"
+import { cn } from "../shared/utils"
+import { FieldLabel } from "../shared/components/Label"
 
 /**
  * Brand and Accent are split into separate exports so the layout can sit Accent
@@ -26,9 +27,7 @@ export function BrandField({
 }) {
   return (
     <div className="max-w-[268px] min-w-[180px] flex-1">
-      <div className="mb-1.5 flex h-4 items-center">
-        <FieldLabel>Brand</FieldLabel>
-      </div>
+      <FieldLabel>Brand</FieldLabel>
       <HexField color={brand} format={format} onCommit={onBrandChange} />
     </div>
   )
@@ -61,28 +60,31 @@ export function AccentField({
 
   return (
     <div className={cn(showAccent2 ? "min-w-[300px] flex-[3]" : "min-w-[128px] flex-1")}>
-      <div className="mb-1.5 flex h-4 items-center justify-between gap-2">
-        <FieldLabel>Accent</FieldLabel>
-        <button
-          type="button"
-          onClick={() => {
-            if (locked) {
-              onReset()
-              return
+      <FieldLabel
+        aside={
+          <button
+            type="button"
+            onClick={() => {
+              if (locked) {
+                onReset()
+                return
+              }
+              onAccentChange(autoAccent)
+              if (showAccent2) onAccent2Change(autoAccent2)
+            }}
+            className="bg-ink/[0.06] text-ash hover:bg-ink/10 hover:text-ink rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors"
+            title={
+              locked
+                ? "Manual — click to auto-derive the accents from the brand"
+                : "Auto-derived from brand — click to set the accents manually"
             }
-            onAccentChange(autoAccent)
-            if (showAccent2) onAccent2Change(autoAccent2)
-          }}
-          className="bg-ink/[0.06] text-ash hover:bg-ink/10 hover:text-ink rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors"
-          title={
-            locked
-              ? "Manual — click to auto-derive the accents from the brand"
-              : "Auto-derived from brand — click to set the accents manually"
-          }
-        >
-          {locked ? "Manual" : "Auto"}
-        </button>
-      </div>
+          >
+            {locked ? "Manual" : "Auto"}
+          </button>
+        }
+      >
+        Accent
+      </FieldLabel>
       <div className="flex gap-2">
         <HexField
           color={accentOverride ?? autoAccent}
@@ -100,14 +102,6 @@ export function AccentField({
         )}
       </div>
     </div>
-  )
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-ash font-mono text-[11px] tracking-[0.14em] uppercase">
-      {children}
-    </span>
   )
 }
 

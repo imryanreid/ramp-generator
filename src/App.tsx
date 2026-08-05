@@ -1,20 +1,19 @@
 // ==============================================
 // APP
-// The whole page. Holds the five inputs everything
-// else is derived from — brand color, optional
-// accent override, scope, derivation scheme, and
-// WCAG level — and keeps the URL and document title
-// in sync with them. Below the controls it renders the ramps,
-// the semantic token table, a machine-readable dump
-// of the palette for agents, and the footer.
+// Ramps-specific wiring. Holds the five inputs
+// everything else derives from — brand color,
+// optional accent override, scope, derivation scheme,
+// and WCAG level — keeps the URL and document title in
+// sync with them, and hands the page layout to
+// ToolShell.
 //
-// The small pieces used only here (icon buttons,
-// theme toggle, share button, export modal) live at
-// the bottom of this file; anything reused lives in
-// components/.
+// Everything generic (the shell, the utility buttons,
+// the modal, labels, segmented controls) lives in
+// src/shared and is identical in every tool. What is
+// left here is either color math or the controls that
+// drive it.
 // ==============================================
 import { useEffect, useMemo, useRef, useState } from "react"
-import { AnimatePresence, motion, MotionConfig } from "motion/react"
 import { BrandField, AccentField } from "./components/ColorInput"
 import RampGroup from "./components/RampGroup"
 import SemanticTokens from "./components/SemanticTokens"
@@ -35,25 +34,20 @@ import {
   DEFAULT_STATE,
   type ShareState,
 } from "./lib/share"
-import { toCss, toJson, allRamps, type Compliance, type ExportOptions } from "./lib/semantics"
+import { toCss, toJson, type Compliance, type ExportOptions } from "./lib/semantics"
 import { COLOR_FORMATS, type ColorFormat } from "./lib/color"
-import { useCopy } from "./lib/clipboard"
-import { cn } from "./lib/utils"
-import {
-  DownloadSimple,
-  Sun,
-  Moon,
-  LinkSimple,
-  Check,
-  X,
-  CaretRight,
-  CaretDown,
-  ArrowCounterClockwise,
-} from "@phosphor-icons/react"
-import ToolSwitcher from "./shared/components/ToolSwitcher"
-import ToolDirectory from "./shared/components/ToolDirectory"
-import avatarUrl from "./assets/avatar-ryan.webp"
-import studioLogo from "./assets/logo-tktk.webp"
+import { useCopy } from "./shared/clipboard"
+import { cn } from "./shared/utils"
+import { useTheme } from "./shared/theme"
+import ToolShell from "./shared/components/ToolShell"
+import IconButton from "./shared/components/IconButton"
+import ThemeToggle from "./shared/components/ThemeToggle"
+import ResetButton from "./shared/components/ResetButton"
+import ShareButton from "./shared/components/ShareButton"
+import ExportModal from "./shared/components/ExportModal"
+import Segmented from "./shared/components/Segmented"
+import { FieldLabel } from "./shared/components/Label"
+import { DownloadSimple, CaretRight, CaretDown } from "@phosphor-icons/react"
 
 /** Which entry in the shared tools manifest is this repo. */
 const TOOL_ID = "ramps"
@@ -104,7 +98,7 @@ export default function App() {
     () => new Set(initial.excludedTokens ?? DEFAULT_STATE.excludedTokens),
   )
   const [exportOpen, setExportOpen] = useState(false)
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+  const { theme, toggle: toggleTheme } = useTheme()
 
   const toggle = (set: Set<string>, key: string) => {
     const next = new Set(set)
@@ -210,16 +204,6 @@ export default function App() {
     isDefault,
   ])
 
-  // Apply + persist the page theme by toggling `.dark` on <html>.
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark")
-    try {
-      localStorage.setItem("theme", theme)
-    } catch {
-      // Ignore storage failures (private mode / sandbox).
-    }
-  }, [theme])
-
   // Keep document title + description in sync so agents (and link unfurlers)
   // that read the rendered head see what this specific palette is. On the
   // default palette we leave index.html's canonical copy in place — that's the
@@ -245,74 +229,45 @@ export default function App() {
   ])
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="min-h-screen">
-        <AnimatePresence>
-          {exportOpen && (
-            <ExportModal key="export" onClose={() => setExportOpen(false)}>
-              <ExportPanel
-                palette={palette}
-                options={exportOptions}
-                shareHref={shareUrl(shareState)}
-                onPrint={() => {
-                  // Close first — the modal would otherwise land on page one.
-                  // The delay lets the exit animation finish before printing.
-                  setExportOpen(false)
-                  window.setTimeout(() => window.print(), 300)
-                }}
-              />
-            </ExportModal>
-          )}
-        </AnimatePresence>
+    <ToolShell
+      toolId={TOOL_ID}
+      title="Color Ramp Generator"
+      subtitle="Generate agent-optimized, accessible color ramps in a few clicks."
+      actions={
+        <>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <ResetButton onReset={reset} onUndo={undoReset} />
+          <ShareButton
+            url={shareUrl(shareState)}
+            title="Copy a shareable link to this palette"
+          />
+          <IconButton onClick={() => setExportOpen(true)} title="Export tokens" variant="solid">
+            <DownloadSimple size={18} weight="regular" aria-hidden="true" />
+          </IconButton>
+        </>
+      }
+      overlay={
+        exportOpen && (
+          <ExportModal key="export" onClose={() => setExportOpen(false)}>
+            <ExportPanel
+              palette={palette}
+              options={exportOptions}
+              shareHref={shareUrl(shareState)}
+              onPrint={() => {
+                // Close first — the modal would otherwise land on page one.
+                // The delay lets the exit animation finish before printing.
+                setExportOpen(false)
+                window.setTimeout(() => window.print(), 300)
+              }}
+            />
+          </ExportModal>
+        )
+      }
+      controls={
+        <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
+          <BrandField brand={brand} format={format} onBrandChange={setBrand} />
 
-        <div className="mx-auto max-w-[1400px] px-6 py-10 lg:px-10 lg:py-14">
-          {/* Controls — top row */}
-          <section className="border-line mb-12 border-b pb-10">
-            {/*
-              Utility bar. Everything that acts on the page rather than
-              describing it — the family switcher on the left, the action stack
-              on the right — sits on one line across the full width, so the two
-              read as a pair of controls rather than as decoration attached to
-              the title. It also fixes the old narrow-screen layout, which used
-              flex-col-reverse to push the action stack above the header and
-              left four buttons floating with nothing to anchor them.
-            */}
-            <div className="mb-8 flex items-center justify-between gap-4 print:hidden">
-              <ToolSwitcher current={TOOL_ID} />
-
-              {/* Theme, reset, share, export (icon-only). */}
-              <div className="flex items-center gap-2">
-                <ThemeToggle
-                  theme={theme}
-                  onToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
-                />
-                <ResetButton onReset={reset} onUndo={undoReset} />
-                <ShareButton state={shareState} />
-                <IconButton
-                  onClick={() => setExportOpen(true)}
-                  title="Export tokens"
-                  variant="solid"
-                >
-                  <DownloadSimple size={18} weight="regular" aria-hidden="true" />
-                </IconButton>
-              </div>
-            </div>
-
-            {/* What the page is. Its own row, below the controls that act on it. */}
-            <header className="mb-8">
-              <h1 className="font-display text-3xl leading-none font-semibold tracking-tight">
-                Color Ramp Generator
-              </h1>
-              <p className="text-ash mt-3 max-w-[52ch] text-sm leading-relaxed">
-                Generate agent-optimized, accessible color ramps in a few clicks.
-              </p>
-            </header>
-
-            {/* Controls — single row */}
-            <div className="flex flex-wrap items-end gap-x-8 gap-y-6">
-              <BrandField brand={brand} format={format} onBrandChange={setBrand} />
-
-              {/*
+          {/*
               Accent and Derivation are coupled: while the accent is on Auto,
               Derivation is what produces it. They share a wrapper so they wrap
               together, with a rule drawn between them to show the link. On
@@ -320,120 +275,144 @@ export default function App() {
               accent-2, the neutral tint and status vividness, so it stays
               selectable rather than being disabled outright.
             */}
-              <div className="flex min-w-[300px] flex-[2] flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
-                <AccentField
-                  accentOverride={accentOverride}
-                  accent2Override={accent2Override}
-                  autoAccent={autoAccent}
-                  autoAccent2={autoAccent2}
-                  showAccent2={mode === "full"}
-                  format={format}
-                  onAccentChange={setAccentOverride}
-                  onAccent2Change={setAccent2Override}
-                  onReset={() => {
+          <div className="flex min-w-[300px] flex-[2] flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
+            <AccentField
+              accentOverride={accentOverride}
+              accent2Override={accent2Override}
+              autoAccent={autoAccent}
+              autoAccent2={autoAccent2}
+              showAccent2={mode === "full"}
+              format={format}
+              onAccentChange={setAccentOverride}
+              onAccent2Change={setAccent2Override}
+              onReset={() => {
+                setAccentOverride(null)
+                setAccent2Override(null)
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className={cn(
+                "mb-[17px] hidden h-px w-8 shrink-0 transition-colors sm:block",
+                accentLocked ? "bg-transparent" : "bg-line",
+              )}
+            />
+            <div className="w-full sm:w-[196px] sm:shrink-0">
+              <FieldLabel>Derivation</FieldLabel>
+              <div
+                className={cn("transition-opacity", accentLocked && "opacity-45")}
+                title={
+                  accentLocked
+                    ? "The accent is set manually, so derivation no longer produces it — it still shapes accent-2, the neutral tint and status colors."
+                    : undefined
+                }
+              >
+                <SchemeSelect
+                  scheme={scheme}
+                  onChange={(next) => {
+                    setScheme(next)
+                    // Picking a derivation is a request for it to drive the
+                    // accents, so pinned accents hand control back.
                     setAccentOverride(null)
                     setAccent2Override(null)
                   }}
                 />
-                <div
-                  aria-hidden="true"
-                  className={cn(
-                    "mb-[17px] hidden h-px w-8 shrink-0 transition-colors sm:block",
-                    accentLocked ? "bg-transparent" : "bg-line",
-                  )}
-                />
-                <div className="w-full sm:w-[196px] sm:shrink-0">
-                  <SectionLabel>Derivation</SectionLabel>
-                  <div
-                    className={cn("transition-opacity", accentLocked && "opacity-45")}
-                    title={
-                      accentLocked
-                        ? "The accent is set manually, so derivation no longer produces it — it still shapes accent-2, the neutral tint and status colors."
-                        : undefined
-                    }
-                  >
-                    <SchemeSelect
-                      scheme={scheme}
-                      onChange={(next) => {
-                        setScheme(next)
-                        // Picking a derivation is a request for it to drive the
-                        // accents, so pinned accents hand control back.
-                        setAccentOverride(null)
-                        setAccent2Override(null)
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <SectionLabel>Format</SectionLabel>
-                <FormatSelect format={format} onChange={setFormat} />
-              </div>
-
-              <div>
-                <SectionLabel>Contrast</SectionLabel>
-                <ComplianceToggle compliance={compliance} onChange={setCompliance} />
-              </div>
-
-              <div>
-                <SectionLabel>Scope</SectionLabel>
-                <ModeToggle mode={mode} onChange={setMode} />
               </div>
             </div>
-          </section>
+          </div>
 
-          {/* Output — new section */}
-          <main className="min-w-0">
-            {(
-              [
-                ["Brand", palette.primaries],
-                ["Accents", palette.accents],
-                ["Neutral", [palette.neutral]],
-                ["Status", palette.status],
-              ] as const
-            ).map(([title, ramps]) => (
-              <RampGroup
-                key={title}
-                title={title}
-                ramps={ramps}
-                format={format}
-                excluded={excludedRamps}
-                onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
-                onSetMany={(names, off) =>
-                  setExcludedRamps((prev) => {
-                    const next = new Set(prev)
-                    names.forEach((n) => (off ? next.add(n) : next.delete(n)))
-                    return next
-                  })
-                }
-              />
-            ))}
-            <SemanticTokens
-              palette={palette}
-              mode={mode}
-              compliance={compliance}
-              format={format}
-              excludedRamps={excludedRamps}
-              excluded={excludedTokens}
-              onToggle={(name) => setExcludedTokens((prev) => toggle(prev, name))}
-              onSetMany={(names, off) =>
-                setExcludedTokens((prev) => {
-                  const next = new Set(prev)
-                  names.forEach((n) => (off ? next.add(n) : next.delete(n)))
-                  return next
-                })
-              }
+          <div>
+            <FieldLabel>Format</FieldLabel>
+            <FormatSelect format={format} onChange={setFormat} />
+          </div>
+
+          <div>
+            <FieldLabel>Contrast</FieldLabel>
+            <Segmented
+              ariaLabel="Contrast target"
+              layoutId="compliance-pill"
+              value={compliance}
+              onChange={setCompliance}
+              options={COMPLIANCE_OPTIONS}
             />
-            <AgentData palette={palette} options={exportOptions} state={shareState} />
-            <ToolDirectory current={TOOL_ID} />
-            <Attribution />
-          </main>
+          </div>
+
+          <div>
+            <FieldLabel>Scope</FieldLabel>
+            <Segmented
+              ariaLabel="Token scope"
+              layoutId="mode-pill"
+              value={mode}
+              onChange={setMode}
+              options={SCOPE_OPTIONS}
+            />
+          </div>
         </div>
-      </div>
-    </MotionConfig>
+      }
+    >
+      {(
+        [
+          ["Brand", palette.primaries],
+          ["Accents", palette.accents],
+          ["Neutral", [palette.neutral]],
+          ["Status", palette.status],
+        ] as const
+      ).map(([title, ramps]) => (
+        <RampGroup
+          key={title}
+          title={title}
+          ramps={ramps}
+          format={format}
+          excluded={excludedRamps}
+          onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
+          onSetMany={(names, off) =>
+            setExcludedRamps((prev) => {
+              const next = new Set(prev)
+              names.forEach((n) => (off ? next.add(n) : next.delete(n)))
+              return next
+            })
+          }
+        />
+      ))}
+      <SemanticTokens
+        palette={palette}
+        mode={mode}
+        compliance={compliance}
+        format={format}
+        excludedRamps={excludedRamps}
+        excluded={excludedTokens}
+        onToggle={(name) => setExcludedTokens((prev) => toggle(prev, name))}
+        onSetMany={(names, off) =>
+          setExcludedTokens((prev) => {
+            const next = new Set(prev)
+            names.forEach((n) => (off ? next.add(n) : next.delete(n)))
+            return next
+          })
+        }
+      />
+      <AgentData palette={palette} options={exportOptions} state={shareState} />
+    </ToolShell>
   )
 }
+
+/**
+ * WCAG contrast target. Changing it re-resolves every semantic token: paired
+ * foregrounds walk their ramp until they clear the ratio, and action fills move
+ * too when a foreground runs out of ramp. See `resolveTokens` in lib/semantics.
+ */
+const COMPLIANCE_OPTIONS = [
+  { id: "AA" as const, label: "AA", title: "WCAG AA — 4.5:1 minimum for normal text" },
+  { id: "AAA" as const, label: "AAA", title: "WCAG AAA — 7:1 minimum for normal text" },
+]
+
+const SCOPE_OPTIONS = [
+  {
+    id: "full" as const,
+    label: "Full",
+    title: "Every token, including hover and active states",
+  },
+  { id: "basic" as const, label: "Lite", title: "Core tokens only" },
+]
 
 /** Upsert a <meta> tag by attribute so runtime updates stay in sync. */
 function setMeta(attr: "name" | "property", key: string, content: string) {
@@ -451,6 +430,11 @@ function describePalette(s: ShareState): string {
   const accent = s.accentOverride ? `accent ${s.accentOverride}` : "auto-derived accent"
   return `Design-system palette generated from brand color ${s.brand} (${accent}), ${s.scheme} derivation, ${s.mode} scope, tuned to WCAG ${s.compliance} contrast. Perceptually-even OKLCH ramps plus usage-first semantic tokens for light and dark. Full token values are listed on the page.`
 }
+
+const AGENT_FORMATS = [
+  { id: "json" as const, label: "JSON" },
+  { id: "css" as const, label: "CSS" },
+]
 
 /**
  * A visible-but-collapsed, plain-text dump of the entire palette so agents that
@@ -499,10 +483,6 @@ function AgentData({
   const [format, setFormat] = useState<"css" | "json">("json")
   const { copied, copy } = useCopy(1400)
   const code = format === "css" ? toCss(palette, options) : toJson(palette, options)
-  const formats: { id: "css" | "json"; label: string }[] = [
-    { id: "json", label: "JSON" },
-    { id: "css", label: "CSS" },
-  ]
 
   return (
     <section className="mb-12 print:hidden" aria-label="Machine-readable palette for agents">
@@ -524,31 +504,14 @@ function AgentData({
             {legend}
           </pre>
           <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="border-line inline-flex rounded-md border p-0.5">
-              {formats.map((f) => {
-                const active = format === f.id
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setFormat(f.id)}
-                    className={cn(
-                      "relative rounded px-2.5 py-1 font-mono text-[11px] transition-colors",
-                      active ? "text-paper" : "text-ash hover:text-ink",
-                    )}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="agent-format-pill"
-                        className="bg-ink absolute inset-0 rounded"
-                        transition={{ type: "spring", stiffness: 480, damping: 38 }}
-                      />
-                    )}
-                    <span className="relative z-10">{f.label}</span>
-                  </button>
-                )
-              })}
-            </div>
+            <Segmented
+              ariaLabel="Machine-readable format"
+              layoutId="agent-format-pill"
+              size="sm"
+              value={format}
+              onChange={setFormat}
+              options={AGENT_FORMATS}
+            />
             <button
               type="button"
               onClick={() => copy(code)}
@@ -563,317 +526,6 @@ function AgentData({
         </div>
       </details>
     </section>
-  )
-}
-
-type Theme = "light" | "dark"
-
-/** Initial theme: stored preference, else the OS setting, else light. */
-function getInitialTheme(): Theme {
-  try {
-    const saved = localStorage.getItem("theme")
-    if (saved === "light" || saved === "dark") return saved
-  } catch {
-    // Ignore storage failures.
-  }
-  if (
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-color-scheme: dark)").matches
-  ) {
-    return "dark"
-  }
-  return "light"
-}
-
-/** Shared icon-button chrome for the top-right action stack. */
-function IconButton({
-  onClick,
-  title,
-  variant = "outline",
-  children,
-}: {
-  onClick: () => void
-  title: string
-  variant?: "outline" | "solid" | "danger"
-  children: React.ReactNode
-}) {
-  const chrome =
-    variant === "solid"
-      ? "bg-ink text-paper hover:-translate-y-0.5 shadow-sm"
-      : variant === "danger"
-        ? // Destructive-ish: reset throws away whatever the visitor built up.
-          "border border-ink/20 text-ink hover:-translate-y-0.5 hover:border-red-500 hover:text-red-500 hover:bg-red-500/[0.06]"
-        : "border border-ink/20 text-ink hover:-translate-y-0.5 hover:border-ink/40 hover:bg-ink/[0.04]"
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      aria-label={title}
-      className={cn(
-        "inline-flex h-10 w-10 items-center justify-center rounded-md transition-all",
-        chrome,
-      )}
-    >
-      {children}
-    </button>
-  )
-}
-
-function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
-  const dark = theme === "dark"
-  return (
-    <IconButton
-      onClick={onToggle}
-      title={dark ? "Switch to light mode" : "Switch to dark mode"}
-    >
-      <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
-        {/* Sun (shown in dark mode → click for light) */}
-        <Sun
-          size={18}
-          weight="regular"
-          aria-hidden="true"
-          className="absolute transition-all duration-300 ease-out"
-          style={{
-            opacity: dark ? 1 : 0,
-            transform: dark ? "none" : "rotate(-90deg) scale(0.6)",
-          }}
-        />
-        {/* Moon (shown in light mode → click for dark) */}
-        <Moon
-          size={18}
-          weight="regular"
-          aria-hidden="true"
-          className="absolute transition-all duration-300 ease-out"
-          style={{
-            opacity: dark ? 0 : 1,
-            transform: dark ? "rotate(90deg) scale(0.6)" : "none",
-          }}
-        />
-      </span>
-    </IconButton>
-  )
-}
-
-/**
- * Reset, with a short window to take it back.
- *
- * The reset is destructive and one click away, so for a few seconds afterwards
- * the button becomes the undo. That doubles as the confirmation — you can see
- * something happened — which is why there's no separate checkmark.
- */
-function ResetButton({ onReset, onUndo }: { onReset: () => void; onUndo: () => void }) {
-  const [undoable, setUndoable] = useState(false)
-  const timer = useRef<number | null>(null)
-
-  const stopTimer = () => window.clearTimeout(timer.current ?? undefined)
-  useEffect(() => stopTimer, [])
-
-  // One element throughout, so the width eases and the labels crossfade the way
-  // the share and copy buttons do. Swapping between two elements snapped.
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        stopTimer()
-        if (undoable) {
-          setUndoable(false)
-          onUndo()
-          return
-        }
-        onReset()
-        setUndoable(true)
-        timer.current = window.setTimeout(() => setUndoable(false), 3500)
-      }}
-      title={undoable ? "Restore the palette you had before resetting" : "Reset to defaults"}
-      aria-label={undoable ? "Undo reset" : "Reset to defaults"}
-      className={cn(
-        "relative inline-flex h-10 shrink-0 items-center justify-center overflow-hidden rounded-md border transition-all duration-300 ease-out hover:-translate-y-0.5",
-        undoable
-          ? "border-ink/20 text-ink hover:border-ink/40 hover:bg-ink/[0.04] w-[92px]"
-          : "border-ink/20 text-ink w-10 hover:border-red-500 hover:bg-red-500/[0.06] hover:text-red-500",
-      )}
-    >
-      <ArrowCounterClockwise
-        size={18}
-        weight="regular"
-        aria-hidden="true"
-        className="absolute transition-all duration-200 ease-out"
-        style={{ opacity: undoable ? 0 : 1, transform: undoable ? "scale(0.7)" : "none" }}
-      />
-      <span
-        className="absolute inline-flex items-center gap-1.5 font-mono text-xs whitespace-nowrap transition-all duration-200 ease-out"
-        style={{ opacity: undoable ? 1 : 0, transform: undoable ? "none" : "scale(0.9)" }}
-      >
-        <ArrowCounterClockwise size={14} weight="bold" aria-hidden="true" />
-        Undo?
-      </span>
-    </button>
-  )
-}
-
-function ShareButton({ state }: { state: ShareState }) {
-  const { copied, copy } = useCopy(1400)
-  return (
-    <IconButton
-      onClick={() => copy(shareUrl(state))}
-      title="Copy a shareable link to this palette"
-    >
-      <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
-        {/* Link icon → check crossfade on copy. */}
-        <LinkSimple
-          size={18}
-          weight="regular"
-          aria-hidden="true"
-          className="absolute transition-all duration-200 ease-out"
-          style={{ opacity: copied ? 0 : 1, transform: copied ? "scale(0.7)" : "none" }}
-        />
-        <Check
-          size={18}
-          weight="bold"
-          aria-hidden="true"
-          className="absolute text-emerald-500 transition-all duration-200 ease-out"
-          style={{ opacity: copied ? 1 : 0, transform: copied ? "none" : "scale(0.7)" }}
-        />
-      </span>
-    </IconButton>
-  )
-}
-
-function Attribution() {
-  return (
-    // The tool directory above already draws the rule that separates the page
-    // from its colophon, so this no longer draws a second one.
-    <footer className="text-ash mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-      <span>Built by</span>
-      <a
-        href="https://www.linkedin.com/in/imryanreid/"
-        target="_blank"
-        rel="noreferrer"
-        className="border-line hover:border-ink/30 hover:bg-ink/[0.04] inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-all duration-200 hover:-translate-y-0.5"
-      >
-        <img src={avatarUrl} alt="Ryan Reid" className="h-6 w-6 rounded-full object-cover" />
-        <span className="text-ink font-medium">Ryan Reid</span>
-      </a>
-      <span>at</span>
-      <a
-        href="https://www.tktk.studio/"
-        target="_blank"
-        rel="noreferrer"
-        className="border-line hover:border-ink/30 hover:bg-ink/[0.04] inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-all duration-200 hover:-translate-y-0.5"
-      >
-        <img src={studioLogo} alt="tktk studio" className="h-6 w-6 rounded-full object-cover" />
-        <span className="text-ink font-medium">tktk studio</span>
-      </a>
-    </footer>
-  )
-}
-
-function ExportModal({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode
-  onClose: () => void
-}) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", onKey)
-    document.body.style.overflow = "hidden"
-    return () => {
-      window.removeEventListener("keydown", onKey)
-      document.body.style.overflow = ""
-    }
-  }, [onClose])
-
-  return (
-    <motion.div
-      className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-8"
-      onClick={onClose}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-    >
-      <motion.div
-        className="border-line bg-paper mt-6 w-full max-w-3xl rounded-xl border p-5 shadow-xl sm:mt-10 sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 8, scale: 0.985 }}
-        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-display text-xl font-semibold tracking-tight">Export</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="text-ash hover:bg-ink/[0.06] hover:text-ink rounded p-1.5 transition-colors"
-          >
-            <X size={18} weight="regular" aria-hidden="true" />
-          </button>
-        </div>
-        {children}
-      </motion.div>
-    </motion.div>
-  )
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-ash mb-3 font-mono text-[11px] tracking-[0.16em] uppercase">
-      {children}
-    </h2>
-  )
-}
-
-/**
- * WCAG contrast target. Changing this re-resolves every semantic token: paired
- * foregrounds walk their ramp until they clear the ratio, and action fills move
- * too when a foreground runs out of ramp. See `resolveTokens` in lib/semantics.
- */
-function ComplianceToggle({
-  compliance,
-  onChange,
-}: {
-  compliance: Compliance
-  onChange: (c: Compliance) => void
-}) {
-  const options: { id: Compliance; label: string; title: string }[] = [
-    { id: "AA", label: "AA", title: "WCAG AA — 4.5:1 minimum for normal text" },
-    { id: "AAA", label: "AAA", title: "WCAG AAA — 7:1 minimum for normal text" },
-  ]
-  return (
-    <div className="border-line inline-flex rounded-md border p-0.5">
-      {options.map((o) => {
-        const active = compliance === o.id
-        return (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => onChange(o.id)}
-            title={o.title}
-            aria-pressed={active}
-            className={cn(
-              "relative rounded px-3 py-1.5 font-mono text-xs transition-colors",
-              active ? "text-paper" : "text-ash hover:text-ink",
-            )}
-          >
-            {active && (
-              <motion.span
-                layoutId="compliance-pill"
-                className="bg-ink absolute inset-0 rounded"
-                transition={{ type: "spring", stiffness: 480, damping: 38 }}
-              />
-            )}
-            <span className="relative z-10">{o.label}</span>
-          </button>
-        )
-      })}
-    </div>
   )
 }
 
@@ -895,7 +547,7 @@ function FormatSelect({
         value={format}
         onChange={(e) => onChange(e.target.value as ColorFormat)}
         aria-label="Color notation"
-        className="border-line bg-paper text-ink hover:border-ink/30 focus-visible:ring-ink/30 cursor-pointer appearance-none rounded-md border py-1.5 pr-8 pl-3 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="border-line bg-paper text-ink hover:border-ink/30 focus-visible:ring-ink/30 h-9 cursor-pointer appearance-none rounded-md border pr-8 pl-3 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
         {COLOR_FORMATS.map((f) => (
           <option key={f.id} value={f.id}>
@@ -909,40 +561,6 @@ function FormatSelect({
         aria-hidden="true"
         className="text-ash pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2"
       />
-    </div>
-  )
-}
-
-function ModeToggle({ mode, onChange }: { mode: DsMode; onChange: (m: DsMode) => void }) {
-  const options: { id: DsMode; label: string }[] = [
-    { id: "full", label: "Full" },
-    { id: "basic", label: "Lite" },
-  ]
-  return (
-    <div className="border-line inline-flex rounded-md border p-0.5">
-      {options.map((o) => {
-        const active = mode === o.id
-        return (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => onChange(o.id)}
-            className={cn(
-              "relative rounded px-3 py-1.5 font-mono text-xs transition-colors",
-              active ? "text-paper" : "text-ash hover:text-ink",
-            )}
-          >
-            {active && (
-              <motion.span
-                layoutId="mode-pill"
-                className="bg-ink absolute inset-0 rounded"
-                transition={{ type: "spring", stiffness: 480, damping: 38 }}
-              />
-            )}
-            <span className="relative z-10">{o.label}</span>
-          </button>
-        )
-      })}
     </div>
   )
 }

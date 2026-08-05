@@ -6,7 +6,6 @@
 // or as the ramp alias they point at.
 // ==============================================
 import { useState } from "react"
-import { motion } from "motion/react"
 import {
   resolveTokens,
   rampAliasNames,
@@ -17,9 +16,10 @@ import {
 } from "../lib/semantics"
 import type { Palette } from "../lib/recommend"
 import { formatColor, type ColorFormat } from "../lib/color"
-import { cn } from "../lib/utils"
-import CopyButton from "./CopyButton"
-import RowToggle from "./RowToggle"
+import { cn } from "../shared/utils"
+import Segmented from "../shared/components/Segmented"
+import CopyButton from "../shared/components/CopyButton"
+import RowToggle from "../shared/components/RowToggle"
 import { Square, TextT, Selection, Target, Warning } from "@phosphor-icons/react"
 
 type ValueView = "hex" | "ramp"
@@ -64,7 +64,15 @@ export default function SemanticTokens({
     <section className="mb-12">
       <div className="mb-4 flex items-center justify-between gap-4">
         <h2 className="font-display text-xl font-semibold tracking-tight">Semantic tokens</h2>
-        <ViewToggle view={view} onChange={setView} />
+        <Segmented
+          ariaLabel="Token value display"
+          layoutId="sem-view-pill"
+          size="sm"
+          uppercase
+          value={view}
+          onChange={setView}
+          options={VIEW_OPTIONS}
+        />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] border-collapse text-sm">
@@ -101,40 +109,10 @@ export default function SemanticTokens({
   )
 }
 
-/** Segmented control switching the Light/Dark columns between hex and ramp refs. */
-function ViewToggle({ view, onChange }: { view: ValueView; onChange: (v: ValueView) => void }) {
-  const options: { id: ValueView; label: string }[] = [
-    { id: "hex", label: "Hex" },
-    { id: "ramp", label: "Ramp" },
-  ]
-  return (
-    <div className="border-line bg-paper inline-flex items-center rounded-full border p-0.5">
-      {options.map((o) => {
-        const active = view === o.id
-        return (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => onChange(o.id)}
-            className={cn(
-              "relative rounded-full px-3 py-1 font-mono text-[11px] tracking-wide uppercase transition-colors",
-              active ? "text-ink" : "text-ash hover:text-ink",
-            )}
-          >
-            {active && (
-              <motion.span
-                layoutId="sem-view-pill"
-                className="bg-ink/[0.08] absolute inset-0 rounded-full"
-                transition={{ type: "spring", stiffness: 480, damping: 38 }}
-              />
-            )}
-            <span className="relative">{o.label}</span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
+const VIEW_OPTIONS = [
+  { id: "hex" as const, label: "Hex", title: "Show the resolved color value" },
+  { id: "ramp" as const, label: "Ramp", title: "Show which ramp step each token points at" },
+]
 
 function GroupBlock({
   category,

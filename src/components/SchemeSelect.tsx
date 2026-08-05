@@ -6,7 +6,7 @@
 // ==============================================
 import { useEffect, useRef, useState } from "react"
 import { SCHEMES, type Scheme } from "../lib/recommend"
-import { cn } from "../lib/utils"
+import { cn } from "../shared/utils"
 import { CaretDown, Check } from "@phosphor-icons/react"
 
 type Props = {

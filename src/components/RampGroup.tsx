@@ -12,9 +12,9 @@
 // ==============================================
 import { readableText, formatColor, type Ramp, type ColorFormat } from "../lib/color"
 import { Check } from "@phosphor-icons/react"
-import { cn } from "../lib/utils"
-import CopyText from "./CopyText"
-import RowToggle from "./RowToggle"
+import { cn } from "../shared/utils"
+import CopyText from "../shared/components/CopyText"
+import RowToggle from "../shared/components/RowToggle"
 
 type Props = {
   title: string

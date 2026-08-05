@@ -22,7 +22,7 @@
 import { useEffect, useRef, useState } from "react"
 import { CaretDown, Check } from "@phosphor-icons/react"
 import { TOOLS, toolUrl } from "../tools"
-import { cn } from "../../lib/utils"
+import { cn } from "../utils"
 
 export default function ToolSwitcher({ current }: { current: string }) {
   const [open, setOpen] = useState(false)

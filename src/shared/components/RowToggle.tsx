@@ -8,7 +8,7 @@
 // keyboard- and screen-reader-navigable.
 // ==============================================
 import { Check, Minus } from "@phosphor-icons/react"
-import { cn } from "../lib/utils"
+import { cn } from "../utils"
 
 export default function RowToggle({
   checked,

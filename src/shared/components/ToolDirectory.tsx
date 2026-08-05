@@ -19,7 +19,7 @@
 // outward. Don't edit it downstream.
 // ==============================================
 import { TOOLS, toolUrl, FAMILY_NAME } from "../tools"
-import { cn } from "../../lib/utils"
+import { cn } from "../utils"
 
 export default function ToolDirectory({ current }: { current: string }) {
   return (

@@ -6,8 +6,8 @@
 // content.
 // ==============================================
 import { type ReactNode } from "react"
-import { useCopy } from "../lib/clipboard"
-import { cn } from "../lib/utils"
+import { useCopy } from "../clipboard"
+import { cn } from "../utils"
 import { Check } from "@phosphor-icons/react"
 
 type Props = {

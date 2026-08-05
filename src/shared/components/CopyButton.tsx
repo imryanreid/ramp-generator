@@ -3,8 +3,8 @@
 // Small icon button that copies a value and
 // crossfades from a copy icon to a checkmark.
 // ==============================================
-import { useCopy } from "../lib/clipboard"
-import { cn } from "../lib/utils"
+import { useCopy } from "../clipboard"
+import { cn } from "../utils"
 import { Copy, Check } from "@phosphor-icons/react"
 
 type Props = {
