@@ -74,7 +74,8 @@ export default function ToolSwitcher({ current }: { current: string }) {
             : "border-line text-ash hover:border-ink/30 hover:text-ink",
         )}
       >
-        {here?.wordmark ?? current}
+        {/* No wordmark until a domain exists — fall back to the tool's name. */}
+        {here?.wordmark ?? here?.name ?? current}
         <CaretDown
           size={11}
           weight="bold"

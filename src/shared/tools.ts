@@ -27,12 +27,15 @@ export type Tool = {
   /** Short label, shown in menu rows and the footer list. */
   name: string
   /**
-   * The eyebrow wordmark above a tool's title, e.g. "ramps.studio". Kept
-   * separate from `domain` because the canonical host carries a `www.` that
-   * looks wrong set in letterspaced caps — and because a tool that hasn't
-   * shipped still has a wordmark but no host.
+   * The eyebrow wordmark above a tool's title, e.g. "ramps.studio".
+   *
+   * Separate from `domain` because the canonical host carries a `www.` that
+   * looks wrong set in letterspaced caps. Optional, and absent until a domain
+   * is actually registered — asserting a wordmark for a domain nobody owns puts
+   * a name on screen that may never be true, which is the same mistake as
+   * shipping a `domain` for an unreleased tool. Falls back to the tool's name.
    */
-  wordmark: string
+  wordmark?: string
   /** What it makes. One noun phrase, no verb. */
   title: string
   /** One line, plain language. Shown in the switcher and the footer. */
@@ -58,7 +61,6 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "motion",
-    wordmark: "motion.studio",
     name: "Motion",
     title: "Easing curves & durations",
     blurb: "Easing curves, springs and durations you can preview on real UI.",
@@ -66,7 +68,6 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "shape",
-    wordmark: "shape.studio",
     name: "Shape",
     title: "Spacing, radius & elevation",
     blurb: "One set of rules for spacing steps, nested radii and a light-source shadow ramp.",
@@ -74,7 +75,6 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "type",
-    wordmark: "type.studio",
     name: "Type",
     title: "Fluid scales & text styles",
     blurb: "Scales that interpolate with the viewport, and the text styles built on them.",
@@ -82,7 +82,6 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "icons",
-    wordmark: "icons.studio",
     name: "Icons",
     title: "SVG cleanup & alignment",
     blurb: "Clean up exported SVGs and sit them on a consistent optical grid.",
