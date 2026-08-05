@@ -74,6 +74,47 @@ Nothing outside the codebase is outstanding.
 
 ## Session log
 
+### 2026-08-05 — The shared layer, and the family switcher
+
+Everything that isn't about color now lives in `src/shared`, which is copied
+verbatim into every other tool by `scripts/sync-shared.sh`. **This repo is
+upstream** — `src/shared` is authored here and pushed outward, never edited
+downstream. Run `./scripts/sync-shared.sh --check` before any release; without
+it, "just copy the files" quietly becomes "the files differ in four repos".
+
+- **Cross-tool switcher**, driven by one manifest (`src/shared/tools.ts`). Two
+  surfaces: a menu hung off the eyebrow wordmark, and a plain-anchor directory
+  in the footer. The second isn't redundancy — the menu doesn't exist until
+  React runs, and most agents that follow a link never run it. The family also
+  now appears in the injected agent text, in `llms.txt`, and as JSON-LD
+  `isPartOf`.
+- **Coming-soon tools carry no domain.** Inventing URLs would ship a dead link
+  in every copy of the manifest until each is registered.
+- **The header is three rows** — utility bar, title, controls. That retired the
+  narrow-screen `flex-col-reverse` case that stranded the action stack above
+  the title.
+- **Three long-standing inconsistencies fixed** while extracting: the
+  control-row labels now share a baseline (they came from three different label
+  components), the control band is one height (36px, was 36 and 30 mixed), and
+  four segmented-control skins became one. The token table's Hex/Ramp toggle
+  changed appearance as a result — it takes the canonical solid pill now.
+- **Reduced motion** is finally honoured for CSS transitions. `MotionConfig`
+  only ever covered Motion components.
+- **Tests exist**: 68 cases over `resolveTokens` and 8 over the agent payload.
+  The resolver suite was mutation-checked — see the note in the file about
+  `FIXED_BACKGROUNDS`, which no test currently exercises.
+
+**Motion Studio was scaffolded as the pilot consumer**, and copying `src/shared`
+into it immediately found three defects invisible from one repo: shared code
+depending on the host's `vite-env.d.ts`, `ToolShell` reserving space for a
+control band a tool didn't have, and `ToolDirectory` claiming a tool was both
+"here" and "soon". All three fixed upstream and re-synced. That is the argument
+for doing this at two tools rather than five.
+
+**Not yet done:** the shared layer has not been verified end to end against a
+running Vercel function. `agent.ts` changed, and CLAUDE.md is right that a
+browser proves nothing there.
+
 ### 2026-08-02 — Favicon in search results
 
 The search result was rendering the generic globe. The only icon declared was

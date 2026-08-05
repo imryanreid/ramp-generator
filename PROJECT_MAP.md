@@ -46,55 +46,74 @@ or they drift from it.
 
 ## `scripts/` — build-time helpers, run by hand
 
-| File             | What it does                                                                                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `build-icons.py` | Renders `public/icon-192.png` and `public/apple-touch-icon.png` from the shape in `favicon.svg`. Pure stdlib — no rasterizer dependency to draw four rounded bars. |
+| File             | What it does                                                                                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build-icons.py` | Renders `public/icon-192.png` and `public/apple-touch-icon.png` from the shape in `favicon.svg`. Pure stdlib — no rasterizer dependency to draw four rounded bars.               |
+| `sync-shared.sh` | Pushes `src/shared` to every sibling tool repo. `--check` diffs and exits non-zero instead — run it before any release. This repo is upstream, marked by `scripts/.is-upstream`. |
 
 ## `src/` — application code
 
-| File            | What it does                                                                                                                                                                                                                                                                                                          |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `main.tsx`      | Entry point. Mounts `App` into `#root`, loads the stylesheet, attaches Vercel Analytics and Speed Insights.                                                                                                                                                                                                           |
-| `App.tsx`       | The whole page: holds the five pieces of state everything derives from, syncs the URL and document title, and lays out the controls, ramps, tokens, and footer. Also contains the small local components — icon buttons, theme toggle, share button, export modal, and the machine-readable palette block for agents. |
-| `index.css`     | Global stylesheet. Imports the self-hosted fonts, defines the Tailwind v4 theme (`paper`/`ink`/`ash`/`line` color tokens), and flips those tokens for dark mode.                                                                                                                                                      |
-| `vite-env.d.ts` | Vite's ambient type declarations.                                                                                                                                                                                                                                                                                     |
+| File            | What it does                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main.tsx`      | Entry point. Mounts `App` into `#root`, loads the stylesheet, attaches Vercel Analytics and Speed Insights, and removes the server-injected agent block once JavaScript is running.                     |
+| `App.tsx`       | Ramps-specific wiring: the inputs everything derives from, the URL and title sync, and the controls. Page layout is `ToolShell`. Also holds the machine-readable palette block and the notation select. |
+| `index.css`     | Imports the shared tokens, then the two things only this tool needs — the print rules behind the PDF export, and the react-colorful overrides.                                                          |
+| `vite-env.d.ts` | This app's ambient types, including `VITE_SITE_URL`. Shared code brings its own.                                                                                                                        |
 
-### `src/lib/` — the logic, no UI
+### `src/shared/` — the family layer, copied to every tool
 
-| File           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `color.ts`     | The engine. Also holds `formatColor`, which writes any hex as hex/oklch/rgb/hsl for both display and export. Converts a hex to OKLCH and builds an 11-step ramp (50–950) using a fixed lightness curve and a bell-curve chroma multiplier, clamping each result back into sRGB. Also builds the tinted neutral ramp and computes contrast for the swatch labels.                  |
-| `recommend.ts` | Decides _which_ colors to generate. Rotates the brand hue by the chosen scheme to derive accents, picks status hues, and pushes any status hue that lands too close to a palette hue out of the way. Exports `SCHEMES` and `buildPalette`.                                                                                                                                        |
-| `semantics.ts` | Maps ramp steps onto usage-first token names (surface, border, text, interactive states) for both light and dark, nudging steps as needed so every paired foreground clears the selected WCAG target, then serializes the result — `toCss`, `toTailwind`, `toFigma` (W3C DTCG), and `toJson`. These exporters are the canonical output format; everything else renders from them. |
-| `params.ts`    | The URL contract: encode/decode the inputs that reproduce a palette, validating each field independently so a malformed link falls back to defaults. Deliberately free of browser and Vite globals so the functions in `api/` can import it.                                                                                                                                      |
-| `share.ts`     | Browser-side helpers over `params.ts` — absolute share URLs and reading state from `window.location`.                                                                                                                                                                                                                                                                             |
-| `agent.ts`     | Turns a query string into the payload an agent receives, as structured JSON and as plain readable text. Shared by both functions.                                                                                                                                                                                                                                                 |
-| `site.ts`      | The canonical site origin, used to build absolute share URLs. Overridable via `VITE_SITE_URL`.                                                                                                                                                                                                                                                                                    |
-| `clipboard.ts` | `copyToClipboard` plus the `useCopy` hook that drives the "Copied" confirmations.                                                                                                                                                                                                                                                                                                 |
-| `utils.ts`     | `cn()` — merges Tailwind class names via clsx + tailwind-merge.                                                                                                                                                                                                                                                                                                                   |
+Authored here and pushed outward with `scripts/sync-shared.sh`. **Never imports
+from `src/lib/` or `src/components/`** — one direction only, which is what keeps
+the copy mechanical. If a shared component needs tool-specific behaviour it
+takes a prop.
 
-### `src/components/` — presentational pieces
+| File                           | What it does                                                                                  |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| `tools.ts`                     | The tools manifest — the whole family in one list, plus `familyAsText()` for agent payloads.  |
+| `tokens.css`                   | Fonts, the Tailwind theme, the five color tokens, dark mode, base styles, reduced motion.     |
+| `motion.ts`                    | The pill spring, the panel easing, the duration scale, the hover-lift class.                  |
+| `theme.ts`                     | `useTheme()` — light/dark state, persistence, and the `.dark` class on `<html>`.              |
+| `utils.ts`                     | `cn()` — merges Tailwind class names via clsx + tailwind-merge.                               |
+| `clipboard.ts`                 | `copyToClipboard` plus the `useCopy` hook behind every "Copied" confirmation.                 |
+| `env.d.ts`                     | Vite client types, so `shared/` compiles without the host repo's declarations.                |
+| `components/ToolShell.tsx`     | The three-row page: utility row, title row, control band, output, footer directory, colophon. |
+| `components/ToolSwitcher.tsx`  | The family menu, hung off the eyebrow wordmark.                                               |
+| `components/ToolDirectory.tsx` | The same list in the footer as plain anchors — the half that works without JavaScript.        |
+| `components/Segmented.tsx`     | The segmented control and its spring pill. One component for what had been four skins.        |
+| `components/Label.tsx`         | `Label` and `FieldLabel` — the family's one control-label treatment.                          |
+| `components/IconButton.tsx`    | The 40px utility-row button: outline, solid, danger.                                          |
+| `components/ThemeToggle.tsx`   | Sun/moon crossfade.                                                                           |
+| `components/ResetButton.tsx`   | Reset that becomes its own undo for 3.5 seconds.                                              |
+| `components/ShareButton.tsx`   | Copies a link and crossfades to a check. Takes a finished URL, not a state object.            |
+| `components/ExportModal.tsx`   | The dialog shell the export flow renders into.                                                |
+| `components/CopyText.tsx`      | Inline text that copies itself.                                                               |
+| `components/CopyButton.tsx`    | Icon button that copies and crossfades to a check.                                            |
+| `components/RowToggle.tsx`     | The per-row export checkbox, including the mixed state.                                       |
+| `components/Attribution.tsx`   | The colophon, plus the two images it uses in `shared/assets/`.                                |
 
-| File                 | What it does                                                                                                                                                                                                                                                                        |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ColorInput.tsx`     | The brand and accent pickers: a swatch that opens a react-colorful popover, a hex field, and the lock/reset behaviour for overriding the auto-derived accent.                                                                                                                       |
-| `SchemeSelect.tsx`   | The derivation dropdown (complementary, analogous, triadic, split, monochromatic) with its descriptions.                                                                                                                                                                            |
-| `RampGroup.tsx`      | Renders a titled group of ramps as rows of swatches, each with an include/exclude checkbox beside its name.                                                                                                                                                                         |
-| `SemanticTokens.tsx` | The semantic token table — token name, the ramp step it resolves to, light/dark previews, and a contrast badge whose pass threshold follows the selected WCAG level.                                                                                                                |
-| `ExportPanel.tsx`    | The contents of the export modal. Opens on a choice between taking the tokens as code and copying an agent prompt. The code branch has a tab per format (CSS variables, Tailwind v4, Figma variables, JSON) with copy and download; the Figma tab emits one W3C DTCG file per mode. |
-| `RowToggle.tsx`      | The checkbox beside each ramp and token row, including the mixed-state variant used for section-level toggles.                                                                                                                                                                      |
-| `CopyButton.tsx`     | Button that copies a value and crossfades to a checkmark.                                                                                                                                                                                                                           |
-| `CopyText.tsx`       | Inline text that copies itself when clicked.                                                                                                                                                                                                                                        |
+### `src/lib/` — the color logic, no UI
 
-### `src/assets/`
+| File                | What it does                                                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `color.ts`          | The engine. Hex to OKLCH, the 11-step ramp from a fixed lightness curve and a bell-curve chroma multiplier, gamut clamping, the tinted neutral, contrast helpers, and `formatColor`. |
+| `recommend.ts`      | Decides _which_ colors to generate: scheme rotations, status hues, hue-collision avoidance. Exports `SCHEMES` and `buildPalette`.                                                    |
+| `semantics.ts`      | The semantic token contract, `resolveTokens` (the WCAG-driven step search), and the canonical exporters — `toCss`, `toTailwind`, `toFigma`, `toJson`.                                |
+| `semantics.test.ts` | 68 cases over `resolveTokens`: the contrast guarantee, what may and may not move, scope, and collision reporting.                                                                    |
+| `params.ts`         | The URL contract. Free of browser and Vite globals so `api/` can import it.                                                                                                          |
+| `share.ts`          | Browser-side helpers over `params.ts` — absolute share URLs and reading state from `window.location`.                                                                                |
+| `agent.ts`          | Turns a query string into the agent payload, as JSON and as plain text — now including the rest of the family. Shared by both functions.                                             |
+| `agent.test.ts`     | Asserts what a JavaScript-less reader receives, since a browser can't prove anything here.                                                                                           |
+| `site.ts`           | The canonical site origin. Overridable via `VITE_SITE_URL`.                                                                                                                          |
 
-| File               | What it does               |
-| ------------------ | -------------------------- |
-| `avatar-ryan.webp` | Footer avatar, 96×96.      |
-| `logo-tktk.webp`   | Footer studio logo, 96×96. |
+### `src/components/` — ramps-specific UI
 
-Both are under Vite's inline threshold, so they're embedded as data URIs at
-build time rather than fetched separately.
+| File                 | What it does                                                                                  |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `ColorInput.tsx`     | The brand and accent pickers: swatch, react-colorful popover, hex field, and the accent lock. |
+| `SchemeSelect.tsx`   | The derivation dropdown with its descriptions.                                                |
+| `RampGroup.tsx`      | A titled group of ramps as rows of swatches, each with an include/exclude checkbox.           |
+| `SemanticTokens.tsx` | The token table — name, resolved step, light/dark previews, and a contrast badge.             |
+| `ExportPanel.tsx`    | The export modal's contents: the code-vs-agent-prompt choice, then a tab per format.          |
 
 ## `docs/`
 
