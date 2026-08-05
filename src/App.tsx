@@ -253,12 +253,6 @@ export default function App() {
               palette={palette}
               options={exportOptions}
               shareHref={shareUrl(shareState)}
-              onPrint={() => {
-                // Close first — the modal would otherwise land on page one.
-                // The delay lets the exit animation finish before printing.
-                setExportOpen(false)
-                window.setTimeout(() => window.print(), 300)
-              }}
             />
           </ExportModal>
         )
