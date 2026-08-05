@@ -115,7 +115,9 @@ export function toolUrl(tool: Tool): string | null {
  * that only exists once JavaScript runs is invisible to most of them.
  */
 export function familyAsText(currentId?: string): string {
-  const lines = [`${FAMILY_NAME} — ${FAMILY_BLURB}`, ""]
+  // Rows only. The caller supplies its own heading, so this doesn't repeat the
+  // family name directly under one.
+  const lines: string[] = []
   for (const t of TOOLS) {
     const here = t.id === currentId ? "  (this tool)" : ""
     const where = t.domain ? `https://${t.domain}/` : "not yet released"

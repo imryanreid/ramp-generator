@@ -95,6 +95,21 @@ Ramp names: `primary` (your brand), `accent`, `accent-2`, `neutral` (tinted
 toward the brand hue), and the status ramps `success`, `warning`, `error`,
 `info`.
 
+## Other tools in Studio Tools
+
+Small, free, agent-readable design utilities. Same contract everywhere: state
+lives in the query string, every page serves its values as plain text without
+JavaScript, and there is no account, key or rate limit.
+
+| Tool | Makes | Where |
+| --- | --- | --- |
+| Ramps | Color ramps & semantic tokens | https://www.ramps.studio/ (this tool) |
+| Motion | Easing curves, springs and durations | not yet released |
+| Shape | Spacing, radius & elevation | not yet released |
+| Type | Type scale | not yet released |
+| Fallback | Font fallback metrics | not yet released |
+| SVG | SVG normalizer | not yet released |
+
 ## Source
 
 MIT licensed: https://github.com/imryanreid/ramp-generator

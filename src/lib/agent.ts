@@ -23,6 +23,7 @@ import {
   CONTRAST_TARGET,
   type ContrastReference,
 } from "./semantics.js"
+import { familyAsText, FAMILY_NAME, FAMILY_BLURB } from "../shared/tools.js"
 import {
   resolveShareState,
   decodeShareState,
@@ -354,6 +355,15 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     "",
     `  Same palette as JSON: ${origin}/api/palette?b=<brand hex, no #>`,
     `  Full machine-readable contract, including every token name: ${origin}/llms.txt`,
+    // The rest of the family, in the payload rather than only in a dropdown.
+    // The switcher in the header doesn't exist until JavaScript runs, and the
+    // readers this block is written for don't run it — so without this an agent
+    // that finds one tool has no way to learn the others exist.
+    "",
+    "OTHER TOOLS IN THIS FAMILY",
+    `${FAMILY_NAME} — ${FAMILY_BLURB}`,
+    "",
+    familyAsText("ramps"),
   )
 
   return { state, json, text: lines.join("\n") }

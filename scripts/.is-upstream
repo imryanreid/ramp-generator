@@ -1,0 +1,3 @@
+# Marks this repo as the source of truth for src/shared.
+# sync-shared.sh looks for this file to decide whether to push or pull.
+# It exists only in Ramps Studio. Do not copy it downstream.
