@@ -158,6 +158,32 @@ Figma rejects on import. Those tokens fall back to literal colors instead.
 - Adding state anywhere — a database, a session, a write path. The functions in
   `api/` are pure and must stay pure.
 
+## Never push straight to `main`
+
+This site is live on a custom domain, so every change goes through a branch and
+a Vercel preview, and Ryan looks before it merges.
+
+```bash
+git checkout -b <branch> && git push -u origin <branch>
+# Vercel builds a preview automatically; hand over the link, then merge.
+```
+
+The rule is about visibility, not risk. Don't argue a change is safe enough to
+skip it — "I want to see it before the public does" needs no risk case, and
+re-deriving one per change wastes everyone's time.
+
+**Previews are SSO-gated**, so an anonymous `curl` gets a 302 to
+`vercel.com/sso-api`. Use the Vercel MCP's `get_access_to_vercel_url` for a
+bypass link when you need to fetch one.
+
+One caveat worth knowing: with Deployment Protection on, `api/render`'s own
+fetch of `/index.html` is intercepted and served the login page at status 200.
+The guard in `api/render.ts` catches that now, but it means a preview can't
+fully stand in for production when verifying the agent path.
+
+Sibling tools on `*.vercel.app` placeholders don't need this — the rule starts
+when a domain does.
+
 ## Verify before calling it done
 
 ```bash
