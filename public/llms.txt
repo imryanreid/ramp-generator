@@ -103,12 +103,11 @@ JavaScript, and there is no account, key or rate limit.
 
 | Tool | Makes | Where |
 | --- | --- | --- |
-| Ramps | Color ramps & semantic tokens | https://www.ramps.studio/ (this tool) |
-| Motion | Easing curves, springs and durations | not yet released |
+| Ramps | Color scales & semantic tokens | https://www.ramps.studio/ (this tool) |
+| Motion | Easing curves & durations | not yet released |
 | Shape | Spacing, radius & elevation | not yet released |
-| Type | Type scale | not yet released |
-| Fallback | Font fallback metrics | not yet released |
-| SVG | SVG normalizer | not yet released |
+| Type | Fluid scales & text styles | not yet released |
+| Icons | SVG cleanup & alignment | not yet released |
 
 ## Source
 
