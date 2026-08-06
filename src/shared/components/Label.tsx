@@ -17,6 +17,27 @@
 import type { ReactNode } from "react"
 import { cn } from "../utils"
 
+/**
+ * The title of a panel — Geist, not mono.
+ *
+ * A panel header set in the same 11px uppercase mono as its control labels has
+ * no hierarchy to perceive: "Timing" and "Exit" read as siblings when one
+ * contains the other. The family already has two faces for this, so use them.
+ */
+export function PanelTitle({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <h2 className={cn("font-display text-sm font-semibold tracking-tight", className)}>
+      {children}
+    </h2>
+  )
+}
+
 /** 11px mono, uppercase, letterspaced. The family's one label treatment. */
 export function Label({
   children,
