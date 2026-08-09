@@ -106,10 +106,15 @@ export default function ToolSwitcher({ current }: { current: string }) {
                     <span
                       className={cn(
                         "font-mono text-[11px] tracking-[0.14em] uppercase",
-                        soon ? "text-ash" : "text-ink",
+                        isCurrent ? "text-ink" : "text-ash",
                       )}
                     >
-                      {tool.name}
+                      {/* The row you're on names the address, not the tool —
+                          it's the one row where "where am I" is the question,
+                          and the two can differ (Motion lives at
+                          springs.studio). Everywhere else the short name is
+                          what you're choosing between. */}
+                      {isCurrent ? (tool.wordmark ?? tool.name) : tool.name}
                     </span>
                     {/* Beside the name, not floating at the far right — the
                         footer directory marks the current tool this way and a

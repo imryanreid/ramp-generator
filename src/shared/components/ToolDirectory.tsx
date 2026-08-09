@@ -47,7 +47,10 @@ export default function ToolDirectory({ current }: { current: string }) {
                 <span
                   className={cn(
                     "font-mono text-[11px] tracking-[0.14em] uppercase",
-                    isCurrent ? "text-ink" : soon ? "text-ash" : "text-ink",
+                    // Only the current tool gets full ink. Five names at the
+                    // same weight is a list; one darker than the rest is a
+                    // list with your place in it.
+                    isCurrent ? "text-ink" : "text-ash",
                   )}
                 >
                   {tool.name}
@@ -80,7 +83,7 @@ export default function ToolDirectory({ current }: { current: string }) {
           // box inside it sizes to its own content — without this the boxes
           // in a row end at three different heights, which is worse than
           // having no boxes at all.
-          const box = "border-line block h-full rounded-lg border p-3"
+          const box = "block h-full rounded-lg border p-3"
 
           return (
             <li key={tool.id}>
@@ -89,7 +92,7 @@ export default function ToolDirectory({ current }: { current: string }) {
                   href={href}
                   className={cn(
                     box,
-                    "hover:border-ink/30 hover:bg-ink/[0.03] transition-colors",
+                    "border-line hover:border-ink/25 hover:bg-ink/[0.03] transition-colors",
                   )}
                 >
                   {label}
@@ -97,7 +100,18 @@ export default function ToolDirectory({ current }: { current: string }) {
               ) : (
                 <span
                   aria-current={isCurrent ? "page" : undefined}
-                  className={cn(box, isCurrent && "bg-ink/[0.04]", soon && "opacity-70")}
+                  className={cn(
+                    box,
+                    // Stronger than a hovered neighbour, so the current tool
+                    // still reads as the current tool while you're pointing
+                    // somewhere else.
+                    isCurrent ? "border-ink/40 bg-ink/[0.04]" : "border-line",
+                    // Never dim the tool you're on. The same reason the
+                    // "soon" pill is suppressed here: you are demonstrably
+                    // looking at it, and fading it fights the stronger stroke
+                    // that says so.
+                    soon && !isCurrent && "opacity-70",
+                  )}
                 >
                   {label}
                 </span>
