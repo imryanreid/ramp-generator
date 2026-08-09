@@ -113,7 +113,7 @@ export default function ToolSwitcher({ current }: { current: string }) {
                   {isCurrent ? (
                     <span className="text-ash inline-flex shrink-0 items-center gap-1 font-mono text-[10px] tracking-wide lowercase">
                       <Check size={10} weight="bold" aria-hidden="true" />
-                      you are here
+                      viewing
                     </span>
                   ) : soon ? (
                     <span className="border-line text-ash shrink-0 rounded-full border px-1.5 py-px font-mono text-[10px] tracking-wide lowercase">
