@@ -55,10 +55,15 @@ export default function ToolDirectory({ current }: { current: string }) {
                 {/* Mutually exclusive, matching the switcher menu. On the tool
                     you're already looking at, "soon" is noise at best and a
                     contradiction at worst — you are demonstrably on it. */}
+                {/* A dot, not a word. The filled box already says "this one";
+                    a tag beside it says it twice, and this block is a
+                    colophon — it should read quietly. aria-current carries
+                    the meaning that the dot can't. */}
                 {isCurrent ? (
-                  <span className="bg-ink text-paper rounded-full px-1.5 py-px font-mono text-[10px] tracking-[0.1em] uppercase">
-                    Viewing
-                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="bg-ink inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                  />
                 ) : soon ? (
                   <span className="border-line text-ash rounded-full border px-1.5 py-px font-mono text-[10px] lowercase">
                     soon
