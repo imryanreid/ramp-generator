@@ -11,9 +11,13 @@
 // DOM, always real <a href>, and survives
 // HTML-to-markdown conversion.
 //
-// Sized to stay quiet: one line per tool, no cards,
-// no icons. It sits above the attribution and reads
-// as a colophon rather than a nav bar.
+// Each tool sits in its own faintly-ruled box, and
+// the one you're on is filled and tagged. The boxes
+// are what make it scannable as a set — an unruled
+// grid of five two-line entries reads as prose in
+// columns, and the tool you're already on is the one
+// piece of information the block can give you for
+// free.
 //
 // SHARED FILE. Authored in ramps-studio, copied
 // outward. Don't edit it downstream.
@@ -31,7 +35,7 @@ export default function ToolDirectory({ current }: { current: string }) {
       <h2 className="text-ash mb-4 font-mono text-[11px] tracking-[0.16em] uppercase">
         {FAMILY_NAME}
       </h2>
-      <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {TOOLS.map((tool) => {
           const isCurrent = tool.id === current
           const href = toolUrl(tool)
@@ -52,7 +56,9 @@ export default function ToolDirectory({ current }: { current: string }) {
                     you're already looking at, "soon" is noise at best and a
                     contradiction at worst — you are demonstrably on it. */}
                 {isCurrent ? (
-                  <span className="text-ash font-mono text-[10px] lowercase">you are here</span>
+                  <span className="bg-ink text-paper rounded-full px-1.5 py-px font-mono text-[10px] tracking-[0.1em] uppercase">
+                    Viewing
+                  </span>
                 ) : soon ? (
                   <span className="border-line text-ash rounded-full border px-1.5 py-px font-mono text-[10px] lowercase">
                     soon
@@ -63,17 +69,30 @@ export default function ToolDirectory({ current }: { current: string }) {
             </>
           )
 
+          // One shape for all three states, so the boxes stay the same size
+          // whether they hold a link, the current tool, or something unbuilt.
+          // h-full because the <li> is the grid item and stretches, but the
+          // box inside it sizes to its own content — without this the boxes
+          // in a row end at three different heights, which is worse than
+          // having no boxes at all.
+          const box = "border-line block h-full rounded-lg border p-3"
+
           return (
             <li key={tool.id}>
               {href && !isCurrent ? (
                 <a
                   href={href}
-                  className="hover:text-ink block transition-colors hover:-translate-y-0.5"
+                  className={cn(
+                    box,
+                    "hover:border-ink/30 hover:bg-ink/[0.03] transition-colors",
+                  )}
                 >
                   {label}
                 </a>
               ) : (
-                <span className={cn("block", soon && "opacity-70")}>{label}</span>
+                <span className={cn(box, isCurrent && "bg-ink/[0.04]", soon && "opacity-70")}>
+                  {label}
+                </span>
               )}
             </li>
           )
