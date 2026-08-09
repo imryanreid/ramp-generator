@@ -95,7 +95,10 @@ export default function ToolDirectory({ current }: { current: string }) {
                   {label}
                 </a>
               ) : (
-                <span className={cn(box, isCurrent && "bg-ink/[0.04]", soon && "opacity-70")}>
+                <span
+                  aria-current={isCurrent ? "page" : undefined}
+                  className={cn(box, isCurrent && "bg-ink/[0.04]", soon && "opacity-70")}
+                >
                   {label}
                 </span>
               )}
