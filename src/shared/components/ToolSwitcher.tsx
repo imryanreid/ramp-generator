@@ -109,12 +109,12 @@ export default function ToolSwitcher({ current }: { current: string }) {
                         isCurrent ? "text-ink" : "text-ash",
                       )}
                     >
-                      {/* The row you're on names the address, not the tool —
-                          it's the one row where "where am I" is the question,
-                          and the two can differ (Motion lives at
-                          springs.studio). Everywhere else the short name is
-                          what you're choosing between. */}
-                      {isCurrent ? (tool.wordmark ?? tool.name) : tool.name}
+                      {/* Always the short name, current row included. The
+                          address belongs on the collapsed trigger, which is
+                          the site's wordmark; inside the menu every row is a
+                          tool you might switch to, and one of them suddenly
+                          being a hostname breaks the list it belongs to. */}
+                      {tool.name}
                     </span>
                     {/* Beside the name, not floating at the far right — the
                         footer directory marks the current tool this way and a
