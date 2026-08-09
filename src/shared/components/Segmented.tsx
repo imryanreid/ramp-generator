@@ -33,9 +33,17 @@ export type SegmentedOption<T extends string> = {
  */
 export type SegmentedSize = "sm" | "md"
 
+/**
+ * `sm` is a fixed h-7, matching every other small control in the family.
+ *
+ * It used to size to its own content, which landed at 31px — three taller than
+ * the h-7 buttons and chips beside it. That is invisible on its own and
+ * obvious in a row: two panel headers side by side ended up three pixels
+ * apart because one's tallest control was a button and the other's was this.
+ */
 const SIZES: Record<SegmentedSize, { frame: string; pad: string; text: string }> = {
   md: { frame: "h-9", pad: "px-3", text: "text-xs" },
-  sm: { frame: "", pad: "px-2.5 py-1", text: "text-[11px]" },
+  sm: { frame: "h-7", pad: "px-2.5", text: "text-[11px]" },
 }
 
 export default function Segmented<T extends string>({
@@ -61,7 +69,15 @@ export default function Segmented<T extends string>({
     <div
       role="group"
       aria-label={ariaLabel}
-      className={cn("border-line inline-flex items-center rounded-md border p-0.5", s.frame)}
+      /*
+        `bg-paper`, the same surface every input has. Transparent, an unselected
+        option sitting on a tinted panel reads as disabled rather than as a
+        choice you haven't made yet. On a paper background this changes nothing.
+      */
+      className={cn(
+        "border-line bg-paper inline-flex items-center rounded-md border p-0.5",
+        s.frame,
+      )}
     >
       {options.map((o) => {
         const active = value === o.id
