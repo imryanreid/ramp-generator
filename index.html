@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Color Ramp &amp; Semantics Generator</title>
+    <title>Color ramps and semantic tokens your agent can read</title>
     <meta
       name="description"
-      content="Pick one brand color and get a complete design system: perceptually-even OKLCH ramps, derived accents, a matched neutral, status colors, and usage-first semantic tokens for light and dark. Export to CSS, Tailwind v4, Figma variables, or JSON."
+      content="The color ramp generator built for handing off: every palette is readable by an agent as plain text or JSON, with no JavaScript. Perceptually-even OKLCH ramps, derived accents, a matched neutral, status colors, and usage-first semantic tokens for light and dark, with WCAG AA or AAA enforced rather than merely reported. Export to CSS, Tailwind v4, Figma variables, or JSON."
     />
     <link rel="canonical" href="https://www.ramps.studio/" />
     <meta name="robots" content="index, follow" />
@@ -33,18 +33,24 @@
     <!--
       og:site_name is the brand; og:title matches the <title> exactly. The two
       are deliberately different — an unfurl shows both, so repeating the same
-      words twice wastes the card. The value proposition lives in
-      og:description below rather than in a title tail, which would collide
-      with "Semantics Generator" saying much the same thing.
+      words twice wastes the card.
+
+      The title used to be "Color Ramp & Semantics Generator", which competed
+      head-on with every generator that has fifteen years of authority on that
+      phrase, and said nothing about the one thing none of them do. It now
+      leads with what is actually differentiated. The agent claim is not
+      marketing: robots.txt addresses agents directly, /llms.txt is the full
+      contract, and the page renders its palette as plain text with no
+      JavaScript — all of which is testable from a terminal.
       Note "&amp;" here but a bare "&" in the JSON-LD block: attribute values
       are HTML-parsed, the contents of a ld+json script are not.
     -->
     <meta property="og:site_name" content="Ramps Studio" />
     <meta property="og:url" content="https://www.ramps.studio/" />
-    <meta property="og:title" content="Color Ramp &amp; Semantics Generator" />
+    <meta property="og:title" content="Color ramps and semantic tokens your agent can read" />
     <meta
       property="og:description"
-      content="Pick one brand color and get a complete design system: OKLCH ramps, derived accents, a matched neutral, status colors, and semantic tokens for light and dark."
+      content="Built for handing off: every palette is readable by an agent as plain text or JSON, with no JavaScript. OKLCH ramps, derived accents, status colors, and semantic tokens for light and dark."
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta property="og:image" content="https://www.ramps.studio/api/og" />
@@ -56,10 +62,10 @@
       content="Color Ramp Generator — perceptually-even OKLCH color ramps"
     />
     <meta name="twitter:image" content="https://www.ramps.studio/api/og" />
-    <meta name="twitter:title" content="Color Ramp &amp; Semantics Generator" />
+    <meta name="twitter:title" content="Color ramps and semantic tokens your agent can read" />
     <meta
       name="twitter:description"
-      content="Pick one brand color and get a complete design system, ready to export as CSS, Tailwind, Figma variables, or JSON."
+      content="Built for handing off: readable by an agent as plain text or JSON, with no JavaScript. Export to CSS, Tailwind, Figma variables, or JSON."
     />
 
     <!--
@@ -71,11 +77,11 @@
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "Color Ramp & Semantics Generator",
+        "name": "Color ramps and semantic tokens your agent can read",
         "url": "https://www.ramps.studio/",
         "applicationCategory": "DesignApplication",
         "operatingSystem": "Any (web browser)",
-        "description": "Generates a complete design-system color palette from a single brand color: perceptually-even OKLCH ramps (50-950), scheme-derived accents, a chroma-matched neutral, collision-avoided status colors, and usage-first semantic tokens for light and dark themes with enforced WCAG AA or AAA contrast. Exports to CSS custom properties, a Tailwind v4 theme block, W3C DTCG token files for Figma variables, or JSON.",
+        "description": "Built to be handed to a coding agent: the homepage returns a complete palette as plain text without JavaScript, /api/palette returns it as JSON, and /llms.txt documents every parameter and token name. Generates a complete design-system color palette from a single brand color: perceptually-even OKLCH ramps (50-950), scheme-derived accents, a chroma-matched neutral, collision-avoided status colors, and usage-first semantic tokens for light and dark themes with enforced WCAG AA or AAA contrast. Exports to CSS custom properties, a Tailwind v4 theme block, W3C DTCG token files for Figma variables, or JSON.",
         "isAccessibleForFree": true,
         "isPartOf": {
           "@type": "WebSite",

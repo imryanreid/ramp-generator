@@ -232,7 +232,7 @@ export default function App() {
     <ToolShell
       toolId={TOOL_ID}
       title="Color Ramp Generator"
-      subtitle="Generate agent-optimized, accessible color ramps in a few clicks."
+      subtitle="Contrast-checked color ramps and semantic tokens, built to start a project and hand to your agent."
       actions={
         <>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
