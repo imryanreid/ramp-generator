@@ -61,15 +61,15 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "motion",
-    // Registered, not yet pointed at the deployment. The wordmark can be true
-    // before the link is, so the switcher can name the address you're on; the
-    // `domain` stays absent until DNS resolves, because that's what turns
-    // every copy of this manifest into a dead link.
+    // The tool is Motion; springs.studio is where it lives. The family names
+    // what a tool makes, and "springs" would name a mechanism that is only one
+    // of the two easing types it produces.
     wordmark: "springs.studio",
     name: "Motion",
     title: "Easing curves & durations",
     blurb: "Easing curves, springs and durations you can preview on real UI.",
-    status: "soon",
+    domain: "www.springs.studio",
+    status: "live",
   },
   {
     id: "shape",
