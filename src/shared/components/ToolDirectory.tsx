@@ -24,6 +24,7 @@
 // ==============================================
 import { TOOLS, toolUrl, FAMILY_NAME } from "../tools"
 import { cn } from "../utils"
+import ToolMark from "./ToolMark"
 
 export default function ToolDirectory({ current }: { current: string }) {
   return (
@@ -43,7 +44,8 @@ export default function ToolDirectory({ current }: { current: string }) {
 
           const label = (
             <>
-              <span className="flex items-baseline gap-2">
+              <span className="flex items-center gap-2">
+                <ToolMark id={tool.id} size={16} className={cn(soon && "opacity-50")} />
                 <span
                   className={cn(
                     "font-mono text-[11px] tracking-[0.14em] uppercase",
