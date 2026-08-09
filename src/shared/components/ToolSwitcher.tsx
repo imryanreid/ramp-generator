@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react"
 import { CaretDown } from "@phosphor-icons/react"
 import { TOOLS, toolUrl } from "../tools"
 import { cn } from "../utils"
+import ToolMark from "./ToolMark"
 
 export default function ToolSwitcher({ current }: { current: string }) {
   const [open, setOpen] = useState(false)
@@ -103,6 +104,7 @@ export default function ToolSwitcher({ current }: { current: string }) {
               <>
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex min-w-0 items-center gap-2">
+                    <ToolMark id={tool.id} size={16} className={cn(soon && "opacity-50")} />
                     <span
                       className={cn(
                         "font-mono text-[11px] tracking-[0.14em] uppercase",
