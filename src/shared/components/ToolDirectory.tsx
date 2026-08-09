@@ -62,7 +62,7 @@ export default function ToolDirectory({ current }: { current: string }) {
                 {isCurrent ? (
                   <span
                     aria-hidden="true"
-                    className="bg-ink inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                    className="bg-ink h-1.5 w-1.5 shrink-0 self-center rounded-full"
                   />
                 ) : soon ? (
                   <span className="border-line text-ash rounded-full border px-1.5 py-px font-mono text-[10px] lowercase">

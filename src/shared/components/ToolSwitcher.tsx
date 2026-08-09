@@ -20,7 +20,7 @@
 // outward. Don't edit it downstream.
 // ==============================================
 import { useEffect, useRef, useState } from "react"
-import { CaretDown, Check } from "@phosphor-icons/react"
+import { CaretDown } from "@phosphor-icons/react"
 import { TOOLS, toolUrl } from "../tools"
 import { cn } from "../utils"
 
@@ -102,20 +102,27 @@ export default function ToolSwitcher({ current }: { current: string }) {
             const inner = (
               <>
                 <div className="flex items-center justify-between gap-2">
-                  <span
-                    className={cn(
-                      "font-mono text-[11px] tracking-[0.14em] uppercase",
-                      soon ? "text-ash" : "text-ink",
-                    )}
-                  >
-                    {tool.name}
-                  </span>
-                  {isCurrent ? (
-                    <span className="text-ash inline-flex shrink-0 items-center gap-1 font-mono text-[10px] tracking-wide lowercase">
-                      <Check size={10} weight="bold" aria-hidden="true" />
-                      viewing
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={cn(
+                        "font-mono text-[11px] tracking-[0.14em] uppercase",
+                        soon ? "text-ash" : "text-ink",
+                      )}
+                    >
+                      {tool.name}
                     </span>
-                  ) : soon ? (
+                    {/* Beside the name, not floating at the far right — the
+                        footer directory marks the current tool this way and a
+                        dot at the opposite end of the row wouldn't read as the
+                        same signal. */}
+                    {isCurrent && (
+                      <span
+                        aria-hidden="true"
+                        className="bg-ink h-1.5 w-1.5 shrink-0 rounded-full"
+                      />
+                    )}
+                  </span>
+                  {!isCurrent && soon ? (
                     <span className="border-line text-ash shrink-0 rounded-full border px-1.5 py-px font-mono text-[10px] tracking-wide lowercase">
                       soon
                     </span>
@@ -130,7 +137,7 @@ export default function ToolSwitcher({ current }: { current: string }) {
 
             if (isCurrent) {
               return (
-                <div key={tool.id} className="bg-ink/[0.05] px-3 py-2.5">
+                <div key={tool.id} aria-current="page" className="bg-ink/[0.05] px-3 py-2.5">
                   {inner}
                 </div>
               )

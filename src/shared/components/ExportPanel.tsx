@@ -276,7 +276,9 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
         {hasBar && (
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-white/10 px-4 py-2">
             <div className="min-w-0">{active.options}</div>
-            {active.fidelity && <Fidelity note={active.fidelity} />}
+            {active.fidelity && (
+              <TerminalNote summary={active.fidelity.summary} detail={active.fidelity.detail} />
+            )}
           </div>
         )}
 
@@ -298,15 +300,29 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
 }
 
 /**
- * What this tab's conversion costs. Collapsed to one line, expandable.
+ * A one-line note in the toolbar that opens into a paragraph.
+ *
+ * Exported because it isn't only about fidelity: anything in the options bar
+ * that needs a sentence of explanation should look and behave identically, and
+ * two near-copies of a disclosure drift apart the first time one is touched.
+ *
+ * Set in the toolbar's own grey rather than a warning colour. Amber read as an
+ * error on a tab where nothing is wrong — these notes explain a trade-off you
+ * chose, and the loudest thing in the panel shouldn't be a footnote.
  *
  * Collapse for humans, never for machines: the agent payload carries the full
  * report for every target whether or not anyone expanded anything here.
  */
-function Fidelity({ note }: { note: FidelityNote }) {
+export function TerminalNote({
+  summary,
+  detail,
+}: {
+  summary: string
+  detail?: React.ReactNode
+}) {
   const [open, setOpen] = useState(false)
-  if (!note.detail) {
-    return <p className="font-mono text-[11px] text-amber-300/70">{note.summary}</p>
+  if (!detail) {
+    return <p className="font-mono text-[11px] text-white/45">{summary}</p>
   }
   return (
     <div className="min-w-0">
@@ -314,9 +330,9 @@ function Fidelity({ note }: { note: FidelityNote }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 font-mono text-[11px] text-amber-300/70 transition-colors hover:text-amber-300"
+        className="inline-flex items-center gap-1.5 font-mono text-[11px] text-white/45 transition-colors hover:text-white/75"
       >
-        {note.summary}
+        {summary}
         <CaretRight
           size={10}
           weight="bold"
@@ -326,7 +342,7 @@ function Fidelity({ note }: { note: FidelityNote }) {
       </button>
       {open && (
         <div className="mt-1.5 max-w-[60ch] font-sans text-[11px] leading-relaxed text-white/55">
-          {note.detail}
+          {detail}
         </div>
       )}
     </div>
