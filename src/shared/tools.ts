@@ -65,8 +65,13 @@ export const TOOLS: Tool[] = [
     // what a tool makes, and "springs" would name a mechanism that is only one
     // of the two easing types it produces.
     wordmark: "springs.studio",
-    name: "Motion",
-    title: "Easing curves & durations",
+    // "Springs" in the family surfaces — the switcher, the footer, the agent
+    // listing — because that is the address people will type and remember.
+    // The tool's own copy stays Motion: the H1, the page title, and the
+    // `motion.*` token namespace it emits. One is the shelf label, the other
+    // is what is written on the tin.
+    name: "Springs",
+    title: "Motion, easings & durations",
     blurb: "Easing curves, springs and durations you can preview on real UI.",
     domain: "www.springs.studio",
     status: "live",
@@ -90,6 +95,13 @@ export const TOOLS: Tool[] = [
     name: "Icons",
     title: "SVG cleanup & alignment",
     blurb: "Clean up exported SVGs and sit them on a consistent optical grid.",
+    status: "soon",
+  },
+  {
+    id: "sound",
+    name: "Sound",
+    title: "UI beeps & boops",
+    blurb: "Short interface sounds that agree with the motion they accompany.",
     status: "soon",
   },
 ]
