@@ -22,7 +22,7 @@
 // SHARED FILE. Authored in ramps-studio, copied
 // outward. Don't edit it downstream.
 // ==============================================
-import { TOOLS, toolUrl, FAMILY_NAME } from "../tools"
+import { TOOLS, toolUrl, FAMILY_DIRECTORY_LABEL } from "../tools"
 import { cn } from "../utils"
 import ToolMark from "./ToolMark"
 
@@ -30,11 +30,11 @@ export default function ToolDirectory({ current }: { current: string }) {
   return (
     <nav
       id="tools"
-      aria-label={`${FAMILY_NAME} — other tools`}
+      aria-label={FAMILY_DIRECTORY_LABEL}
       className="border-line mt-12 border-t pt-6"
     >
       <h2 className="text-ash mb-4 font-mono text-[11px] tracking-[0.16em] uppercase">
-        {FAMILY_NAME}
+        {FAMILY_DIRECTORY_LABEL}
       </h2>
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {TOOLS.map((tool) => {
