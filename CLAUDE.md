@@ -63,6 +63,60 @@ reintroduce Figma Make conventions.** If you find a leftover, remove it.
   HTML-parsed. The `README.md` H1 is deliberately left as "Ramp Generator" —
   renaming it to the brand would duplicate the ramps.studio link directly below.
 
+## `src/shared/` is authored here, and it fans out
+
+This repo is **upstream** for the whole family. `scripts/.is-upstream` marks it,
+and `pnpm sync` from here pushes `src/shared/` into every sibling tool repo
+under `Studio Tools/` with `rsync -a --delete`.
+
+Three consequences worth holding in your head before you touch anything in
+there:
+
+**1. A change here lands in every tool.** Motion Studio renders the same
+`Segmented`, `ToolShell`, `Label` and `ExportPanel` you're editing. "Does this
+still look right in Ramps?" is half the question; the other half is Motion, and
+soon Shape, Type and Icons. Check the family before changing a shared
+component's size, colour or spacing — a three-pixel height change to
+`Segmented` was invisible here and misaligned two panel headers there.
+
+**2. It is a single-writer bottleneck.** Two agents editing `src/shared/`
+concurrently produce real conflicts that then fan out to every downstream repo.
+If work is being split across parallel sessions, keep shared-layer changes on
+**one** of them and let the others work in `src/lib/`, `src/components/` and
+`api/`.
+
+**3. Downstream copies are disposable.** `rsync --delete` means anything
+edited in a sibling's `src/shared/` is destroyed silently by the next sync —
+no conflict, no warning, no trace. If someone reports that a fix "didn't
+stick" in another tool, this is why.
+
+To verify nothing has drifted:
+
+```bash
+pnpm sync:check    # diff every sibling; exits non-zero on drift
+pnpm sync          # push this repo's src/shared to all of them
+```
+
+And because this site is live on a custom domain, a shared change follows the
+branch rule below like any other — with the extra wrinkle that its blast radius
+is every tool, not just this one.
+
+## Worktrees go inside `Studio Tools/`
+
+`scripts/sync-shared.sh` resolves the family by **filesystem path**, not by git:
+`FAMILY_ROOT` is simply the parent directory of the repo. A worktree checked out
+somewhere else — `~/Projects/ramps-feature-x` — will look for the family in
+`~/Projects`, not find it, and fail.
+
+```bash
+git worktree add "../Ramps Studio-feature-x" -b feature-x origin/main
+```
+
+Any sibling directory containing a `package.json` is treated as a tool repo by
+`pnpm sync`, so a worktree placed correctly also receives the shared layer.
+That's intended — it keeps the worktree building — but it does mean `pnpm sync`
+will `rsync --delete` into it without asking.
+
 ## The three things that are easy to break
 
 **0. The canonical host is `https://www.ramps.studio`** — with the `www`, because
