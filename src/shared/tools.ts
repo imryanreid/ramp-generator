@@ -77,6 +77,13 @@ export const TOOLS: Tool[] = [
     status: "live",
   },
   {
+    id: "sound",
+    name: "Sound",
+    title: "UI beeps & boops",
+    blurb: "Short interface sounds that agree with the motion they accompany.",
+    status: "soon",
+  },
+  {
     id: "shape",
     name: "Shape",
     title: "Spacing, radius & elevation",
@@ -97,17 +104,20 @@ export const TOOLS: Tool[] = [
     blurb: "Clean up exported SVGs and sit them on a consistent optical grid.",
     status: "soon",
   },
-  {
-    id: "sound",
-    name: "Sound",
-    title: "UI beeps & boops",
-    blurb: "Short interface sounds that agree with the motion they accompany.",
-    status: "soon",
-  },
 ]
 
 /** The family, described once, for page copy and agent payloads alike. */
 export const FAMILY_NAME = "Studio Tools"
+
+/**
+ * What the footer directory calls the set.
+ *
+ * Separate from FAMILY_NAME on purpose. That one is the family's identity — it
+ * goes in the agent payloads and in schema.org's `isPartOf`, where a nav label
+ * would read as nonsense. This is a heading over a list of links, and it can
+ * say something the identity shouldn't.
+ */
+export const FAMILY_DIRECTORY_LABEL = "all tktk.studio tools"
 export const FAMILY_BLURB =
   "Small, free, agent-readable design utilities. No account, no API key, nothing stored."
 
