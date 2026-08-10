@@ -38,6 +38,23 @@ import { encodeShareState } from "../src/lib/params.js"
  * src/lib/params.ts — far from this file, and easy to widen without ever
  * looking here.
  */
+/**
+ * JSON that is safe to sit inside a `<script>` element.
+ *
+ * `JSON.stringify` does not escape `<`, so any string reaching the payload
+ * could carry `</script>` and end the element early — everything after it is
+ * then parsed as live HTML. That is not hypothetical: a crafted `pu` parameter
+ * did exactly this on production, and `s-maxage=31536000` pinned the result at
+ * the edge.
+ *
+ * `\u003c` is valid JSON and parses back to `<` identically, so no consumer
+ * can tell the difference. Escaping here rather than at each field closes the
+ * category for every field that gets added later.
+ */
+function jsonForScript(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, "\\u003c")
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -45,6 +62,22 @@ function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 }
+
+/**
+ * Headers every HTML response carries.
+ *
+ * Not a full CSP — Vite's output plus the inline JSON-LD would need hashes or
+ * a nonce, which is real design work and worse half-done. These three are free
+ * and independently useful: nosniff matters because this route echoes
+ * URL-derived content, the referrer policy matters because the URL *is* the
+ * user's palette or motion set and a full path would leak it to every outbound
+ * link, and frame-ancestors is cheap clickjacking cover for a page of controls.
+ */
+const SAFE_HEADERS = {
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "content-security-policy": "frame-ancestors 'self'",
+} as const
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url)
@@ -67,10 +100,27 @@ export async function GET(request: Request): Promise<Response> {
   const shellUrl = new URL("/index.html", url.origin)
   const build = process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_GIT_COMMIT_SHA
   if (build) shellUrl.searchParams.set("__build", build)
-  const shell = await fetch(shellUrl, {
-    cache: "no-store",
-    headers: { "user-agent": "ramps-studio-render" },
-  })
+  // Bounded, with one retry. This fetch had no timeout: if it hung, the
+  // invocation held a Fluid Compute concurrency slot until the 300s default —
+  // I/O wait, so unbilled, but slots are the contended resource under load.
+  const fetchShell = () =>
+    fetch(shellUrl, {
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
+      headers: { "user-agent": "ramps-studio-render" },
+    })
+
+  let shell: Response
+  try {
+    shell = await fetchShell()
+  } catch {
+    try {
+      shell = await fetchShell()
+    } catch {
+      return new Response("Unable to load the page shell.", { status: 502 })
+    }
+  }
+
   if (!shell.ok) {
     return new Response("Unable to load the page shell.", { status: 502 })
   }
@@ -92,7 +142,10 @@ export async function GET(request: Request): Promise<Response> {
   if (!html.includes('<div id="root">')) {
     return new Response(html, {
       status: shell.status,
-      headers: { "content-type": shell.headers.get("content-type") ?? "text/html" },
+      headers: {
+        ...SAFE_HEADERS,
+        "content-type": shell.headers.get("content-type") ?? "text/html",
+      },
     })
   }
 
@@ -104,7 +157,7 @@ export async function GET(request: Request): Promise<Response> {
     // the untouched shell and let the client render it.
     return new Response(html, {
       status: 200,
-      headers: { "content-type": "text/html; charset=utf-8" },
+      headers: { ...SAFE_HEADERS, "content-type": "text/html; charset=utf-8" },
     })
   }
 
@@ -171,7 +224,7 @@ export async function GET(request: Request): Promise<Response> {
   const injected = `
 <div id="agent-palette">
 <script type="application/json" id="ramps-studio-palette">
-${JSON.stringify(json)}
+${jsonForScript(json)}
 </script>
 <pre>
 ${escapeHtml(text)}
@@ -189,6 +242,7 @@ ${escapeHtml(text)}
   return new Response(html, {
     status: 200,
     headers: {
+      ...SAFE_HEADERS,
       "content-type": "text/html; charset=utf-8",
       // Deterministic for a given query string.
       "cache-control": "public, max-age=0, s-maxage=31536000, must-revalidate",

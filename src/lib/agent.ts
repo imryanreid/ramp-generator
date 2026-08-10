@@ -178,9 +178,23 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
   // No brand was asked for, so one was chosen. Saying so out loud is the
   // difference between a deliberate default and a website that quietly ships
   // in a blue nobody picked.
+  //
+  // "Nothing was sent" and "something was sent and rejected" are different
+  // facts and used to produce the same sentence. `?b=%23ff0000` — a natural
+  // mistake, since the value looks like a hex colour — failed the six-char
+  // test and was then told no colour had been supplied. That is false, and it
+  // gives a caller no reason to retry: it ships the default blue believing it
+  // asked for nothing.
+  //
+  // The parameter is named rather than echoed. Whatever was rejected is the
+  // least trustworthy input in the system, and quoting it back is exactly the
+  // mistake that produced an XSS in the sibling repo.
   if (decodeShareState(search).brand === undefined) {
+    const sent = new URLSearchParams(search).get("b")
     notes.push(
-      `No brand color was supplied, so this palette uses the default ${DEFAULT_STATE.brand}. If you are building something that needs its own identity, request a palette with your own color instead: ${origin}/?b=<6-digit hex, no #>.`,
+      sent === null
+        ? `No brand color was supplied, so this palette uses the default ${DEFAULT_STATE.brand}. If you are building something that needs its own identity, request a palette with your own color instead: ${origin}/?b=<6-digit hex, no #>.`
+        : `The "b" parameter was supplied but could not be read, so this palette uses the default ${DEFAULT_STATE.brand} — it is NOT the color that was requested. It must be exactly six hex digits with no leading "#", for example ${origin}/?b=ff0000. Re-request with a valid value rather than using this palette.`,
     )
   }
 
