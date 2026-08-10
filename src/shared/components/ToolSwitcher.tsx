@@ -76,14 +76,19 @@ export default function ToolSwitcher({ current }: { current: string }) {
           // min-w-0 and a truncating label so the wordmark yields before the
           // row does. It only ellipsizes on a very narrow screen; the row
           // staying intact matters more than the last few characters.
-          "bg-paper inline-flex min-w-0 items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors",
+          "bg-paper inline-flex h-9 min-w-0 items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors sm:h-auto",
           open
             ? "border-ink/30 text-ink bg-ink/[0.03]"
             : "border-line text-ash hover:border-ink/30 hover:text-ink",
         )}
       >
         {/* No wordmark until a domain exists — fall back to the tool's name. */}
-        <span className="truncate">{here?.wordmark ?? here?.name ?? current}</span>
+        {/* min-w-0 as well as truncate: this span is itself a flex item, and a
+            flex item defaults to min-width:auto — so without it the label
+            keeps its full width and spills out of the chip rather than
+            ellipsizing, and the next button draws on top of it. Visible when
+            the reset button expands to offer an undo and the row loses 52px. */}
+        <span className="min-w-0 truncate">{here?.wordmark ?? here?.name ?? current}</span>
         <CaretDown
           size={11}
           weight="bold"

@@ -78,8 +78,13 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "sound",
-    name: "Sound",
-    title: "UI beeps & boops",
+    // The same split as motion/Springs: the id and the repo folder stay
+    // "sound", and the shelf label is what the domain says. It ships at
+    // beeps.studio. No `wordmark` or `domain` until that domain is registered
+    // and the tool is live — asserting either now puts a dead link in every
+    // copy of this manifest.
+    name: "Beeps",
+    title: "UI sounds & feedback",
     blurb: "Short interface sounds that agree with the motion they accompany.",
     status: "soon",
   },

@@ -227,15 +227,21 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
     <div>
       <BackButton onBack={onBack} />
       <Terminal>
-        <div className="flex items-center justify-between border-b border-white/10 px-2">
-          <div className="flex">
+        <div className="flex items-center justify-between gap-2 border-b border-white/10 px-2">
+          {/*
+            The strip scrolls; the buttons beside it do not. Five formats plus
+            two actions do not fit a phone, and with everything in one
+            non-scrolling row the tabs compressed until "Framer Motion" broke
+            across two lines and the actions were pushed out of reach.
+          */}
+          <div className="-mb-px flex min-w-0 overflow-x-auto">
             {formats.map((f) => (
               <button
                 key={f.id}
                 type="button"
                 onClick={() => setTabId(f.id)}
                 className={cn(
-                  "relative px-3 py-2.5 font-mono text-xs transition-colors",
+                  "relative shrink-0 px-3 py-2.5 font-mono text-xs whitespace-nowrap transition-colors",
                   f.id === active.id ? "text-paper" : "text-white/40 hover:text-white/70",
                 )}
               >
@@ -250,7 +256,7 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             <button
               type="button"
               onClick={() => download(active.filename, active.mime, code)}
@@ -258,7 +264,9 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
               className={cn(TERMINAL_BUTTON, "inline-flex items-center gap-1.5")}
             >
               <DownloadSimple size={12} weight="bold" />
-              download
+              {/* The word costs ~60px a phone does not have, and the icon plus
+                  the title attribute already say it. */}
+              <span className="hidden sm:inline">download</span>
             </button>
             {/* cn() inside CopyText resolves the hover-opacity conflict, so the
                 plain utility is enough — no `!important` needed. */}
