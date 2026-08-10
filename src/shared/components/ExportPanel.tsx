@@ -229,12 +229,30 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
       <Terminal>
         <div className="flex items-center justify-between gap-2 border-b border-white/10 px-2">
           {/*
-            The strip scrolls; the buttons beside it do not. Five formats plus
-            two actions do not fit a phone, and with everything in one
-            non-scrolling row the tabs compressed until "Framer Motion" broke
-            across two lines and the actions were pushed out of reach.
+            A select on a phone, tabs on a pointer device.
+            
+            Scrolling the strip was the first attempt and it was worse: an
+            overflow container scrolls both axes, so the row drifted vertically
+            as well as sideways. Five formats never fit 375px, and a native
+            select hands the whole problem to the OS picker — which is also a
+            far better target than a 30px tab.
           */}
-          <div className="-mb-px flex min-w-0 overflow-x-auto">
+          <label className="sr-only" htmlFor="export-format">
+            Export format
+          </label>
+          <select
+            id="export-format"
+            value={active.id}
+            onChange={(e) => setTabId(e.target.value)}
+            className="text-paper min-w-0 flex-1 rounded border border-white/15 bg-transparent px-2 py-1.5 font-mono text-sm sm:hidden"
+          >
+            {formats.map((f) => (
+              <option key={f.id} value={f.id} className="text-ink bg-paper">
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <div className="-mb-px hidden min-w-0 sm:flex">
             {formats.map((f) => (
               <button
                 key={f.id}

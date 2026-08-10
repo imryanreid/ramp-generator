@@ -43,7 +43,7 @@ export type SegmentedSize = "sm" | "md"
  */
 const SIZES: Record<SegmentedSize, { frame: string; pad: string; text: string }> = {
   md: { frame: "h-9", pad: "px-3", text: "text-xs" },
-  sm: { frame: "h-9 sm:h-7", pad: "px-2.5", text: "text-[11px]" },
+  sm: { frame: "h-9 sm:h-7", pad: "px-2.5", text: "text-sm sm:text-[11px]" },
 }
 
 export default function Segmented<T extends string>({
