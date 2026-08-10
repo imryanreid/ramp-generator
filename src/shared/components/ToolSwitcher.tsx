@@ -49,7 +49,11 @@ export default function ToolSwitcher({ current }: { current: string }) {
   return (
     // No outer margin: this now sits in a utility row the host page lays out,
     // so spacing is the caller's business rather than baked in here.
-    <div ref={ref} className="relative inline-block print:hidden">
+    // min-w-0 so this yields before the row does. A flex item defaults to
+    // min-width:auto and will not shrink below its content, which is what put
+    // the utility row past the right edge of a phone — the wordmark refusing
+    // to give up a pixel while four 40px buttons refused too.
+    <div ref={ref} className="relative inline-block min-w-0 print:hidden">
       {/*
         A bordered control, not bare text with a caret. As an unstyled wordmark
         the affordance only landed if you were already looking for it — the
@@ -69,14 +73,17 @@ export default function ToolSwitcher({ current }: { current: string }) {
         aria-haspopup="menu"
         title="Other tools in this family"
         className={cn(
-          "bg-paper inline-flex items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors",
+          // min-w-0 and a truncating label so the wordmark yields before the
+          // row does. It only ellipsizes on a very narrow screen; the row
+          // staying intact matters more than the last few characters.
+          "bg-paper inline-flex min-w-0 items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors",
           open
             ? "border-ink/30 text-ink bg-ink/[0.03]"
             : "border-line text-ash hover:border-ink/30 hover:text-ink",
         )}
       >
         {/* No wordmark until a domain exists — fall back to the tool's name. */}
-        {here?.wordmark ?? here?.name ?? current}
+        <span className="truncate">{here?.wordmark ?? here?.name ?? current}</span>
         <CaretDown
           size={11}
           weight="bold"
