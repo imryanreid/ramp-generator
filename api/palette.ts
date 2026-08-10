@@ -19,6 +19,8 @@ export function GET(request: Request): Response {
     status: 200,
     headers: {
       "content-type": "application/json; charset=utf-8",
+      // Echoes URL-derived content, so never let a browser sniff it as HTML.
+      "x-content-type-options": "nosniff",
       // Deterministic output, so let the CDN keep it indefinitely.
       "cache-control": "public, max-age=0, s-maxage=31536000, immutable",
       // Read-only public data; usable from anywhere.
