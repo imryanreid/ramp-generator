@@ -76,7 +76,13 @@ export default function ToolSwitcher({ current }: { current: string }) {
           // min-w-0 and a truncating label so the wordmark yields before the
           // row does. It only ellipsizes on a very narrow screen; the row
           // staying intact matters more than the last few characters.
-          "bg-paper inline-flex h-9 min-w-0 items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors sm:h-auto",
+          // max-w-full is what actually contains this, and min-w-0 alone did
+          // not. The wrapper is a block, so the button is an inline-level
+          // child that nothing asks to shrink — it sized to its content and
+          // spilled out of a wrapper that had correctly shrunk to 91px.
+          // Capping it makes the label inside a flex item with somewhere to
+          // shrink to, which is when truncate finally engages.
+          "bg-paper inline-flex h-9 max-w-full min-w-0 items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors sm:h-auto",
           open
             ? "border-ink/30 text-ink bg-ink/[0.03]"
             : "border-line text-ash hover:border-ink/30 hover:text-ink",
