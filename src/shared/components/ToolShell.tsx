@@ -54,7 +54,10 @@ export default function ToolShell({
       <div className="min-h-screen">
         <AnimatePresence>{overlay}</AnimatePresence>
 
-        <div className="mx-auto max-w-[1400px] px-6 py-10 lg:px-10 lg:py-14">
+        {/* px-4 below sm: the utility row is a wordmark and four 40px buttons,
+            which together need more than a 375px screen leaves at px-6. Eight
+            pixels of padding is a cheaper thing to give up than the row. */}
+        <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
           <section className="border-line mb-12 border-b pb-10">
             {/*
               Utility row. Everything that acts on the page rather than
