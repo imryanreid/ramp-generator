@@ -48,19 +48,42 @@ export type ExportFormat = {
   label: string
   filename: string
   mime: string
-  /** Called only for the active tab, so inactive formats cost nothing. */
+  /**
+   * What the terminal shows. Called only for the active tab, so inactive
+   * formats cost nothing.
+   *
+   * For a binary format this is a human-readable summary rather than the file
+   * itself — see `bytes`.
+   */
   render: () => string
+  /**
+   * The bytes to download, when the file isn't text.
+   *
+   * Optional, and absent on every text format, so the common case stays
+   * `render()` and nothing else. When it's here the download ships these bytes
+   * and `render()` is only ever the preview.
+   *
+   * Without this a binary file has to travel as a string, and `new Blob([str])`
+   * UTF-8-encodes it — every byte above 0x7F becomes two, so the file arrives
+   * corrupt and roughly 1.5x too big. That failure is silent: the download
+   * succeeds and the file is simply broken.
+   */
+  bytes?: () => Uint8Array
   /** This tab's own settings, rendered at the left of the bar. */
   options?: ReactNode
   fidelity?: FidelityNote
 }
 
-function download(filename: string, mime: string, content: string) {
-  const blob = new Blob([content], { type: mime })
+function download(format: ExportFormat, text: string) {
+  // Binary when the format offers bytes, text otherwise. `text` is passed in
+  // rather than re-rendered so the download is byte-identical to the preview
+  // the person is looking at.
+  const body: BlobPart = format.bytes ? (format.bytes() as BlobPart) : text
+  const blob = new Blob([body], { type: format.mime })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
-  a.download = filename
+  a.download = format.filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
@@ -277,7 +300,7 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               type="button"
-              onClick={() => download(active.filename, active.mime, code)}
+              onClick={() => download(active, code)}
               title={`Download ${active.filename}`}
               className={cn(TERMINAL_BUTTON, "inline-flex items-center gap-1.5")}
             >

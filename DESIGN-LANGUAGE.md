@@ -11,6 +11,13 @@
 Derived from ramps.studio at commit `f880adb`, read in source and exercised
 running locally in light and dark, desktop and mobile.
 
+**Reconciled 2026-08-10, while starting Beeps.** Much of what §11 proposed has
+since shipped: `src/shared/` exists and fans out to every tool, motion tokens
+are named, `Segmented` and `Label` are extracted, and both Ramps and Motion have
+test suites. The _descriptions_ below (§§2–8) remain accurate and are the
+authority on the visual language. The _task lists_ (§9, §11) are annotated with
+what is done — read them as a ledger, not as a to-do list.
+
 ---
 
 ## 1. Stack and build
@@ -24,7 +31,7 @@ running locally in light and dark, desktop and mobile.
 | Package manager | pnpm 10.34.3, Node 22, pinned in `.mise.toml`                                                                              |
 | Formatter       | Prettier + `prettier-plugin-tailwindcss`. `semi: false`, double quotes, `printWidth: 96`, `trailingComma: "all"`           |
 | Linter          | **None installed.** Two `eslint-disable-next-line` comments exist in `App.tsx` referencing a linter that isn't in the tree |
-| Tests           | **None**                                                                                                                   |
+| Tests           | Vitest. 93 in Ramps, 288 in Motion — `lib/` only, since it is pure and framework-free                                      |
 | Deploy          | Vercel. No `vercel.json` — zero-config static build plus filesystem-routed functions                                       |
 | Verify          | `pnpm build` = `tsc --noEmit && vite build`. Both must be clean                                                            |
 
@@ -546,29 +553,30 @@ Studio's cross-platform honesty requirement.
 
 ## 9. What is unfinished, inconsistent, or a shortcut
 
-Ordered roughly by how much they'd bother you.
+Ordered roughly by how much they'd bother you. Status as of 2026-08-10 —
+✅ fixed, ⬜ still open.
 
-| #   | Issue                                                                                                                                                                                                                                                  | Where                                              |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| 1   | **Contrast badges are near-white in dark mode** — `bg-emerald-100 text-emerald-700` / `bg-amber-100 text-amber-700` never flip                                                                                                                         | `SemanticTokens.tsx:351`                           |
-| 2   | **Three label components, three trackings, three margins** → visible baseline misalignment in the control row                                                                                                                                          | `App.tsx:810`, `ColorInput.tsx:106`, `App.tsx:270` |
-| 3   | **Four skins for one segmented control**                                                                                                                                                                                                               | §7.3                                               |
-| 4   | **Three control heights** (40 / 36 / 30) in two adjacent bands                                                                                                                                                                                         | §4                                                 |
-| 5   | **Two dropdown implementations** — native `<select>` for Format, custom for Derivation                                                                                                                                                                 | `App.tsx:870`, `SchemeSelect.tsx`                  |
-| 6   | **PDF export is complete, wired, and unreachable**; `Chooser` takes `onPrint` and ignores it                                                                                                                                                           | `ExportPanel.tsx:156`                              |
-| 7   | **No easing/duration/spring tokens** — six copies of one spring, every timing inline                                                                                                                                                                   | everywhere                                         |
-| 8   | **Nine unnamed alpha values** on `ink` doing the work of a surface scale                                                                                                                                                                               | everywhere                                         |
-| 9   | **Built output can't be opened from the filesystem** — Vite's default `base: "/"` emits `/assets/…`                                                                                                                                                    | `vite.config.ts`                                   |
-| 10  | **Four names for one thing** — `package.json` says `color-ramp-generator`, the repo is `ramp-generator`, the folder is `Ramps Studio`, the `<h1>` says "Color Ramp Generator", `og:site_name` says "Ramps Studio", the README H1 says "Ramp Generator" | root                                               |
-| 11  | **Dead import** — `allRamps` imported into `App.tsx`, never used                                                                                                                                                                                       | `App.tsx:38`                                       |
-| 12  | **`@` alias configured, never used**                                                                                                                                                                                                                   | `vite.config.ts`, `tsconfig.json`                  |
-| 13  | **`eslint-disable` comments with no ESLint installed**                                                                                                                                                                                                 | `App.tsx:195,230`                                  |
-| 14  | **No tests.** `resolveTokens` is ~100 lines of subtle three-stage search with no coverage at all                                                                                                                                                       | `semantics.ts:382`                                 |
-| 15  | **`useCopy` has two reset durations** (1100 / 1400) with no stated reason                                                                                                                                                                              | `clipboard.ts:40`                                  |
-| 16  | **CSS transitions aren't reduced-motion gated** — `MotionConfig` only covers `motion` components                                                                                                                                                       | `index.css`                                        |
-| 17  | **Mobile: side-by-side accent fields truncate**; action stack floats above the title unanchored                                                                                                                                                        | observed at 390px                                  |
-| 18  | **`rounded-[4px]`** used where `rounded` is the same value                                                                                                                                                                                             | `RowToggle.tsx:45`                                 |
-| 19  | **A stale `dist/`** sits in the working tree (gitignored, but present and out of date)                                                                                                                                                                 | root                                               |
+| #   | Status                                                | Issue                                                                                                                                                                                                                                                  | Where                                              |
+| --- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| 1   | ⬜ still open                                         | **Contrast badges are near-white in dark mode** — `bg-emerald-100 text-emerald-700` / `bg-amber-100 text-amber-700` never flip. Still the one a visitor would notice.                                                                                  | `SemanticTokens.tsx:329`                           |
+| 2   | ✅ fixed — one `Label`                                | **Three label components, three trackings, three margins** → visible baseline misalignment in the control row                                                                                                                                          | `App.tsx:810`, `ColorInput.tsx:106`, `App.tsx:270` |
+| 3   | ✅ fixed — one `Segmented`                            | **Four skins for one segmented control**                                                                                                                                                                                                               | §7.3                                               |
+| 4   | ⬜ still open                                         | **Three control heights** (40 / 36 / 30) in two adjacent bands                                                                                                                                                                                         | §4                                                 |
+| 5   | ⬜ still open                                         | **Two dropdown implementations** — native `<select>` for Format, custom for Derivation                                                                                                                                                                 | `App.tsx:870`, `SchemeSelect.tsx`                  |
+| 6   | ⬜ still open                                         | **PDF export is complete, wired, and unreachable**; `Chooser` takes `onPrint` and ignores it                                                                                                                                                           | `ExportPanel.tsx:156`                              |
+| 7   | ✅ fixed — `shared/motion.ts`                         | **No easing/duration/spring tokens** — six copies of one spring, every timing inline                                                                                                                                                                   | everywhere                                         |
+| 8   | ✅ fixed — named in `tokens.css`                      | **Nine unnamed alpha values** on `ink` doing the work of a surface scale                                                                                                                                                                               | everywhere                                         |
+| 9   | ⬜ still open in Ramps; Motion sets `base: "./"`      | **Built output can't be opened from the filesystem** — Vite's default `base: "/"` emits `/assets/…`                                                                                                                                                    | `vite.config.ts`                                   |
+| 10  | ⬜ still open                                         | **Four names for one thing** — `package.json` says `color-ramp-generator`, the repo is `ramp-generator`, the folder is `Ramps Studio`, the `<h1>` says "Color Ramp Generator", `og:site_name` says "Ramps Studio", the README H1 says "Ramp Generator" | root                                               |
+| 11  | ✅ fixed                                              | **Dead import** — `allRamps` imported into `App.tsx`, never used                                                                                                                                                                                       | `App.tsx:38`                                       |
+| 12  | ⬜ still open                                         | **`@` alias configured, never used**                                                                                                                                                                                                                   | `vite.config.ts`, `tsconfig.json`                  |
+| 13  | ⬜ still open                                         | **`eslint-disable` comments with no ESLint installed**                                                                                                                                                                                                 | `App.tsx:195,230`                                  |
+| 14  | ✅ fixed — `semantics.test.ts` covers `resolveTokens` | **No tests.** `resolveTokens` is ~100 lines of subtle three-stage search with no coverage at all                                                                                                                                                       | `semantics.ts:382`                                 |
+| 15  | ⬜ still open                                         | **`useCopy` has two reset durations** (1100 / 1400) with no stated reason                                                                                                                                                                              | `clipboard.ts:40`                                  |
+| 16  | ✅ fixed — the media query is in `tokens.css`         | **CSS transitions aren't reduced-motion gated** — `MotionConfig` only covers `motion` components                                                                                                                                                       | `index.css`                                        |
+| 17  | ✅ fixed — the mobile pass, PRs #9–#11                | **Mobile: side-by-side accent fields truncate**; action stack floats above the title unanchored                                                                                                                                                        | observed at 390px                                  |
+| 18  | ⬜ still open                                         | **`rounded-[4px]`** used where `rounded` is the same value                                                                                                                                                                                             | `RowToggle.tsx:45`                                 |
+| 19  | ⬜ still open                                         | **A stale `dist/`** sits in the working tree (gitignored, but present and out of date)                                                                                                                                                                 | root                                               |
 
 None of these are bugs in the product. #1 is the only one a visitor would
 notice; #14 is the only one that would let a real bug through.
@@ -598,8 +606,9 @@ notice; #14 is the only one that would let a real bug through.
 - `IconButton`, `ThemeToggle`, `ResetButton`, `ShareButton` (currently trapped
   in `App.tsx`)
 - `ExportModal` shell
-- `SectionLabel` / `FieldLabel` (once unified)
-- `Segmented` — doesn't exist yet; four instances want extracting into one
+- `Label` — the unified `SectionLabel` / `FieldLabel` ✅ shipped
+- `Segmented` — the four skins, extracted into one with a `variant` prop
+  ✅ shipped
 
 **Patterns, re-implemented per tool but identically shaped**
 
@@ -670,7 +679,13 @@ Value-to-effort, highest first. **Deploy-risk flags:** 🟢 no user-visible
 change · 🟡 visible but safe · 🔴 touches the URL contract, the agent payload,
 or SEO — needs a no-JavaScript fetch to verify.
 
-### Tier 1 — do these before writing a line of the second tool
+### Tier 1 — ✅ all shipped
+
+Done before Motion Studio, as intended. `src/shared/` exists and is fanned out
+by `scripts/sync-shared.sh`; `shared/motion.ts` holds the spring, the bezier and
+the durations; `Segmented` and `Label` are single components; the alpha scale
+and the page shell are in `tokens.css` and `ToolShell`. The one item that did
+**not** land is #5 — see §9, issue 1.
 
 |       | Change                                                                                                                                                                                                                                                                                                                      | Effort | Risk |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |

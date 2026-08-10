@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "sync": "./scripts/sync-shared.sh",
+    "sync:check": "./scripts/sync-shared.sh --check",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
