@@ -178,7 +178,13 @@ ${escapeHtml(text)}
 </pre>
 </div>`
 
-  html = html.replace("</body>", `${injected}\n</body>`)
+  // A replacer function here too, and this one matters more than the head
+  // rewrites: `injected` carries the whole payload — the DTCG JSON alone
+  // contributes dozens of "$" in $type/$value/$extensions, plus names and free
+  // text. None of it forms an expandable sequence today, but nothing
+  // constrains it the way the URL charset constrains a parameter, so this is
+  // the instance least likely to stay safe by accident.
+  html = html.replace("</body>", () => `${injected}\n</body>`)
 
   return new Response(html, {
     status: 200,
