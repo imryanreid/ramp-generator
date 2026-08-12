@@ -70,12 +70,14 @@ export default function ToolDirectory({ current }: { current: string }) {
                     className="bg-ink h-1.5 w-1.5 shrink-0 self-center rounded-full"
                   />
                 ) : soon ? (
-                  <span className="border-line text-ash rounded-full border px-1.5 py-px font-mono text-[10px] lowercase">
+                  <span className="border-line text-ash rounded-full border px-1.5 py-px font-mono text-[11px] lowercase sm:text-[10px]">
                     soon
                   </span>
                 ) : null}
               </span>
-              <span className="text-ash mt-0.5 block text-xs leading-snug">{tool.title}</span>
+              <span className="text-ash mt-0.5 block text-sm leading-snug sm:text-xs">
+                {tool.title}
+              </span>
             </>
           )
 

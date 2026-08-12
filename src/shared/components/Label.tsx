@@ -23,6 +23,13 @@ import { cn } from "../utils"
  * A panel header set in the same 11px uppercase mono as its control labels has
  * no hierarchy to perceive: "Timing" and "Exit" read as siblings when one
  * contains the other. The family already has two faces for this, so use them.
+ *
+ * Larger on a phone, and the reason is the same argument one breakpoint along.
+ * Touch forces inputs to 16px — below that Safari zooms the viewport on focus —
+ * so a 14px title ended up *smaller* than the fields it introduces. The
+ * controls cannot come down, so the title goes up. At that width the panels are
+ * stacked full-width and read as sections rather than cards, which is why this
+ * lands on the same size as a section heading instead of somewhere between.
  */
 export function PanelTitle({
   children,
@@ -32,7 +39,9 @@ export function PanelTitle({
   className?: string
 }) {
   return (
-    <h2 className={cn("font-display text-sm font-semibold tracking-tight", className)}>
+    <h2
+      className={cn("font-display text-xl font-semibold tracking-tight sm:text-sm", className)}
+    >
       {children}
     </h2>
   )
