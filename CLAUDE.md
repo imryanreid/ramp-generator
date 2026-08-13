@@ -112,6 +112,34 @@ And because this site is live on a custom domain, a shared change follows the
 branch rule below like any other — with the extra wrinkle that its blast radius
 is every tool, not just this one.
 
+### The family block in `llms.txt` is generated, not written
+
+`src/shared/scripts/build-llms.mjs` rewrites the "other tools" section of
+`public/llms.txt` from `TOOLS`, in every repo. It runs as part of `pnpm build`,
+so a stale block is corrected before anyone can commit one.
+
+It lives under `src/shared/` rather than `scripts/` on purpose: that directory
+is what `pnpm sync` fans out, so there is **one** authored copy across three
+repos instead of three that drift. It imports the manifest directly — hence
+`--experimental-strip-types`, required on Node 22.6–23.5 and a no-op from 23.6
+on — rather than scraping it, so the manifest stays the single source of truth.
+
+Each repo marks its own block and picks its own shape:
+
+```
+<!-- FAMILY:START format="table" current="ramps" -->
+<!-- FAMILY:END -->
+```
+
+`format="table"` emits a markdown table and marks the current tool;
+`format="list"` emits a padded plain-text block and omits it. Missing markers
+fail the build with an instruction rather than silently doing nothing.
+
+This exists because the hand-maintained version rotted without anything
+noticing: this file listed Motion as "not yet released" while springs.studio was
+live, and omitted Beeps entirely. `pnpm llms:check` is the same logic as a
+non-writing assertion, if you want it in a gate.
+
 ## Worktrees go inside `Studio Tools/`
 
 `scripts/sync-shared.sh` resolves the family by **filesystem path**, not by git:

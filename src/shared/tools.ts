@@ -161,3 +161,40 @@ export function familyAsText(currentId?: string): string {
   }
   return lines.join("\n")
 }
+
+/**
+ * The same list as a compact plain-text block — name, title, URL — with the
+ * columns padded to fit whatever is actually in the manifest.
+ *
+ * Separate from `familyAsText` because that one emits a second line of prose
+ * per tool, which is right for a payload an agent reads in full and wrong for
+ * a directory an agent skims. `omitId` drops the tool doing the rendering, for
+ * files whose heading already says "other tools".
+ */
+export function familyAsList(omitId?: string): string {
+  const rows = TOOLS.filter((t) => t.id !== omitId)
+  const nw = Math.max(...rows.map((t) => t.name.length)) + 2
+  const tw = Math.max(...rows.map((t) => t.title.length)) + 2
+  return rows
+    .map((t) => {
+      const where = t.domain ? `https://${t.domain}/` : "not yet released"
+      return `  ${t.name.padEnd(nw)}${t.title.padEnd(tw)}${where}`
+    })
+    .join("\n")
+}
+
+/**
+ * The same list as a markdown table, for `llms.txt` files written in markdown.
+ * `currentId` marks the tool doing the rendering rather than dropping it —
+ * a table with a header row reads as the complete set, so a silent omission
+ * is more confusing than a "(this tool)" note.
+ */
+export function familyAsMarkdownTable(currentId?: string): string {
+  const lines = ["| Tool | Makes | Where |", "| --- | --- | --- |"]
+  for (const t of TOOLS) {
+    const here = t.id === currentId ? " (this tool)" : ""
+    const where = t.domain ? `https://${t.domain}/` : "not yet released"
+    lines.push(`| ${t.name} | ${t.title} | ${where}${here} |`)
+  }
+  return lines.join("\n")
+}
