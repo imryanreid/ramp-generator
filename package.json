@@ -7,7 +7,9 @@
   "description": "Generate perceptually-even OKLCH color ramps and semantic design tokens from a single brand color.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "pnpm llms && tsc --noEmit && vite build",
+    "llms": "node --experimental-strip-types src/shared/scripts/build-llms.mjs",
+    "llms:check": "node --experimental-strip-types src/shared/scripts/build-llms.mjs --check",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

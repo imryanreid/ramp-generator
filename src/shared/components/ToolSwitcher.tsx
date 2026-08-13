@@ -82,12 +82,24 @@ export default function ToolSwitcher({ current }: { current: string }) {
           // spilled out of a wrapper that had correctly shrunk to 91px.
           // Capping it makes the label inside a flex item with somewhere to
           // shrink to, which is when truncate finally engages.
-          "bg-paper inline-flex h-10 max-w-full min-w-0 items-center gap-2 rounded-md border pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors",
+          "bg-paper inline-flex h-10 max-w-full min-w-0 items-center gap-2 rounded-md border pr-2 pl-2 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors",
           open
             ? "border-ink/30 text-ink bg-ink/[0.03]"
             : "border-line text-ash hover:border-ink/30 hover:text-ink",
         )}
       >
+        {/*
+          The current tool's mark, same 16px as the menu rows below. Without it
+          the collapsed control was the only place in the family where a tool
+          was named but not shown, so opening the menu introduced a visual
+          language that the trigger had not used — and the row you were already
+          on was the one row whose mark you never saw.
+
+          It costs 24px of a row that is already tight on a phone, which is why
+          the left padding drops to match: the label truncates sooner, and the
+          mark is the part worth keeping when space runs out.
+        */}
+        <ToolMark id={current} size={16} />
         {/* No wordmark until a domain exists — fall back to the tool's name. */}
         {/* min-w-0 as well as truncate: this span is itself a flex item, and a
             flex item defaults to min-width:auto — so without it the label

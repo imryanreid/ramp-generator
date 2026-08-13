@@ -90,24 +90,34 @@ export const TOOLS: Tool[] = [
     domain: "www.beeps.studio",
     status: "live",
   },
+  // The three unbuilt tools. Ids stay as they are — the same split motion and
+  // sound already use, where the id and the repo folder are one word and the
+  // shelf label is another. Renaming an id would mean renaming a folder and a
+  // ToolMark key for a tool that does not exist yet.
   {
     id: "shape",
-    name: "Shape",
-    title: "Spacing, radius & elevation",
-    blurb: "One set of rules for spacing steps, nested radii and a light-source shadow ramp.",
+    name: "Depths",
+    title: "Elevation & shadows",
+    // Narrower than it was. This entry used to promise spacing steps and
+    // nested radii too, which "Depths" does not cover — the name is a z-axis
+    // word and the title now says only what it means.
+    blurb: "Elevation levels and a shadow ramp derived from one light source.",
     status: "soon",
   },
   {
     id: "type",
-    name: "Type",
-    title: "Fluid scales & text styles",
+    name: "Texts",
+    title: "Type styles & scaling",
     blurb: "Scales that interpolate with the viewport, and the text styles built on them.",
     status: "soon",
   },
   {
     id: "icons",
-    name: "Icons",
-    title: "SVG cleanup & alignment",
+    // Stored mixed-case and rendered uppercase by the switcher and the footer,
+    // so this shows as "SVGS" on screen while staying readable as English in
+    // llms.txt and the agent payload, which render it verbatim.
+    name: "SVGs",
+    title: "Icon cleanup & alignment",
     blurb: "Clean up exported SVGs and sit them on a consistent optical grid.",
     status: "soon",
   },
@@ -148,6 +158,43 @@ export function familyAsText(currentId?: string): string {
     const where = t.domain ? `https://${t.domain}/` : "not yet released"
     lines.push(`  ${t.name.padEnd(9)} ${t.title.padEnd(32)} ${where}${here}`)
     lines.push(`  ${" ".repeat(9)} ${t.blurb}`)
+  }
+  return lines.join("\n")
+}
+
+/**
+ * The same list as a compact plain-text block — name, title, URL — with the
+ * columns padded to fit whatever is actually in the manifest.
+ *
+ * Separate from `familyAsText` because that one emits a second line of prose
+ * per tool, which is right for a payload an agent reads in full and wrong for
+ * a directory an agent skims. `omitId` drops the tool doing the rendering, for
+ * files whose heading already says "other tools".
+ */
+export function familyAsList(omitId?: string): string {
+  const rows = TOOLS.filter((t) => t.id !== omitId)
+  const nw = Math.max(...rows.map((t) => t.name.length)) + 2
+  const tw = Math.max(...rows.map((t) => t.title.length)) + 2
+  return rows
+    .map((t) => {
+      const where = t.domain ? `https://${t.domain}/` : "not yet released"
+      return `  ${t.name.padEnd(nw)}${t.title.padEnd(tw)}${where}`
+    })
+    .join("\n")
+}
+
+/**
+ * The same list as a markdown table, for `llms.txt` files written in markdown.
+ * `currentId` marks the tool doing the rendering rather than dropping it —
+ * a table with a header row reads as the complete set, so a silent omission
+ * is more confusing than a "(this tool)" note.
+ */
+export function familyAsMarkdownTable(currentId?: string): string {
+  const lines = ["| Tool | Makes | Where |", "| --- | --- | --- |"]
+  for (const t of TOOLS) {
+    const here = t.id === currentId ? " (this tool)" : ""
+    const where = t.domain ? `https://${t.domain}/` : "not yet released"
+    lines.push(`| ${t.name} | ${t.title} | ${where}${here} |`)
   }
   return lines.join("\n")
 }
