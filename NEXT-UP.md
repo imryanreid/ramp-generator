@@ -74,6 +74,43 @@ Nothing outside the codebase is outstanding.
 
 ## Session log
 
+### 2026-08-13 — The Springs mark, and generated family blocks
+
+**The Springs mark is a coil spring now**, not the step-response curve. Four
+attempts drew that curve as two parallel strokes to give it Ramps' mass, and all
+four failed for one reason worth not rediscovering: two strokes stay parallel at
+a gap `d` only where the curve's radius of curvature exceeds `d`, and a spring
+that rings has a radius near **0.6 units** at its overshoot peak against a
+~2.3-unit gap. The inner stroke folds through itself — a visible cusp.
+Translating straight down instead loses the gap where the curve is steep, so the
+strokes merge on the rise; slope-scaling the offset staggers them apart; capping
+at the local radius still kinks. A search over damping, cycles and amplitude
+found only 0.75-cycle curves — barely a spring — clear the constraint.
+
+A coil is **one stroke**, so there is no offset to fold. It is an obliquely-
+viewed helix, split on the sign of its depth so the back halves paint first in
+`#2452b0` and the front halves over them in `#8db0ff` — the loops pass behind
+one another, and that split restores the two-tone weight. The family now reads
+as three different objects: horizontal bars, vertical bars, a coil. Full
+reasoning is in the comment on `favicon.svg` in Motion Studio and on the
+`motion` figure in `ToolMark.tsx`.
+
+- **The collapsed switcher shows the current tool's mark.** It was the only
+  place in the family where a tool was named but not shown.
+- **The three unbuilt tools were renamed**: Shape → Depths ("Elevation &
+  shadows"), Type → Texts ("Type styles & scaling"), Icons → SVGs ("Icon
+  cleanup & alignment"). Ids stay `shape`/`type`/`icons`, the same split
+  `motion`/Springs and `sound`/Beeps use.
+- **The `llms.txt` family block is generated now** — see the CLAUDE.md section.
+  It had rotted unnoticed: this file listed Motion as "not yet released" while
+  springs.studio was live, and omitted Beeps entirely.
+
+**Open, deliberately unresolved:** Depths is narrower than Shape was, so
+**spacing and radius have no home in the manifest**. Ryan is leaning toward not
+building these three at all; parked rather than decided. If they are dropped,
+the `status: "soon"` rows should go with them — they are public promises that
+ship in every switcher, footer and agent payload.
+
 ### 2026-08-05 — The shared layer, and the family switcher
 
 Everything that isn't about color now lives in `src/shared`, which is copied
