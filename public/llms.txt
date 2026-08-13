@@ -104,10 +104,11 @@ JavaScript, and there is no account, key or rate limit.
 | Tool | Makes | Where |
 | --- | --- | --- |
 | Ramps | Color scales & semantic tokens | https://www.ramps.studio/ (this tool) |
-| Motion | Easing curves & durations | not yet released |
-| Shape | Spacing, radius & elevation | not yet released |
-| Type | Fluid scales & text styles | not yet released |
-| Icons | SVG cleanup & alignment | not yet released |
+| Springs | Motion, easings & durations | https://www.springs.studio/ |
+| Beeps | UI sounds & feedback | https://www.beeps.studio/ |
+| Depths | Elevation & shadows | not yet released |
+| Texts | Type styles & scaling | not yet released |
+| SVGs | Icon cleanup & alignment | not yet released |
 
 ## Source
 
