@@ -79,14 +79,16 @@ export const TOOLS: Tool[] = [
   {
     id: "sound",
     // The same split as motion/Springs: the id and the repo folder stay
-    // "sound", and the shelf label is what the domain says. It ships at
-    // beeps.studio. No `wordmark` or `domain` until that domain is registered
-    // and the tool is live — asserting either now puts a dead link in every
-    // copy of this manifest.
+    // "sound", and the shelf label is what the domain says.
+    wordmark: "beeps.studio",
     name: "Beeps",
     title: "UI sounds & feedback",
-    blurb: "Short interface sounds that agree with the motion they accompany.",
-    status: "soon",
+    // Was "Short interface sounds that agree with the motion they accompany",
+    // which promised a motion-coupling the tool does not do. It synthesizes;
+    // that is the interesting part and the reason there is nothing to host.
+    blurb: "A coherent set of interface sounds, synthesized rather than sampled.",
+    domain: "www.beeps.studio",
+    status: "live",
   },
   {
     id: "shape",
