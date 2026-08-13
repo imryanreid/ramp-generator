@@ -58,43 +58,71 @@ const FIGURES: Record<string, React.ReactNode> = {
       <rect x="23.20" y="12.50" width="2.8" height="7" rx="1.1" fill="#8db0ff" />
     </>
   ),
-  // A spring's step response, as two stacked strokes. Same point lists as
+  // A coil spring, drawn literally. Same point lists as
   // springs.studio/favicon.svg — change one, change both.
   //
-  // A single stroke carried far less weight than Ramps' four filled bars, so
-  // the two did not read as equals side by side. Filling the area beneath read
-  // as a blob rather than a curve, and a heavy stroke with a lighter core read
-  // as an outline. A parallel pair keeps it a LINE while giving it Ramps' kind
-  // of density, and it rhymes with the four bars there and the five in Beeps —
-  // the family is stacked strokes, in every mark.
+  // Earlier versions drew the spring's step response as two parallel strokes,
+  // to give it Ramps' kind of mass. That does not work at this size: two
+  // strokes stay parallel at a gap d only where the curve's radius of curvature
+  // exceeds d, and a spring that rings has a radius near 0.6 units at its
+  // overshoot peak against a ~2.3-unit gap, so the inner stroke folds through
+  // itself. Translating down instead merges them on the steep rise; slope-
+  // scaling the offset staggers them apart; capping at the local radius kinks.
+  // A coil is ONE stroke, so there is no offset to fold — and it is more
+  // literal. Ramps is horizontal bars, Beeps vertical bars, Springs a coil.
   //
-  // THE DAMPING IS SET BY THE GEOMETRY, NOT BY TASTE. Two strokes stay parallel
-  // at a gap d only where the curve's radius of curvature exceeds d. Ring the
-  // spring harder and the radius at the overshoot peak collapses — at zeta 0.30
-  // over 1.30 cycles it is about 0.6 units against a 2.3-unit offset — and the
-  // inner stroke has nowhere to go but through itself, which is a visible cusp.
-  // Translating straight down instead keeps the shapes identical but loses the
-  // gap where the curve is steep, so the strokes merge on the rise; scaling the
-  // offset by the local slope holds the gap but staggers the two apart. Only
-  // 0.75-cycle curves clear the constraint at a Ramps-like gap.
-  //
-  // So: zeta 0.30 over 0.75 cycles, both strokes 2.6 wide at a constant
-  // 4.39-unit centre gap, verified to have zero backward-travelling points.
+  // An obliquely-viewed helix: x = P*t + A*sin(t), y = B*cos(t), depth = sin(t)
+  // with P 0.55, A 1.6, B 3.2 over 3 turns at 40 degrees. The stroke is split on
+  // the sign of that depth — BACK halves in #2452b0 first, FRONT halves over
+  // them in #8db0ff — so the loops pass behind one another rather than reading
+  // as a flat scribble.
   motion: (
     <>
       <polyline
-        points="7.30,17.15 7.41,17.14 7.45,17.14 7.49,17.13 7.55,17.12 7.62,17.10 7.70,17.07 7.80,17.03 7.90,16.98 8.01,16.92 8.13,16.85 8.26,16.76 8.40,16.67 8.55,16.57 8.70,16.46 8.85,16.34 9.01,16.21 9.18,16.08 9.34,15.93 9.52,15.78 9.69,15.63 9.87,15.47 10.05,15.30 10.23,15.13 10.42,14.96 10.61,14.79 10.80,14.61 10.99,14.43 11.18,14.25 11.38,14.07 11.58,13.90 11.78,13.72 11.98,13.54 12.19,13.36 12.40,13.19 12.61,13.02 12.82,12.85 13.04,12.68 13.25,12.52 13.47,12.36 13.70,12.21 13.92,12.06 14.15,11.91 14.38,11.77 14.61,11.64 14.85,11.51 15.09,11.39 15.33,11.27 15.58,11.17 15.82,11.07 16.07,10.97 16.32,10.89 16.57,10.81 16.83,10.74 17.08,10.68 17.34,10.62 17.59,10.58 17.85,10.54 18.10,10.51 18.36,10.49 18.61,10.47 18.86,10.47 19.11,10.47 19.36,10.47 19.60,10.49 19.84,10.50 20.08,10.53 20.32,10.56 20.55,10.59 20.79,10.63 21.01,10.68 21.24,10.72 21.46,10.77 21.68,10.83 21.90,10.88 22.12,10.94 22.33,11.00 22.54,11.06 22.75,11.12 22.95,11.19 23.15,11.25 23.35,11.32 23.55,11.38 23.75,11.45 23.94,11.52 24.13,11.58 24.32,11.65 24.51,11.71 24.70,11.78"
+        points="15.97,7.64 15.81,7.56 15.57,7.52 15.29,7.55 14.98,7.64 14.63,7.80 14.26,8.03 13.87,8.32 13.48,8.67 13.08,9.07 12.69,9.53 12.31,10.03 11.95,10.57 11.62,11.13 11.32,11.72 11.07,12.32 10.86,12.93 10.70,13.54 10.59,14.13 10.54,14.71 10.56,15.25 10.63,15.77 10.76,16.24 10.95,16.66 11.20,17.03 11.51,17.34 11.56,17.38"
         fill="none"
-        stroke="#8db0ff"
-        strokeWidth="2.6"
+        stroke="#2452b0"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <polyline
-        points="7.46,21.53 7.73,21.52 8.07,21.49 8.40,21.43 8.72,21.35 9.02,21.26 9.32,21.15 9.61,21.03 9.88,20.89 10.14,20.75 10.40,20.61 10.65,20.45 10.89,20.29 11.12,20.13 11.35,19.96 11.57,19.79 11.79,19.61 12.00,19.44 12.21,19.26 12.42,19.08 12.62,18.90 12.82,18.72 13.01,18.54 13.21,18.36 13.40,18.18 13.59,18.01 13.78,17.83 13.96,17.66 14.14,17.49 14.32,17.33 14.50,17.17 14.68,17.01 14.85,16.86 15.02,16.71 15.19,16.57 15.36,16.44 15.53,16.31 15.69,16.18 15.85,16.06 16.01,15.95 16.16,15.84 16.31,15.74 16.46,15.65 16.61,15.56 16.75,15.47 16.89,15.40 17.03,15.33 17.16,15.26 17.30,15.21 17.43,15.15 17.56,15.10 17.68,15.06 17.81,15.02 17.93,14.99 18.06,14.96 18.18,14.93 18.30,14.91 18.42,14.89 18.55,14.88 18.67,14.87 18.79,14.86 18.92,14.86 19.05,14.86 19.18,14.86 19.31,14.87 19.45,14.88 19.58,14.89 19.73,14.91 19.87,14.93 20.01,14.95 20.16,14.98 20.31,15.01 20.47,15.05 20.63,15.09 20.79,15.13 20.95,15.17 21.11,15.22 21.28,15.27 21.45,15.32 21.62,15.37 21.80,15.43 21.97,15.49 22.15,15.55 22.34,15.61 22.52,15.67 22.70,15.73 22.89,15.80 23.08,15.86 23.27,15.93"
+        points="20.23,11.21 20.07,11.13 19.83,11.09 19.55,11.12 19.24,11.21 18.89,11.37 18.52,11.60 18.13,11.89 17.73,12.24 17.34,12.65 16.94,13.10 16.57,13.60 16.21,14.14 15.88,14.70 15.58,15.29 15.33,15.90 15.12,16.50 14.96,17.11 14.85,17.70 14.80,18.28 14.81,18.83 14.88,19.34 15.02,19.81 15.21,20.23 15.46,20.60 15.77,20.91 15.82,20.95"
         fill="none"
-        stroke="#3d7dff"
-        strokeWidth="2.6"
+        stroke="#2452b0"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points="24.48,14.79 24.32,14.70 24.09,14.66 23.81,14.69 23.49,14.79 23.15,14.95 22.78,15.17 22.39,15.46 21.99,15.81 21.59,16.22 21.20,16.67 20.82,17.17 20.47,17.71 20.14,18.28 19.84,18.87 19.58,19.47 19.37,20.08 19.21,20.68 19.11,21.28 19.06,21.85 19.07,22.40 19.14,22.91 19.27,23.38 19.47,23.80 19.72,24.17 20.02,24.48"
+        fill="none"
+        stroke="#2452b0"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points="7.31,13.81 7.61,14.01 8.01,14.19 8.46,14.31 8.95,14.36 9.47,14.34 10.01,14.26 10.56,14.11 11.13,13.90 11.70,13.64 12.26,13.33 12.81,12.97 13.34,12.58 13.84,12.15 14.31,11.71 14.73,11.25 15.11,10.78 15.44,10.32 15.72,9.87 15.94,9.44 16.10,9.03 16.20,8.66 16.23,8.34 16.21,8.06 16.13,7.83 16.00,7.66 15.97,7.64"
+        fill="none"
+        stroke="#8db0ff"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points="11.56,17.38 11.87,17.58 12.27,17.77 12.72,17.88 13.21,17.93 13.72,17.91 14.27,17.83 14.82,17.68 15.39,17.47 15.96,17.21 16.52,16.90 17.07,16.54 17.60,16.15 18.10,15.73 18.56,15.28 18.99,14.82 19.37,14.35 19.70,13.89 19.98,13.44 20.20,13.01 20.35,12.60 20.45,12.24 20.49,11.91 20.47,11.63 20.39,11.40 20.25,11.24 20.23,11.21"
+        fill="none"
+        stroke="#8db0ff"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points="15.82,20.95 16.12,21.16 16.53,21.34 16.98,21.45 17.47,21.50 17.98,21.48 18.52,21.40 19.08,21.25 19.65,21.05 20.22,20.78 20.78,20.47 21.33,20.12 21.86,19.72 22.36,19.30 22.82,18.85 23.25,18.39 23.63,17.93 23.96,17.46 24.23,17.01 24.45,16.58 24.61,16.18 24.71,15.81 24.75,15.48 24.73,15.20 24.65,14.98 24.51,14.81 24.48,14.79"
+        fill="none"
+        stroke="#8db0ff"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
