@@ -97,6 +97,17 @@ pnpm sync:check    # diff every sibling; exits non-zero on drift
 pnpm sync          # push this repo's src/shared to all of them
 ```
 
+**Only ever sync from an up-to-date `main`.** `pnpm sync` rsyncs whatever is in
+the working tree, with `--delete`, so running it from a branch that is behind
+upstream silently reverts every sibling to that branch's state. It happened:
+a sync from a days-old `family-prep-for-beeps` pushed a stale `ToolSwitcher`
+into Beeps and Motion, undoing a fix that was already on `main`. Nothing failed
+and nothing warned — the drift was found by eye, days later.
+
+```bash
+git checkout main && git pull && pnpm sync
+```
+
 And because this site is live on a custom domain, a shared change follows the
 branch rule below like any other — with the extra wrinkle that its blast radius
 is every tool, not just this one.
