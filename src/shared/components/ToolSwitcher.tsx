@@ -82,7 +82,7 @@ export default function ToolSwitcher({ current }: { current: string }) {
           // spilled out of a wrapper that had correctly shrunk to 91px.
           // Capping it makes the label inside a flex item with somewhere to
           // shrink to, which is when truncate finally engages.
-          "bg-paper inline-flex h-9 max-w-full min-w-0 items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors sm:h-auto",
+          "bg-paper inline-flex h-10 max-w-full min-w-0 items-center gap-2 rounded-md border pr-2 pl-2.5 font-mono text-[11px] tracking-[0.18em] uppercase transition-colors",
           open
             ? "border-ink/30 text-ink bg-ink/[0.03]"
             : "border-line text-ash hover:border-ink/30 hover:text-ink",

@@ -250,7 +250,7 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
     <div>
       <BackButton onBack={onBack} />
       <Terminal>
-        <div className="flex items-center justify-between gap-2 border-b border-white/10 px-2">
+        <div className="flex items-center justify-between gap-2 border-b border-white/10 px-2 py-2 sm:py-0">
           {/*
             A select on a phone, tabs on a pointer device.
             
@@ -267,7 +267,7 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
             id="export-format"
             value={active.id}
             onChange={(e) => setTabId(e.target.value)}
-            className="text-paper min-w-0 flex-1 rounded border border-white/15 bg-transparent px-2 py-1.5 font-mono text-sm sm:hidden"
+            className="text-paper max-w-[9.5rem] min-w-0 truncate rounded border border-white/15 bg-transparent px-2 py-1.5 font-mono text-base sm:hidden"
           >
             {formats.map((f) => (
               <option key={f.id} value={f.id} className="text-ink bg-paper">
