@@ -25,6 +25,12 @@ import { TOOLS, toolUrl } from "../tools"
 import { cn } from "../utils"
 import ToolMark from "./ToolMark"
 
+/**
+ * Where the donate row points. One place, because this file is copied into
+ * every tool repo — a hardcoded URL per copy would be four to change.
+ */
+const DONATE_URL = "https://buymeacoffee.com/tktk"
+
 export default function ToolSwitcher({ current }: { current: string }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -197,6 +203,31 @@ export default function ToolSwitcher({ current }: { current: string }) {
               </a>
             )
           })}
+
+          {/*
+            Not a tool, so it carries no mark and sits below a rule — the list
+            above is "somewhere else you can go in this family", and this is a
+            different kind of thing. Same row metrics otherwise, so it reads as
+            part of the menu rather than bolted on.
+
+            Opens in a new tab: every tool in this family keeps its entire state
+            in the query string, and someone part-way through editing a palette
+            or a sound set should not have this replace it. `rel` is the usual
+            pair — `noopener` is what stops the opened page reaching back
+            through `window.opener`.
+          */}
+          <a
+            href={DONATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            role="menuitem"
+            className="border-line hover:bg-ink/[0.03] block border-t px-3 py-2.5 transition-colors"
+          >
+            <span className="text-ash font-mono text-[11px] tracking-[0.14em] uppercase">
+              Donate
+            </span>
+            <p className="text-ash mt-0.5 text-xs leading-snug">Help support our free apps</p>
+          </a>
         </div>
       )}
     </div>
