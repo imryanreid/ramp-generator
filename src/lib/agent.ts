@@ -91,6 +91,7 @@ type PaletteJson = {
     scope: string
     scheme: string
     wcag: string
+    vividness: string
     excludedRamps: string[]
     excludedTokens: string[]
   }
@@ -136,6 +137,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     state.mode,
     state.scheme,
     state.accent2Override,
+    state.vividness,
   )
 
   const excludedRamps = new Set(state.excludedRamps)
@@ -268,6 +270,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
       scope: state.mode,
       scheme: state.scheme,
       wcag: state.compliance,
+      vividness: state.vividness,
       excludedRamps: state.excludedRamps,
       excludedTokens: state.excludedTokens,
     },
@@ -308,7 +311,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     "RAMPS STUDIO — GENERATED COLOR PALETTE",
     `Source: ${canonical}`,
     "",
-    `Brand ${state.brand} · accent ${state.accentOverride ?? "auto-derived"} · accent-2 ${state.accent2Override ?? "auto-derived"} · ${state.scheme} derivation · ${state.mode} scope · WCAG ${state.compliance}`,
+    `Brand ${state.brand} · accent ${state.accentOverride ?? "auto-derived"} · accent-2 ${state.accent2Override ?? "auto-derived"} · ${state.scheme} derivation · ${state.vividness} accent saturation · ${state.mode} scope · WCAG ${state.compliance}`,
     "",
     "RAMPS (OKLCH-derived, 50 lightest to 950 darkest)",
   ]
@@ -364,6 +367,7 @@ export function buildAgentPayload(search: string, origin: string): AgentPayload 
     "    s   scheme: complementary | analogous | triadic | split | monochromatic (default complementary)",
     "    c   WCAG target: AA | AAA                                  (default AA)",
     "    f   notation: oklch | hex | rgb | hsl                      (default oklch)",
+    "    v   derived-accent saturation: natural | bold                (default natural)",
     "    xr  ramps to omit, dot-separated names, e.g. xr=accent-2.info",
     "    xt  tokens to omit, dot-separated names, e.g. xt=bg-info.text-info",
     "",

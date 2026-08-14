@@ -23,6 +23,7 @@ import {
   buildPalette,
   deriveAccentHex,
   deriveAccent2Hex,
+  type Vividness,
   type DsMode,
   type Scheme,
   type Palette,
@@ -89,6 +90,9 @@ export default function App() {
     initial.compliance ?? DEFAULT_STATE.compliance,
   )
   const [format, setFormat] = useState<ColorFormat>(initial.format ?? DEFAULT_STATE.format)
+  const [vividness, setVividness] = useState<Vividness>(
+    initial.vividness ?? DEFAULT_STATE.vividness,
+  )
   // Deselected rows. Kept as Sets for cheap lookups while rendering ~45 rows;
   // serialized to sorted arrays for the URL so the link is stable.
   const [excludedRamps, setExcludedRamps] = useState<Set<string>>(
@@ -114,6 +118,7 @@ export default function App() {
     scheme,
     compliance,
     format,
+    vividness,
     excludedRamps: [...excludedRamps],
     excludedTokens: [...excludedTokens],
   }
@@ -140,6 +145,7 @@ export default function App() {
     setMode(next.mode)
     setScheme(next.scheme)
     setCompliance(next.compliance)
+    setVividness(next.vividness)
     setFormat(next.format)
     setExcludedRamps(new Set(next.excludedRamps))
     setExcludedTokens(new Set(next.excludedTokens))
@@ -159,11 +165,22 @@ export default function App() {
   }
 
   const accentLocked = accentOverride !== null || accent2Override !== null
-  const autoAccent = useMemo(() => deriveAccentHex(brand, scheme), [brand, scheme])
-  const autoAccent2 = useMemo(() => deriveAccent2Hex(brand, scheme), [brand, scheme])
+  // Vividness floors the *derived* accents, so it does nothing when there are
+  // none left to derive: Lite scope emits no accent ramps at all, and pinning
+  // both accents replaces them with literal colors that carry their own chroma.
+  const vividnessInert =
+    mode !== "full" || (accentOverride !== null && accent2Override !== null)
+  const autoAccent = useMemo(
+    () => deriveAccentHex(brand, scheme, vividness),
+    [brand, scheme, vividness],
+  )
+  const autoAccent2 = useMemo(
+    () => deriveAccent2Hex(brand, scheme, vividness),
+    [brand, scheme, vividness],
+  )
   const palette = useMemo(
-    () => buildPalette(brand, accentOverride, mode, scheme, accent2Override),
-    [brand, accentOverride, mode, scheme, accent2Override],
+    () => buildPalette(brand, accentOverride, mode, scheme, accent2Override, vividness),
+    [brand, accentOverride, mode, scheme, accent2Override, vividness],
   )
 
   // True while the visitor is still looking at the untouched default palette.
@@ -177,6 +194,7 @@ export default function App() {
     scheme === DEFAULT_STATE.scheme &&
     compliance === DEFAULT_STATE.compliance &&
     format === DEFAULT_STATE.format &&
+    vividness === DEFAULT_STATE.vividness &&
     excludedRamps.size === 0 &&
     excludedTokens.size === 0
 
@@ -199,6 +217,7 @@ export default function App() {
     scheme,
     compliance,
     format,
+    vividness,
     excludedRamps,
     excludedTokens,
     isDefault,
@@ -223,6 +242,7 @@ export default function App() {
     mode,
     scheme,
     compliance,
+    vividness,
     excludedRamps,
     excludedTokens,
     isDefault,
@@ -332,6 +352,28 @@ export default function App() {
           </div>
 
           <div>
+            <FieldLabel>Saturation</FieldLabel>
+            <div
+              className={cn("transition-opacity", vividnessInert && "opacity-45")}
+              title={
+                vividnessInert
+                  ? mode !== "full"
+                    ? "Lite scope has no accent ramps, so there is nothing to saturate."
+                    : "Both accents are set manually, so they already carry their own saturation."
+                  : undefined
+              }
+            >
+              <Segmented
+                ariaLabel="Derived accent saturation"
+                layoutId="vividness-pill"
+                value={vividness}
+                onChange={setVividness}
+                options={VIVIDNESS_OPTIONS}
+              />
+            </div>
+          </div>
+
+          <div>
             <FieldLabel>Scope</FieldLabel>
             <Segmented
               ariaLabel="Token scope"
@@ -399,6 +441,22 @@ const COMPLIANCE_OPTIONS = [
   { id: "AAA" as const, label: "AAA", title: "WCAG AAA — 7:1 minimum for normal text" },
 ]
 
+// Binary on purpose: "natural" is the honest default and "bold" is an opt-in
+// floor. Extra rungs can be added later without breaking a shared link.
+const VIVIDNESS_OPTIONS = [
+  {
+    id: "natural" as const,
+    label: "Natural",
+    title: "Derived accents inherit the brand's own saturation",
+  },
+  {
+    id: "bold" as const,
+    label: "Bold",
+    title:
+      "Put a floor under derived accent saturation, so a muted brand still gets accents that carry",
+  },
+]
+
 const SCOPE_OPTIONS = [
   {
     id: "full" as const,
@@ -454,6 +512,7 @@ function AgentData({
     "#   s = derivation: complementary | analogous | triadic | split | monochromatic",
     "#   c = contrast target: AA (4.5:1) | AAA (7:1)",
     "#   f = notation: oklch | hex | rgb | hsl",
+    "#   v = derived accent saturation: natural | bold",
     "#   xr / xt = dot-separated ramp / token names the author deselected",
     // Mirrors encodeShareState: the optional params appear only when they are
     // actually set, so this line stays a copy-pasteable reproduction of exactly
@@ -463,7 +522,8 @@ function AgentData({
       `${state.accentOverride ? ` a=${state.accentOverride.replace("#", "")}` : ""}` +
       `${state.accent2Override ? ` a2=${state.accent2Override.replace("#", "")}` : ""}` +
       ` m=${state.mode} s=${state.scheme} c=${state.compliance}` +
-      `${state.format !== DEFAULT_STATE.format ? ` f=${state.format}` : ""}`,
+      `${state.format !== DEFAULT_STATE.format ? ` f=${state.format}` : ""}` +
+      `${state.vividness !== DEFAULT_STATE.vividness ? ` v=${state.vividness}` : ""}`,
     "# Ramps are 50–950 OKLCH steps; semantic tokens are listed for :root (light) and .dark.",
     `# Token steps are auto-adjusted so paired foregrounds meet WCAG ${state.compliance}.`,
     ...(omitted

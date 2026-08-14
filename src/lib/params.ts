@@ -14,7 +14,7 @@
 // /api import it too. Anything needing the canonical
 // origin lives in share.ts instead.
 // ==============================================
-import { SCHEMES, type DsMode, type Scheme } from "./recommend.js"
+import { SCHEMES, type DsMode, type Scheme, type Vividness } from "./recommend.js"
 import { COLOR_FORMATS, type ColorFormat } from "./color.js"
 import type { Compliance } from "./semantics.js"
 
@@ -29,6 +29,8 @@ export type ShareState = {
   compliance: Compliance
   /** Notation for displayed and exported colors. */
   format: ColorFormat
+  /** How saturated the derived accents are allowed to be. */
+  vividness: Vividness
   /** Ramp names deselected for export, e.g. "accent-2". Empty is the default. */
   excludedRamps: string[]
   /** Semantic token names deselected for export, e.g. "bg-info". */
@@ -44,6 +46,7 @@ export const DEFAULT_STATE: ShareState = {
   scheme: "complementary",
   compliance: "AA",
   format: "oklch",
+  vividness: "natural",
   excludedRamps: [],
   excludedTokens: [],
 }
@@ -85,6 +88,9 @@ export function encodeShareState(s: ShareState): string {
   p.set("s", s.scheme)
   p.set("c", s.compliance)
   if (s.format !== DEFAULT_STATE.format) p.set("f", s.format)
+  // Only when opted in, so every link shared before this existed still encodes
+  // — and decodes — to exactly the palette it always did.
+  if (s.vividness !== DEFAULT_STATE.vividness) p.set("v", s.vividness)
   if (s.excludedRamps.length) p.set("xr", encodeNames(s.excludedRamps))
   if (s.excludedTokens.length) p.set("xt", encodeNames(s.excludedTokens))
   return p.toString()
@@ -115,6 +121,9 @@ export function decodeShareState(search: string): Partial<ShareState> {
 
   const f = p.get("f")
   if (f && COLOR_FORMATS.some((x) => x.id === f)) out.format = f as ColorFormat
+
+  const v = p.get("v")
+  if (v === "natural" || v === "bold") out.vividness = v
 
   const xr = decodeNames(p.get("xr"))
   if (xr) out.excludedRamps = xr

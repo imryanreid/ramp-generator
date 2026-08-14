@@ -74,17 +74,18 @@ database — the inputs fit in the query string:
 https://www.ramps.studio/?b=3d7dff&a=ff8a00&m=full&s=complementary&c=AA
 ```
 
-| Param | Meaning                                                                                                                                                               |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `b`   | Brand hex, no `#`. Omit it and you get the default `3d7dff`, plus a note saying so.                                                                                   |
-| `a`   | Accent hex, no `#`. Optional — omit to auto-derive from the scheme.                                                                                                   |
-| `a2`  | Tertiary accent hex, no `#`. Optional — omit to derive it from the scheme.                                                                                            |
-| `m`   | Scope: `full` or `basic`.                                                                                                                                             |
-| `s`   | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic`                                                                                          |
-| `c`   | Contrast target: `AA` (4.5:1) or `AAA` (7:1).                                                                                                                         |
-| `f`   | Colour notation: `oklch` (default), `hex`, `rgb`, `hsl`. Drives display and the CSS/Tailwind/JSON exports.                                                            |
-| `xr`  | Ramps left out of the export, dot-separated — e.g. `accent-2.info`. Ramp names are `primary`, `accent`, `accent-2`, `neutral`, `success`, `warning`, `error`, `info`. |
-| `xt`  | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`.                                                                                                |
+| Param | Meaning                                                                                                                                                                                                   |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `b`   | Brand hex, no `#`. Omit it and you get the default `3d7dff`, plus a note saying so.                                                                                                                       |
+| `a`   | Accent hex, no `#`. Optional — omit to auto-derive from the scheme.                                                                                                                                       |
+| `a2`  | Tertiary accent hex, no `#`. Optional — omit to derive it from the scheme.                                                                                                                                |
+| `m`   | Scope: `full` or `basic`.                                                                                                                                                                                 |
+| `s`   | Scheme: `complementary`, `analogous`, `triadic`, `split`, or `monochromatic`                                                                                                                              |
+| `c`   | Contrast target: `AA` (4.5:1) or `AAA` (7:1).                                                                                                                                                             |
+| `f`   | Colour notation: `oklch` (default), `hex`, `rgb`, `hsl`. Drives display and the CSS/Tailwind/JSON exports.                                                                                                |
+| `v`   | Derived accent saturation: `natural` (default) or `bold`. `bold` puts a floor under the chroma of the auto-derived accents, so a muted brand still gets accents that carry. Never touches the brand ramp. |
+| `xr`  | Ramps left out of the export, dot-separated — e.g. `accent-2.info`. Ramp names are `primary`, `accent`, `accent-2`, `neutral`, `success`, `warning`, `error`, `info`.                                     |
+| `xt`  | Semantic tokens left out, dot-separated — e.g. `bg-info.text-warning`.                                                                                                                                    |
 
 Malformed params are dropped individually, so a bad link degrades to defaults
 rather than erroring.
