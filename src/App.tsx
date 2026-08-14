@@ -314,7 +314,6 @@ export default function App() {
             <div className="w-full sm:w-[196px] sm:shrink-0">
               <FieldLabel>Derivation</FieldLabel>
               <div
-                className={cn("transition-opacity", accentLocked && "opacity-45")}
                 title={
                   accentLocked
                     ? "The accent is set manually, so derivation no longer produces it — it still shapes accent-2, the neutral tint and status colors."
@@ -322,6 +321,7 @@ export default function App() {
                 }
               >
                 <SchemeSelect
+                  dimmed={accentLocked}
                   scheme={scheme}
                   onChange={(next) => {
                     setScheme(next)

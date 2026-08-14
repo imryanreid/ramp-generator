@@ -12,10 +12,20 @@ import { CaretDown, Check } from "@phosphor-icons/react"
 type Props = {
   scheme: Scheme
   onChange: (scheme: Scheme) => void
+  /**
+   * Fade the trigger when derivation no longer drives the accents.
+   *
+   * This lives here rather than on a wrapper in the caller for a reason worth
+   * keeping: `opacity` below 1 creates a **stacking context**, and a wrapper
+   * carrying it would trap the menu's `z-index` inside — the ramp swatches
+   * further down the page then paint straight over the open dropdown. Fading
+   * only the button leaves the menu in the page's own stacking context.
+   */
+  dimmed?: boolean
 }
 
 /** Dropdown for choosing how downstream colors are derived from the brand. */
-export default function SchemeSelect({ scheme, onChange }: Props) {
+export default function SchemeSelect({ scheme, onChange, dimmed = false }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const current = SCHEMES.find((s) => s.id === scheme) ?? SCHEMES[0]
@@ -39,7 +49,10 @@ export default function SchemeSelect({ scheme, onChange }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="border-line bg-paper hover:border-ink/30 flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-left text-sm transition-colors"
+        className={cn(
+          "border-line bg-paper hover:border-ink/30 flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-left text-sm transition-colors",
+          dimmed && "opacity-45",
+        )}
       >
         <span className="text-ink font-medium">{current.label}</span>
         <CaretDown
