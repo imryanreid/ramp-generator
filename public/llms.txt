@@ -26,6 +26,7 @@ Both accept the same parameters:
 | `s` | no | `complementary` (default), `analogous`, `triadic`, `split`, `monochromatic` | How accents are rotated off the brand hue. |
 | `c` | no | `AA` (default, 4.5:1), `AAA` (7:1) | Contrast target. Token steps move to satisfy it. |
 | `f` | no | `oklch` (default), `hex`, `rgb`, `hsl` | Notation used by the page and the CSS/Tailwind/JSON exports. The JSON API always reports hex. |
+| `v` | no | `natural` (default), `bold` | Saturation of the *derived* accents. Derived hues normally inherit the brand's own chroma, so a muted brand yields muted accents; `bold` puts a floor under them. Leaves the brand ramp alone. |
 | `xr` | no | dot-separated ramp names — e.g. `accent-2.info` | Ramps to leave out. |
 | `xt` | no | dot-separated token names — e.g. `bg-info.text-warning` | Semantic tokens to leave out. |
 

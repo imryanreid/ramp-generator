@@ -47,6 +47,7 @@ export async function GET(request: Request): Promise<Response> {
     state.mode,
     state.scheme,
     state.accent2Override,
+    state.vividness,
   )
   const excluded = new Set(state.excludedRamps)
   const ramps = allRamps(palette)

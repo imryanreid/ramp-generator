@@ -60,6 +60,30 @@ function baseComponents(hex: string): { hue: number; chroma: number } {
 }
 
 /**
+ * How saturated the *derived* hues are allowed to be.
+ *
+ * "natural" hands each derived hue the brand's own chroma, which is the honest
+ * default but means the palette can never out-saturate its brand: a muted input
+ * like #ece9e0 (chroma 0.012) yields accents that are literally gray. "bold"
+ * puts a floor under them so a quiet brand can still carry a loud accent.
+ */
+export type Vividness = "natural" | "bold"
+
+/**
+ * The floor "bold" applies. Chosen to sit in the same register as a saturated
+ * brand accent — Claude's terracotta is 0.135 — so a boosted accent reads as
+ * deliberate rather than neon.
+ *
+ * A floor rather than a multiplier: rescuing chroma 0.012 would need an ~11x
+ * factor, which would wreck a brand that is already saturated. `max()` is
+ * automatically a no-op once the brand carries enough chroma of its own.
+ */
+const BOLD_CHROMA_FLOOR = 0.13
+
+const derivedChroma = (chroma: number, vividness: Vividness): number =>
+  vividness === "bold" ? Math.max(chroma, BOLD_CHROMA_FLOOR) : chroma
+
+/**
  * A derivation scheme (a "vibe") governs how downstream colors are rotated off
  * the brand hue, how tinted the neutral gray is, and how vivid status colors read.
  */
@@ -105,15 +129,31 @@ export const SCHEMES: { id: Scheme; label: string; blurb: string }[] = [
  * The auto-derived accent for a brand color under a given scheme, expressed as a
  * hex seed. Used as the default until the user locks an override.
  */
-export function deriveAccentHex(brand: string, scheme: Scheme = "complementary"): string {
+export function deriveAccentHex(
+  brand: string,
+  scheme: Scheme = "complementary",
+  vividness: Vividness = "natural",
+): string {
   const { hue, chroma } = baseComponents(brand)
-  return hexFromHue(rotate(hue, SCHEME_SPECS[scheme].accent), chroma, 0.637)
+  return hexFromHue(
+    rotate(hue, SCHEME_SPECS[scheme].accent),
+    derivedChroma(chroma, vividness),
+    0.637,
+  )
 }
 
 /** The auto-derived tertiary accent, on the same terms as `deriveAccentHex`. */
-export function deriveAccent2Hex(brand: string, scheme: Scheme = "complementary"): string {
+export function deriveAccent2Hex(
+  brand: string,
+  scheme: Scheme = "complementary",
+  vividness: Vividness = "natural",
+): string {
   const { hue, chroma } = baseComponents(brand)
-  return hexFromHue(rotate(hue, SCHEME_SPECS[scheme].tertiary), chroma, 0.637)
+  return hexFromHue(
+    rotate(hue, SCHEME_SPECS[scheme].tertiary),
+    derivedChroma(chroma, vividness),
+    0.637,
+  )
 }
 
 /**
@@ -124,6 +164,11 @@ export function deriveAccent2Hex(brand: string, scheme: Scheme = "complementary"
  * - neutral: near-gray ramp tinted with the brand hue, tint set by the scheme
  * - status: success/warning/error/info at fixed semantic hues, chroma tuned
  *   toward the palette's saturation and the scheme's vividness.
+ *
+ * `vividness` deliberately reaches only the *derived* accents. The primary ramp
+ * is the brand color the caller supplied — inflating its chroma would hand back
+ * a different brand than the one asked for. Status ramps already carry their own
+ * chroma floor below, so they don't need this one either.
  */
 export function buildPalette(
   brand: string,
@@ -131,20 +176,21 @@ export function buildPalette(
   mode: DsMode,
   scheme: Scheme = "complementary",
   accent2Override: string | null = null,
+  vividness: Vividness = "natural",
 ): Palette {
   const spec = SCHEME_SPECS[scheme]
   const brandRamp = buildRamp("primary", brand)
   const primaries = brandRamp ? [brandRamp] : []
 
   const { hue: baseHue, chroma: baseChroma } = baseComponents(brand)
-  const accentHex = accentOverride ?? deriveAccentHex(brand, scheme)
+  const accentHex = accentOverride ?? deriveAccentHex(brand, scheme, vividness)
 
   // Accents: the (possibly locked) accent + a scheme-rotated tertiary.
   const accents: Ramp[] =
     mode === "full"
       ? [
           buildRamp("accent", accentHex),
-          buildRamp("accent-2", accent2Override ?? deriveAccent2Hex(brand, scheme)),
+          buildRamp("accent-2", accent2Override ?? deriveAccent2Hex(brand, scheme, vividness)),
         ].filter((r): r is Ramp => r !== null)
       : []
 
@@ -157,7 +203,15 @@ export function buildPalette(
   // Hues occupied by the palette itself. If a status color would collide with
   // the brand or accent, nudge it just far enough away to stay distinct — while
   // keeping it recognisably conventional (red=error, green=success, etc.).
-  const paletteHues = [baseHue, baseComponents(accentHex).hue]
+  // Collision avoidance reads the *natural* accent seed even under "bold". A
+  // near-gray hex carries its hue imprecisely — 8-bit channels can't place a
+  // hue at chroma 0.012 — so raising the chroma shifts the hue that round-trips
+  // back out by a degree or two. That was enough to nudge `info` and make
+  // turning Bold on silently repaint a status color. Pinning this to the
+  // natural seed keeps the status ramps identical across both settings, and
+  // identical to what every link shared before this existed already renders.
+  const collisionAccentHex = accentOverride ?? deriveAccentHex(brand, scheme, "natural")
+  const paletteHues = [baseHue, baseComponents(collisionAccentHex).hue]
   const status: Ramp[] = (Object.keys(STATUS_HUES) as (keyof typeof STATUS_HUES)[])
     .map((name) => {
       const hue = avoidCollision(STATUS_HUES[name], paletteHues)
