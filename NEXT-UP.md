@@ -74,6 +74,22 @@ Nothing outside the codebase is outstanding.
 
 ## Session log
 
+### 2026-08-13 — A Donate row in the switcher
+
+`ToolSwitcher` gained a Donate row at the foot of the menu, below a rule and
+without a mark — it is not a tool, and the list above it is "somewhere else you
+can go in this family". Same row metrics otherwise. It opens in a new tab:
+every tool here keeps its whole state in the query string, and someone part-way
+through editing a palette should not have a donation page replace it.
+
+The URL lives in a `DONATE_URL` const because this file is copied into every
+tool repo, so an inline literal would be four places to change.
+
+**`tktk` is Ryan's studio name, not a placeholder.** It reads exactly like the
+`TK` filler an editor leaves in draft copy, so the instinct is to flag it as
+unfinished — see also `FAMILY_DIRECTORY_LABEL`, "all tktk.studio tools". Both
+are settled brand strings. Don't propose replacing them.
+
 ### 2026-08-13 — The Springs mark, and generated family blocks
 
 **The Springs mark is a coil spring now**, not the step-response curve. Four
