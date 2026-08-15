@@ -5,8 +5,10 @@
 // analogous, triadic, split, monochromatic).
 // ==============================================
 import { useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { SCHEMES, type Scheme } from "../lib/recommend"
 import { cn } from "../shared/utils"
+import { POPOVER, POPOVER_ORIGIN } from "../shared/motion"
 import { CaretDown, Check } from "@phosphor-icons/react"
 
 type Props = {
@@ -59,51 +61,59 @@ export default function SchemeSelect({ scheme, onChange, manual = false }: Props
         />
       </button>
 
-      {open && (
-        <div className="border-line bg-paper absolute top-full right-0 left-0 z-20 mt-1.5 overflow-hidden rounded-md border shadow-lg">
-          {/*
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            {...POPOVER}
+            className={cn(
+              "border-line bg-paper absolute top-full right-0 left-0 z-20 mt-1.5 overflow-hidden rounded-md border shadow-lg",
+              POPOVER_ORIGIN,
+            )}
+          >
+            {/*
             Not an option — a state you arrive at by editing an accent, so it
             reads as a header rather than a row you can pick. Choosing any
             scheme below releases the pinned accents and leaves this state,
             which is the only way back to auto now that the chip is gone.
           */}
-          {manual && (
-            <div className="border-line bg-ink/[0.03] border-b px-3 py-2">
-              <span className="text-ink text-sm font-medium">Manual</span>
-              <p className="text-ash mt-0.5 text-xs leading-snug">
-                Your accents are set by hand. Pick a derivation below to hand them back.
-              </p>
-            </div>
-          )}
-          {SCHEMES.map((s) => {
-            const selected = !manual && s.id === scheme
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => {
-                  onChange(s.id)
-                  setOpen(false)
-                }}
-                className={cn(
-                  "block w-full px-3 py-2 text-left transition-colors",
-                  selected ? "bg-ink/[0.05]" : "hover:bg-ink/[0.03]",
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("text-ink text-sm", selected && "font-medium")}>
-                    {s.label}
-                  </span>
-                  {selected && (
-                    <Check size={12} weight="bold" aria-hidden="true" className="text-ink" />
+            {manual && (
+              <div className="border-line bg-ink/[0.03] border-b px-3 py-2">
+                <span className="text-ink text-sm font-medium">Manual</span>
+                <p className="text-ash mt-0.5 text-xs leading-snug">
+                  Your accents are set by hand. Pick a derivation below to hand them back.
+                </p>
+              </div>
+            )}
+            {SCHEMES.map((s) => {
+              const selected = !manual && s.id === scheme
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(s.id)
+                    setOpen(false)
+                  }}
+                  className={cn(
+                    "block w-full px-3 py-2 text-left transition-colors",
+                    selected ? "bg-ink/[0.05]" : "hover:bg-ink/[0.03]",
                   )}
-                </div>
-                <p className="text-ash mt-0.5 text-xs leading-snug">{s.blurb}</p>
-              </button>
-            )
-          })}
-        </div>
-      )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={cn("text-ink text-sm", selected && "font-medium")}>
+                      {s.label}
+                    </span>
+                    {selected && (
+                      <Check size={12} weight="bold" aria-hidden="true" className="text-ink" />
+                    )}
+                  </div>
+                  <p className="text-ash mt-0.5 text-xs leading-snug">{s.blurb}</p>
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -6,10 +6,12 @@
 // picks one, which locks it.
 // ==============================================
 import { useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { HexColorPicker } from "react-colorful"
 import { parseColorInput, formatColor, type ColorFormat } from "../lib/color"
 import type { Vividness } from "../lib/recommend"
 import { cn } from "../shared/utils"
+import { POPOVER, POPOVER_ORIGIN } from "../shared/motion"
 import { FieldLabel } from "../shared/components/Label"
 
 /**
@@ -237,11 +239,19 @@ function SwatchPicker({ color, onChange }: { color: string; onChange: (hex: stri
         className="ring-ink/15 block h-9 w-9 rounded-md ring-1 transition-transform ring-inset hover:scale-[1.04]"
         style={{ backgroundColor: color }}
       />
-      {open && (
-        <div className="ramp-picker border-line bg-paper absolute top-full left-0 z-30 mt-2 rounded-lg border p-2.5 shadow-xl">
-          <HexColorPicker color={color} onChange={onChange} />
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            {...POPOVER}
+            className={cn(
+              "ramp-picker border-line bg-paper absolute top-full left-0 z-30 mt-2 rounded-lg border p-2.5 shadow-xl",
+              POPOVER_ORIGIN,
+            )}
+          >
+            <HexColorPicker color={color} onChange={onChange} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

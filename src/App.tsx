@@ -14,6 +14,7 @@
 // drive it.
 // ==============================================
 import { useEffect, useMemo, useRef, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { BrandField, AccentField } from "./components/ColorInput"
 import RampGroup from "./components/RampGroup"
 import SemanticTokens from "./components/SemanticTokens"
@@ -39,6 +40,7 @@ import { toCss, toJson, type Compliance, type ExportOptions } from "./lib/semant
 import { COLOR_FORMATS, type ColorFormat } from "./lib/color"
 import { useCopy } from "./shared/clipboard"
 import { cn } from "./shared/utils"
+import { DUR, EASE_PANEL, POPOVER, POPOVER_ORIGIN } from "./shared/motion"
 import { useTheme } from "./shared/theme"
 import ToolShell from "./shared/components/ToolShell"
 import IconButton from "./shared/components/IconButton"
@@ -48,7 +50,7 @@ import ShareButton from "./shared/components/ShareButton"
 import ExportModal from "./shared/components/ExportModal"
 import Segmented from "./shared/components/Segmented"
 import { FieldLabel } from "./shared/components/Label"
-import { DownloadSimple, CaretRight, CaretDown } from "@phosphor-icons/react"
+import { DownloadSimple, CaretRight, CaretDown, Check } from "@phosphor-icons/react"
 
 /** Which entry in the shared tools manifest is this repo. */
 const TOOL_ID = "ramps"
@@ -357,30 +359,55 @@ export default function App() {
         </div>
       }
     >
-      {(
-        [
-          ["Brand", palette.primaries],
-          ["Accents", palette.accents],
-          ["Neutral", [palette.neutral]],
-          ["Status", palette.status],
-        ] as const
-      ).map(([title, ramps]) => (
-        <RampGroup
-          key={title}
-          title={title}
-          ramps={ramps}
-          format={format}
-          excluded={excludedRamps}
-          onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
-          onSetMany={(names, off) =>
-            setExcludedRamps((prev) => {
-              const next = new Set(prev)
-              names.forEach((n) => (off ? next.add(n) : next.delete(n)))
-              return next
-            })
-          }
-        />
-      ))}
+      {/*
+        Ramp groups fade and collapse rather than vanishing.
+
+        Lite scope drops the accent ramps entirely, so flipping the toggle used
+        to delete a whole section from under the pointer and snap everything
+        below it upward. The filter is what makes that animatable: RampGroup
+        returns null when it has no ramps, and a child rendering null is still
+        "present" to AnimatePresence — so the group has to leave the array for
+        an exit to run at all.
+      */}
+      <AnimatePresence initial={false}>
+        {(
+          [
+            ["Brand", palette.primaries],
+            ["Accents", palette.accents],
+            ["Neutral", [palette.neutral]],
+            ["Status", palette.status],
+          ] as const
+        )
+          .filter(([, ramps]) => ramps.length > 0)
+          .map(([title, ramps]) => (
+            <motion.div
+              key={title}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: DUR.panel, ease: EASE_PANEL }}
+              // Clips the collapse, and stops the section's own mb-12 from
+              // collapsing through the animating box.
+              className="overflow-hidden"
+            >
+              <RampGroup
+                key={title}
+                title={title}
+                ramps={ramps}
+                format={format}
+                excluded={excludedRamps}
+                onToggle={(name) => setExcludedRamps((prev) => toggle(prev, name))}
+                onSetMany={(names, off) =>
+                  setExcludedRamps((prev) => {
+                    const next = new Set(prev)
+                    names.forEach((n) => (off ? next.add(n) : next.delete(n)))
+                    return next
+                  })
+                }
+              />
+            </motion.div>
+          ))}
+      </AnimatePresence>
       <SemanticTokens
         palette={palette}
         mode={mode}
@@ -458,6 +485,9 @@ function AgentData({
   state: ShareState
 }) {
   const { compliance } = state
+  // Collapsed by default: this block is for agents, and a wall of CSS above the
+  // fold is not what a person came here for.
+  const [agentOpen, setAgentOpen] = useState(false)
   const omitted = state.excludedRamps.length + state.excludedTokens.length
   const legend = [
     "# Ramps Studio — machine-readable palette",
@@ -495,45 +525,83 @@ function AgentData({
 
   return (
     <section className="mb-12 print:hidden" aria-label="Machine-readable palette for agents">
-      <details className="group border-line rounded-lg border">
-        <summary className="text-ash hover:text-ink cursor-pointer list-none px-4 py-3 font-mono text-xs transition-colors">
+      {/*
+        A button plus AnimatePresence rather than <details>.
+
+        Native <details> cannot be animated: the content is display:none when
+        closed, so there is nothing to transition from and it pops open. The
+        caret rotated, which only drew attention to the fact that nothing else
+        did.
+
+        Losing <details> costs nothing an agent relies on. This block is the
+        HUMAN copy — an agent fetching this URL reads a separate payload that
+        api/render injects into the HTML, so collapsing this one has never been
+        what keeps the palette machine-readable. Verified against production
+        before changing it, rather than assumed.
+
+        aria-expanded and aria-controls replace the semantics <summary> gave
+        for free.
+      */}
+      <div className="border-line rounded-lg border">
+        <button
+          type="button"
+          onClick={() => setAgentOpen((v) => !v)}
+          aria-expanded={agentOpen}
+          aria-controls="agent-palette"
+          className="text-ash hover:text-ink w-full cursor-pointer px-4 py-3 text-left font-mono text-xs transition-colors"
+        >
           <span className="inline-flex items-center gap-1.5">
             <CaretRight
               size={12}
               weight="bold"
               aria-hidden="true"
-              className="transition-transform duration-200 group-open:rotate-90"
+              className={cn("transition-transform duration-200", agentOpen && "rotate-90")}
             />
             Machine-readable palette (for agents)
           </span>
-        </summary>
-        <div className="border-line border-t">
-          {/* Legend stays outside the copyable block so the copied code is valid. */}
-          <pre className="text-ash px-4 pt-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
-            {legend}
-          </pre>
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <Segmented
-              ariaLabel="Machine-readable format"
-              layoutId="agent-format-pill"
-              size="sm"
-              value={format}
-              onChange={setFormat}
-              options={AGENT_FORMATS}
-            />
-            <button
-              type="button"
-              onClick={() => copy(code)}
-              className="border-ink/20 text-ink hover:bg-ink/[0.04] inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-mono text-[11px] transition-colors"
+        </button>
+        <AnimatePresence initial={false}>
+          {agentOpen && (
+            <motion.div
+              id="agent-palette"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: DUR.panel, ease: EASE_PANEL }}
+              // Height animation only works on a box that clips: without this
+              // the content spills past the collapsing container mid-flight.
+              className="overflow-hidden"
             >
-              {copied ? "Copied" : `Copy ${format.toUpperCase()}`}
-            </button>
-          </div>
-          <pre className="border-line text-ink overflow-x-auto border-t px-4 py-3 font-mono text-[11px] leading-relaxed">
-            {code}
-          </pre>
-        </div>
-      </details>
+              <div className="border-line border-t">
+                {/* Legend stays outside the copyable block so the copied code is valid. */}
+                <pre className="text-ash px-4 pt-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
+                  {legend}
+                </pre>
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <Segmented
+                    ariaLabel="Machine-readable format"
+                    layoutId="agent-format-pill"
+                    size="sm"
+                    value={format}
+                    onChange={setFormat}
+                    options={AGENT_FORMATS}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => copy(code)}
+                    className="border-ink/20 text-ink hover:bg-ink/[0.04] inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-mono text-[11px] transition-colors"
+                  >
+                    {copied ? "Copied" : `Copy ${format.toUpperCase()}`}
+                  </button>
+                </div>
+                <pre className="border-line text-ink overflow-x-auto border-t px-4 py-3 font-mono text-[11px] leading-relaxed">
+                  {code}
+                </pre>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </section>
   )
 }
@@ -550,26 +618,83 @@ function FormatSelect({
   format: ColorFormat
   onChange: (f: ColorFormat) => void
 }) {
+  // A custom popover rather than a native <select>, matching SchemeSelect
+  // directly beside it. The native control was the odd one out in this row: an
+  // OS menu in the app's own chrome, unstyleable, and the only dropdown here
+  // that could not animate. Dismissal, keyboard handling and the caret rotation
+  // are deliberately identical to SchemeSelect — two dropdowns sitting inches
+  // apart should not behave like different components.
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const current = COLOR_FORMATS.find((f) => f.id === format) ?? COLOR_FORMATS[0]
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
+    document.addEventListener("mousedown", onDoc)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onDoc)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
   return (
-    <div className="relative">
-      <select
-        value={format}
-        onChange={(e) => onChange(e.target.value as ColorFormat)}
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
         aria-label="Color notation"
-        className="border-line bg-paper text-ink hover:border-ink/30 focus-visible:ring-ink/30 h-9 cursor-pointer appearance-none rounded-md border pr-8 pl-3 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="border-line bg-paper text-ink hover:border-ink/30 focus-visible:ring-ink/30 flex h-9 w-full items-center justify-between gap-2 rounded-md border pr-2.5 pl-3 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
-        {COLOR_FORMATS.map((f) => (
-          <option key={f.id} value={f.id}>
-            {f.label}
-          </option>
-        ))}
-      </select>
-      <CaretDown
-        size={12}
-        weight="bold"
-        aria-hidden="true"
-        className="text-ash pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2"
-      />
+        {current.label}
+        <CaretDown
+          size={12}
+          weight="bold"
+          aria-hidden="true"
+          className={cn("text-ash shrink-0 transition-transform", open && "rotate-180")}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="listbox"
+            {...POPOVER}
+            className={cn(
+              "border-line bg-paper absolute top-full right-0 left-0 z-20 mt-1.5 min-w-max overflow-hidden rounded-md border shadow-lg",
+              POPOVER_ORIGIN,
+            )}
+          >
+            {COLOR_FORMATS.map((f) => {
+              const selected = f.id === format
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => {
+                    onChange(f.id)
+                    setOpen(false)
+                  }}
+                  className="hover:bg-ink/[0.04] flex w-full items-center justify-between gap-3 px-3 py-2 text-left font-mono text-xs transition-colors"
+                >
+                  <span className={selected ? "text-ink" : "text-ash"}>{f.label}</span>
+                  {selected && (
+                    <Check size={12} weight="bold" aria-hidden="true" className="text-ink" />
+                  )}
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
