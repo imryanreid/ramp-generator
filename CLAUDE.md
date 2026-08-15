@@ -47,21 +47,38 @@ reintroduce Figma Make conventions.** If you find a leftover, remove it.
 - **`src/lib/semantics.ts` exporters are canonical.** The export modal and the
   agent-readable block on the page both render from them — don't create a third
   serialization.
-- **Three names, and only three.** Four were once in circulation, so an unfurl
-  and a search result disagreed about what this is:
-  - **Ramps Studio** — the brand. `og:site_name`, `public/llms.txt`, the agent
-    payload, the share-image eyebrow, this file's title.
-  - **Color Ramp Generator** — the product. The in-app header and the
-    share-image headline.
-  - **Color Ramp & Semantics Generator** — the descriptive title. `<title>`,
-    `og:title`, `twitter:title`, the JSON-LD `name`.
+- **Two names and a title line, and only those.** Four names were once in
+  circulation, so an unfurl and a search result disagreed about what this is:
+  - **Ramps Studio** — the brand. `og:site_name`, the JSON-LD `name`,
+    `public/llms.txt`, `public/robots.txt`, the agent payload's `generator` and
+    its `RAMPS STUDIO` text header, this file's title. The share image's eyebrow
+    is the domain form, `RAMPS.STUDIO`.
+  - **Color Ramp Generator** — the product. The `ToolShell` title in
+    `src/App.tsx`, the share-image headline, and `og:image:alt`.
+  - **"Ramps · Color ramps and semantic tokens your agent can read"** — the
+    search and social title, in `<title>`, `og:title` and `twitter:title`. Not a
+    name: it's one line that has to earn a click.
 
-  Don't reintroduce a fourth, and don't collapse these into one — `og:site_name`
-  and `og:title` are deliberately different because an unfurl renders both, so
+  The title leads with the tool name so a browser tab identifies itself before
+  it truncates, and so the family reads as a set across open tabs — the tool
+  name rather than the domain, because Motion has no domain yet and a scheme the
+  whole family can't use consistently isn't a scheme. It replaced "Color Ramp &
+  Semantics Generator", which competed head-on with every generator that has
+  fifteen years of authority on that phrase and said nothing about the one thing
+  none of them do. The agent claim isn't marketing: `robots.txt` addresses
+  agents directly, `/llms.txt` is the full contract, and the page renders its
+  palette as plain text with no JavaScript — all testable from a terminal. The
+  long reasoning lives in the comment above the tags in `index.html`.
+
+  Don't reintroduce a fourth, and don't collapse these — `og:site_name` and
+  `og:title` are deliberately different because an unfurl renders both, so
   repeating the words wastes the card. Note the escaping: `&amp;` in HTML
   attributes, a bare `&` inside the `ld+json` script, whose contents are not
-  HTML-parsed. The `README.md` H1 is deliberately left as "Ramp Generator" —
-  renaming it to the brand would duplicate the ramps.studio link directly below.
+  HTML-parsed — the JSON-LD `urlTemplate` separates its query params with bare
+  ampersands for exactly this reason. **"Studio Tools"** appears once more, as
+  the JSON-LD `isPartOf` — that's the family, not this tool. The `README.md` H1
+  is deliberately left as "Ramp Generator": renaming it to the brand would
+  duplicate the ramps.studio link directly below.
 
 ## `src/shared/` is authored here, and it fans out
 

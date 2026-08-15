@@ -233,7 +233,7 @@ export default function App() {
       setMeta("name", "description", CANONICAL.description)
       return
     }
-    document.title = `Color Ramp & Semantics Generator — ${brand} · ${scheme} · ${mode} · ${compliance}`
+    document.title = `Ramps · ${brand} · ${scheme} · ${mode} · ${compliance}`
     setMeta("name", "description", describePalette(shareState))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
   }, [
