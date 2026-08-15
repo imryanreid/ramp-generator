@@ -259,8 +259,26 @@ ${escapeHtml(text)}
     headers: {
       ...SAFE_HEADERS,
       "content-type": "text/html; charset=utf-8",
-      // Deterministic for a given query string.
-      "cache-control": "public, max-age=0, s-maxage=31536000, must-revalidate",
+      // Deterministic for a given query string, but NOT across deployments —
+      // this HTML embeds the built shell, so it names hashed asset filenames
+      // that only exist for as long as that build does. That makes it a
+      // function of (query string, deployment), and a cache key that captures
+      // only the first half must not outlive the second by much.
+      //
+      // It used to say s-maxage=31536000. A year is correct for api/palette,
+      // whose JSON really is a pure function of the URL — and wrong here, which
+      // was demonstrated rather than theorised: a request that landed during a
+      // deploy stored the previous build's HTML, and the edge then served that
+      // stale app for as long as anyone kept asking. Not a 404, because Vercel
+      // keeps old hashed assets resolvable; just the last version of the tool,
+      // indefinitely, with nothing anywhere reporting a problem.
+      //
+      // 60s still absorbs a burst — a link shared to a crowd hits the function
+      // once — while capping the blast radius of a badly-timed request at a
+      // minute instead of a year. `must-revalidate` was already here and was
+      // inert: it only governs what a cache does once an entry is STALE, and
+      // nothing went stale for a year.
+      "cache-control": "public, max-age=0, s-maxage=60, must-revalidate",
     },
   })
 }
