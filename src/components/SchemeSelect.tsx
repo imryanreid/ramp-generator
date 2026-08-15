@@ -13,19 +13,18 @@ type Props = {
   scheme: Scheme
   onChange: (scheme: Scheme) => void
   /**
-   * Fade the trigger when derivation no longer drives the accents.
+   * True when the accents are pinned, so derivation isn't producing them.
    *
-   * This lives here rather than on a wrapper in the caller for a reason worth
-   * keeping: `opacity` below 1 creates a **stacking context**, and a wrapper
-   * carrying it would trap the menu's `z-index` inside — the ramp swatches
-   * further down the page then paint straight over the open dropdown. Fading
-   * only the button leaves the menu in the page's own stacking context.
+   * The control reports this rather than being greyed out. Fading it was both
+   * less discoverable — nothing said *why* it looked inert — and the cause of a
+   * real bug: `opacity` below 1 creates a stacking context, which trapped the
+   * menu's `z-index` and let the ramp swatches paint over the open dropdown.
    */
-  dimmed?: boolean
+  manual?: boolean
 }
 
 /** Dropdown for choosing how downstream colors are derived from the brand. */
-export default function SchemeSelect({ scheme, onChange, dimmed = false }: Props) {
+export default function SchemeSelect({ scheme, onChange, manual = false }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const current = SCHEMES.find((s) => s.id === scheme) ?? SCHEMES[0]
@@ -49,12 +48,9 @@ export default function SchemeSelect({ scheme, onChange, dimmed = false }: Props
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "border-line bg-paper hover:border-ink/30 flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-left text-sm transition-colors",
-          dimmed && "opacity-45",
-        )}
+        className="border-line bg-paper hover:border-ink/30 flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-left text-sm transition-colors"
       >
-        <span className="text-ink font-medium">{current.label}</span>
+        <span className="text-ink font-medium">{manual ? "Manual" : current.label}</span>
         <CaretDown
           size={12}
           weight="bold"
@@ -65,8 +61,22 @@ export default function SchemeSelect({ scheme, onChange, dimmed = false }: Props
 
       {open && (
         <div className="border-line bg-paper absolute top-full right-0 left-0 z-20 mt-1.5 overflow-hidden rounded-md border shadow-lg">
+          {/*
+            Not an option — a state you arrive at by editing an accent, so it
+            reads as a header rather than a row you can pick. Choosing any
+            scheme below releases the pinned accents and leaves this state,
+            which is the only way back to auto now that the chip is gone.
+          */}
+          {manual && (
+            <div className="border-line bg-ink/[0.03] border-b px-3 py-2">
+              <span className="text-ink text-sm font-medium">Manual</span>
+              <p className="text-ash mt-0.5 text-xs leading-snug">
+                Your accents are set by hand. Pick a derivation below to hand them back.
+              </p>
+            </div>
+          )}
           {SCHEMES.map((s) => {
-            const selected = s.id === scheme
+            const selected = !manual && s.id === scheme
             return (
               <button
                 key={s.id}

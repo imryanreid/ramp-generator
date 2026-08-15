@@ -107,13 +107,13 @@ takes a prop.
 
 ### `src/components/` — ramps-specific UI
 
-| File                 | What it does                                                                                  |
-| -------------------- | --------------------------------------------------------------------------------------------- |
-| `ColorInput.tsx`     | The brand and accent pickers: swatch, react-colorful popover, hex field, and the accent lock. |
-| `SchemeSelect.tsx`   | The derivation dropdown with its descriptions.                                                |
-| `RampGroup.tsx`      | A titled group of ramps as rows of swatches, each with an include/exclude checkbox.           |
-| `SemanticTokens.tsx` | The token table — name, resolved step, light/dark previews, and a contrast badge.             |
-| `ExportPanel.tsx`    | The export modal's contents: the code-vs-agent-prompt choice, then a tab per format.          |
+| File                 | What it does                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ColorInput.tsx`     | The brand and accent pickers: swatch, react-colorful popover, hex field, and the saturation chip (NATURAL/BOLD) that governs the derived accents. |
+| `SchemeSelect.tsx`   | The derivation dropdown with its descriptions. Also reports the pinned state by reading "Manual" and heading the menu with an explanation.        |
+| `RampGroup.tsx`      | A titled group of ramps as rows of swatches, each with an include/exclude checkbox.                                                               |
+| `SemanticTokens.tsx` | The token table — name, resolved step, light/dark previews, and a contrast badge.                                                                 |
+| `ExportPanel.tsx`    | The export modal's contents: the code-vs-agent-prompt choice, then a tab per format.                                                              |
 
 ## `docs/`
 

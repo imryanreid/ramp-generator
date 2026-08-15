@@ -165,11 +165,6 @@ export default function App() {
   }
 
   const accentLocked = accentOverride !== null || accent2Override !== null
-  // Vividness floors the *derived* accents, so it does nothing when there are
-  // none left to derive: Lite scope emits no accent ramps at all, and pinning
-  // both accents replaces them with literal colors that carry their own chroma.
-  const vividnessInert =
-    mode !== "full" || (accentOverride !== null && accent2Override !== null)
   const autoAccent = useMemo(
     () => deriveAccentHex(brand, scheme, vividness),
     [brand, scheme, vividness],
@@ -297,12 +292,10 @@ export default function App() {
               autoAccent2={autoAccent2}
               showAccent2={mode === "full"}
               format={format}
+              vividness={vividness}
+              onVividnessChange={setVividness}
               onAccentChange={setAccentOverride}
               onAccent2Change={setAccent2Override}
-              onReset={() => {
-                setAccentOverride(null)
-                setAccent2Override(null)
-              }}
             />
             <div
               aria-hidden="true"
@@ -321,7 +314,7 @@ export default function App() {
                 }
               >
                 <SchemeSelect
-                  dimmed={accentLocked}
+                  manual={accentLocked}
                   scheme={scheme}
                   onChange={(next) => {
                     setScheme(next)
@@ -349,28 +342,6 @@ export default function App() {
               onChange={setCompliance}
               options={COMPLIANCE_OPTIONS}
             />
-          </div>
-
-          <div>
-            <FieldLabel>Saturation</FieldLabel>
-            <div
-              className={cn("transition-opacity", vividnessInert && "opacity-45")}
-              title={
-                vividnessInert
-                  ? mode !== "full"
-                    ? "Lite scope has no accent ramps, so there is nothing to saturate."
-                    : "Both accents are set manually, so they already carry their own saturation."
-                  : undefined
-              }
-            >
-              <Segmented
-                ariaLabel="Derived accent saturation"
-                layoutId="vividness-pill"
-                value={vividness}
-                onChange={setVividness}
-                options={VIVIDNESS_OPTIONS}
-              />
-            </div>
           </div>
 
           <div>
@@ -439,22 +410,6 @@ export default function App() {
 const COMPLIANCE_OPTIONS = [
   { id: "AA" as const, label: "AA", title: "WCAG AA — 4.5:1 minimum for normal text" },
   { id: "AAA" as const, label: "AAA", title: "WCAG AAA — 7:1 minimum for normal text" },
-]
-
-// Binary on purpose: "natural" is the honest default and "bold" is an opt-in
-// floor. Extra rungs can be added later without breaking a shared link.
-const VIVIDNESS_OPTIONS = [
-  {
-    id: "natural" as const,
-    label: "Natural",
-    title: "Derived accents inherit the brand's own saturation",
-  },
-  {
-    id: "bold" as const,
-    label: "Bold",
-    title:
-      "Put a floor under derived accent saturation, so a muted brand still gets accents that carry",
-  },
 ]
 
 const SCOPE_OPTIONS = [
