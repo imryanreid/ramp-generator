@@ -91,15 +91,27 @@ export async function GET(request: Request): Promise<Response> {
   // build's shell: stale meta tags, and asset hashes that now 404. Motion hit
   // exactly that in production — the page served a current palette grafted
   // onto a document whose JavaScript no longer existed, which looks fine to an
-  // agent and is completely broken for a person. This code was the same shape,
-  // so it was one deploy away from the same failure.
+  // agent and is completely broken for a person.
   //
-  // Two defences because one is only a hint: cache: "no-store" asks, and the
-  // per-deployment query key guarantees a distinct cache entry even if the ask
-  // is ignored. A query string doesn't change which static file resolves.
+  // This used to add a per-deployment `__build` query key and describe it as a
+  // guarantee behind `no-store`'s hint. IT WAS NEVER A GUARANTEE. Vercel does
+  // not key static-asset cache entries on the query string: three requests with
+  // different random `__build` values, and one with none at all, all came back
+  // `x-vercel-cache: HIT` with an identical `age` — the same single entry every
+  // time. The key bought nothing and made a false promise, which is worse than
+  // an honest single defence.
+  //
+  // So: two asks that actually reach different layers. `cache: "no-store"` is
+  // the fetch API's own cache mode, and `cache-control: no-cache` is a request
+  // header any intermediary is expected to honour. Both are still requests
+  // rather than guarantees.
+  //
+  // If this ever needs a real guarantee, the two options are fetching the shell
+  // from the per-deployment host (`VERCEL_URL`) instead of the alias, or
+  // reading it off disk rather than over HTTP. The first is not taken because
+  // deployment hosts are SSO-gated when Deployment Protection is on, which is
+  // the exact failure the guard below already exists to catch.
   const shellUrl = new URL("/index.html", url.origin)
-  const build = process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_GIT_COMMIT_SHA
-  if (build) shellUrl.searchParams.set("__build", build)
   // Bounded, with one retry. This fetch had no timeout: if it hung, the
   // invocation held a Fluid Compute concurrency slot until the 300s default —
   // I/O wait, so unbilled, but slots are the contended resource under load.
@@ -107,7 +119,7 @@ export async function GET(request: Request): Promise<Response> {
     fetch(shellUrl, {
       signal: AbortSignal.timeout(3000),
       cache: "no-store",
-      headers: { "user-agent": "ramps-studio-render" },
+      headers: { "user-agent": "ramps-studio-render", "cache-control": "no-cache" },
     })
 
   let shell: Response
