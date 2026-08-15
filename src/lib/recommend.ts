@@ -84,6 +84,22 @@ const derivedChroma = (chroma: number, vividness: Vividness): number =>
   vividness === "bold" ? Math.max(chroma, BOLD_CHROMA_FLOOR) : chroma
 
 /**
+ * Would "bold" actually change this brand's derived accents?
+ *
+ * The `max()` above is a silent no-op for any brand already at or above the
+ * floor — correct behaviour, and indistinguishable from a broken control. The
+ * default brand is one of those, so the first thing most people click does
+ * nothing and says nothing about why.
+ *
+ * Exported so the chip can explain itself rather than each caller re-deriving
+ * the threshold: the floor is defined here and comparisons against it belong
+ * here too. Returns true when there is headroom to lift.
+ */
+export function boldLiftsChroma(brand: string): boolean {
+  return baseComponents(brand).chroma < BOLD_CHROMA_FLOOR
+}
+
+/**
  * A derivation scheme (a "vibe") governs how downstream colors are rotated off
  * the brand hue, how tinted the neutral gray is, and how vivid status colors read.
  */
