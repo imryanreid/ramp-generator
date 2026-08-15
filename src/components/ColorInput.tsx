@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { HexColorPicker } from "react-colorful"
+import { WarningCircle } from "@phosphor-icons/react"
 import { parseColorInput, formatColor, type ColorFormat } from "../lib/color"
 import type { Vividness } from "../lib/recommend"
 import { cn } from "../shared/utils"
@@ -44,6 +45,7 @@ export function AccentField({
   showAccent2,
   format,
   vividness,
+  boldLifts,
   onVividnessChange,
   onAccentChange,
   onAccent2Change,
@@ -55,6 +57,12 @@ export function AccentField({
   showAccent2: boolean
   format: ColorFormat
   vividness: Vividness
+  /**
+   * False when the brand already carries enough chroma that the bold floor has
+   * nothing to lift. Computed in lib/recommend, beside the floor it compares
+   * against, rather than re-derived here.
+   */
+  boldLifts: boolean
   onVividnessChange: (v: Vividness) => void
   onAccentChange: (hex: string) => void
   onAccent2Change: (hex: string) => void
@@ -63,11 +71,18 @@ export function AccentField({
   // to explain for a case nobody has asked for; pinning is all-or-nothing.
   const locked = accentOverride !== null || accent2Override !== null
 
-  // Saturation floors the *derived* accents, so pinned ones have nothing to
-  // apply to — they already carry whatever chroma was typed in. The chip stays
-  // visible and explains itself rather than vanishing, so the setting doesn't
-  // look like it was lost.
-  const inert = locked || !showAccent2
+  // Three ways this control can have nothing to do, and it used to admit only
+  // two. Saturation floors the *derived* accents, so pinned ones have nothing
+  // to apply to; Lite scope has no accent ramps at all; and a brand already
+  // above the floor leaves the floor nothing to lift.
+  //
+  // That third case is the default brand, which made the first thing most
+  // people click do nothing and say nothing about why. Correct maths reads as a
+  // dead control unless the control says otherwise.
+  //
+  // The chip stays visible and explains itself rather than vanishing, so the
+  // setting doesn't look like it was lost.
+  const inert = locked || !showAccent2 || !boldLifts
 
   return (
     <div className={cn(showAccent2 ? "min-w-[300px] flex-[3]" : "min-w-[128px] flex-1")}>
@@ -84,20 +99,31 @@ export function AccentField({
               onVividnessChange(vividness === "bold" ? "natural" : "bold")
             }}
             className={cn(
-              "bg-ink/[0.06] text-ash rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors",
+              "bg-ink/[0.06] text-ash inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors",
               inert ? "cursor-not-allowed opacity-45" : "hover:bg-ink/10 hover:text-ink",
             )}
             title={
               inert
                 ? locked
                   ? "Your accents are set by hand, so they already carry their own saturation."
-                  : "Lite scope has no accent ramps to saturate."
+                  : !showAccent2
+                    ? "Lite scope has no accent ramps to saturate."
+                    : "This brand is already saturated enough that a floor has nothing to lift. Try it on a muted brand."
                 : vividness === "bold"
                   ? "Bold — derived accents get a saturation floor. Click for natural."
                   : "Natural — derived accents inherit the brand's saturation. Click for bold."
             }
           >
             {vividness}
+            {/*
+              Only when inert, because that is the only time the chip's own
+              label fails to explain it: "natural" sitting there unchanged after
+              a click looks like nothing happened, and there is no way to guess
+              that the reason lives in a title attribute. Marks that there is
+              something to read rather than restating it — the tooltip is
+              already carrying the sentence.
+            */}
+            {inert && <WarningCircle size={10} weight="bold" aria-hidden="true" />}
           </button>
         }
       >

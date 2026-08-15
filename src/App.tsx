@@ -28,6 +28,7 @@ import {
   type DsMode,
   type Scheme,
   type Palette,
+  boldLiftsChroma,
 } from "./lib/recommend"
 import {
   readInitialShareState,
@@ -295,6 +296,7 @@ export default function App() {
               showAccent2={mode === "full"}
               format={format}
               vividness={vividness}
+              boldLifts={boldLiftsChroma(brand)}
               onVividnessChange={setVividness}
               onAccentChange={setAccentOverride}
               onAccent2Change={setAccent2Override}
