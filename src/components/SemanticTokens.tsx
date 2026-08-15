@@ -6,6 +6,7 @@
 // or as the ramp alias they point at.
 // ==============================================
 import { useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import {
   resolveTokens,
   rampAliasNames,
@@ -17,6 +18,7 @@ import {
 import type { Palette } from "../lib/recommend"
 import { formatColor, type ColorFormat } from "../lib/color"
 import { cn } from "../shared/utils"
+import { DUR } from "../shared/motion"
 import Segmented from "../shared/components/Segmented"
 import CopyButton from "../shared/components/CopyButton"
 import RowToggle from "../shared/components/RowToggle"
@@ -109,8 +111,13 @@ export default function SemanticTokens({
   )
 }
 
+// "Raw" rather than "Hex": the id stays `hex`, but the label was wrong as often
+// as it was right — the column shows whatever notation the Format control is
+// set to, so it reads `oklch(...)` or `rgb(...)` just as readily. "Raw" names
+// what the toggle actually does, which is show the value itself rather than the
+// ramp step it came from.
 const VIEW_OPTIONS = [
-  { id: "hex" as const, label: "Hex", title: "Show the resolved color value" },
+  { id: "hex" as const, label: "Raw", title: "Show the resolved color value" },
   { id: "ramp" as const, label: "Ramp", title: "Show which ramp step each token points at" },
 ]
 
@@ -306,10 +313,28 @@ function Chip({ hex, label, mode }: { hex: string; label: string; mode: "light" 
             : "inset 0 0 0 1px rgba(0,0,0,0.12)",
         }}
       />
+      {/*
+        Crossfade the label, keyed on its own text.
+
+        Only this span changes when Raw/Ramp is flipped — the token name, the
+        role and the swatch all stay put — so the fade is scoped to the thing
+        that actually swaps rather than dimming whole rows that are not moving.
+        `mode="popLayout"` keeps the outgoing copy out of flow, so the chip does
+        not widen for a frame while both strings are mounted.
+      */}
       {/* Uppercase suits a bare hex; it would mangle `oklch(...)`. */}
-      <span className={cn("font-mono text-xs", label.startsWith("#") && "uppercase")}>
-        {label}
-      </span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={label}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: DUR.swap, ease: "easeOut" }}
+          className={cn("font-mono text-xs", label.startsWith("#") && "uppercase")}
+        >
+          {label}
+        </motion.span>
+      </AnimatePresence>
     </span>
   )
 }

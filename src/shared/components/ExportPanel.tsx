@@ -322,14 +322,35 @@ function CodeExport({ formats, onBack }: { formats: ExportFormat[]; onBack: () =
           </div>
         </div>
 
-        {hasBar && (
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-white/10 px-4 py-2">
-            <div className="min-w-0">{active.options}</div>
-            {active.fidelity && (
-              <TerminalNote summary={active.fidelity.summary} detail={active.fidelity.detail} />
-            )}
-          </div>
-        )}
+        {/*
+          The options bar crossfades on the same key as the code below it.
+          Its contents are per-format — one format's toggles swapping instantly
+          for another's while the code beneath them faded was the two halves of
+          the same panel disagreeing about whether anything had happened.
+
+          Keyed on `active.id` rather than `hasBar`, so switching between two
+          formats that both have a bar still swaps rather than sitting static.
+        */}
+        <AnimatePresence mode="wait" initial={false}>
+          {hasBar && (
+            <motion.div
+              key={`bar-${active.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: DUR.swap, ease: "easeOut" }}
+              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-white/10 px-4 py-2"
+            >
+              <div className="min-w-0">{active.options}</div>
+              {active.fidelity && (
+                <TerminalNote
+                  summary={active.fidelity.summary}
+                  detail={active.fidelity.detail}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence mode="wait" initial={false}>
           <motion.pre

@@ -20,9 +20,11 @@
 // outward. Don't edit it downstream.
 // ==============================================
 import { useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { CaretDown } from "@phosphor-icons/react"
 import { TOOLS, toolUrl } from "../tools"
 import { cn } from "../utils"
+import { POPOVER, POPOVER_ORIGIN } from "../motion"
 import ToolMark from "./ToolMark"
 
 /**
@@ -124,87 +126,101 @@ export default function ToolSwitcher({ current }: { current: string }) {
         />
       </button>
 
-      {open && (
-        <div
-          role="menu"
-          className="border-line bg-paper absolute top-full left-0 z-30 mt-1.5 w-[320px] overflow-hidden rounded-md border shadow-xl"
-        >
-          {TOOLS.map((tool) => {
-            const isCurrent = tool.id === current
-            const href = toolUrl(tool)
-            const soon = tool.status === "soon"
+      {/*
+        AnimatePresence so the menu has an EXIT as well as an entrance. Without
+        it a popover can only fade in — closing stays instant, which reads worse
+        than no animation at all because the two directions disagree.
 
-            // The current tool is stated, never linked — a menu item that
-            // reloads the page you're on reads as a dead control.
-            const inner = (
-              <>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <ToolMark id={tool.id} size={16} className={cn(soon && "opacity-50")} />
-                    <span
-                      className={cn(
-                        "font-mono text-[11px] tracking-[0.14em] uppercase",
-                        isCurrent ? "text-ink" : "text-ash",
-                      )}
-                    >
-                      {/* Always the short name, current row included. The
+        `origin-top` is what makes the scale read as unfolding from the trigger
+        rather than growing from its own middle: the menu is anchored at its top
+        edge, so that edge is the one that must not move.
+      */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="menu"
+            {...POPOVER}
+            className={cn(
+              "border-line bg-paper absolute top-full left-0 z-30 mt-1.5 w-[320px] overflow-hidden rounded-md border shadow-xl",
+              POPOVER_ORIGIN,
+            )}
+          >
+            {TOOLS.map((tool) => {
+              const isCurrent = tool.id === current
+              const href = toolUrl(tool)
+              const soon = tool.status === "soon"
+
+              // The current tool is stated, never linked — a menu item that
+              // reloads the page you're on reads as a dead control.
+              const inner = (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <ToolMark id={tool.id} size={16} className={cn(soon && "opacity-50")} />
+                      <span
+                        className={cn(
+                          "font-mono text-[11px] tracking-[0.14em] uppercase",
+                          isCurrent ? "text-ink" : "text-ash",
+                        )}
+                      >
+                        {/* Always the short name, current row included. The
                           address belongs on the collapsed trigger, which is
                           the site's wordmark; inside the menu every row is a
                           tool you might switch to, and one of them suddenly
                           being a hostname breaks the list it belongs to. */}
-                      {tool.name}
-                    </span>
-                    {/* Beside the name, not floating at the far right — the
+                        {tool.name}
+                      </span>
+                      {/* Beside the name, not floating at the far right — the
                         footer directory marks the current tool this way and a
                         dot at the opposite end of the row wouldn't read as the
                         same signal. */}
-                    {isCurrent && (
-                      <span
-                        aria-hidden="true"
-                        className="bg-ink h-1.5 w-1.5 shrink-0 rounded-full"
-                      />
-                    )}
-                  </span>
-                  {!isCurrent && soon ? (
-                    <span className="border-line text-ash shrink-0 rounded-full border px-1.5 py-px font-mono text-[10px] tracking-wide lowercase">
-                      soon
+                      {isCurrent && (
+                        <span
+                          aria-hidden="true"
+                          className="bg-ink h-1.5 w-1.5 shrink-0 rounded-full"
+                        />
+                      )}
                     </span>
-                  ) : null}
-                </div>
-                {/* `title`, not `blurb` — six two-line blurbs made a menu tall
+                    {!isCurrent && soon ? (
+                      <span className="border-line text-ash shrink-0 rounded-full border px-1.5 py-px font-mono text-[10px] tracking-wide lowercase">
+                        soon
+                      </span>
+                    ) : null}
+                  </div>
+                  {/* `title`, not `blurb` — six two-line blurbs made a menu tall
                     enough to swallow the page header. The fuller prose is in
                     the footer directory and the agent payload. */}
-                <p className="text-ash mt-0.5 text-xs leading-snug">{tool.title}</p>
-              </>
-            )
-
-            if (isCurrent) {
-              return (
-                <div key={tool.id} aria-current="page" className="bg-ink/[0.05] px-3 py-2.5">
-                  {inner}
-                </div>
+                  <p className="text-ash mt-0.5 text-xs leading-snug">{tool.title}</p>
+                </>
               )
-            }
-            if (!href) {
-              return (
-                <div key={tool.id} className="px-3 py-2.5 opacity-60" aria-disabled="true">
-                  {inner}
-                </div>
-              )
-            }
-            return (
-              <a
-                key={tool.id}
-                href={href}
-                role="menuitem"
-                className="hover:bg-ink/[0.03] block px-3 py-2.5 transition-colors"
-              >
-                {inner}
-              </a>
-            )
-          })}
 
-          {/*
+              if (isCurrent) {
+                return (
+                  <div key={tool.id} aria-current="page" className="bg-ink/[0.05] px-3 py-2.5">
+                    {inner}
+                  </div>
+                )
+              }
+              if (!href) {
+                return (
+                  <div key={tool.id} className="px-3 py-2.5 opacity-60" aria-disabled="true">
+                    {inner}
+                  </div>
+                )
+              }
+              return (
+                <a
+                  key={tool.id}
+                  href={href}
+                  role="menuitem"
+                  className="hover:bg-ink/[0.03] block px-3 py-2.5 transition-colors"
+                >
+                  {inner}
+                </a>
+              )
+            })}
+
+            {/*
             Not a tool, so it carries no mark and sits below a rule — the list
             above is "somewhere else you can go in this family", and this is a
             different kind of thing. Same row metrics otherwise, so it reads as
@@ -216,20 +232,21 @@ export default function ToolSwitcher({ current }: { current: string }) {
             pair — `noopener` is what stops the opened page reaching back
             through `window.opener`.
           */}
-          <a
-            href={DONATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            role="menuitem"
-            className="border-line hover:bg-ink/[0.03] block border-t px-3 py-2.5 transition-colors"
-          >
-            <span className="text-ash font-mono text-[11px] tracking-[0.14em] uppercase">
-              Donate
-            </span>
-            <p className="text-ash mt-0.5 text-xs leading-snug">Help support our free apps</p>
-          </a>
-        </div>
-      )}
+            <a
+              href={DONATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              role="menuitem"
+              className="border-line hover:bg-ink/[0.03] block border-t px-3 py-2.5 transition-colors"
+            >
+              <span className="text-ash font-mono text-[11px] tracking-[0.14em] uppercase">
+                Donate
+              </span>
+              <p className="text-ash mt-0.5 text-xs leading-snug">Help support our free apps</p>
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
