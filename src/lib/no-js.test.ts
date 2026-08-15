@@ -76,6 +76,29 @@ describe("GET / — the page an agent fetches", () => {
     expect(block).not.toMatch(/hidden|aria-hidden|visibility:\s*hidden/i)
   })
 
+  it("removes the block inline, without hiding it from a reader of the source", async () => {
+    // The block ships visible so extractors read it, which means a browser
+    // paints it until JavaScript takes it away. Doing that only from main.tsx
+    // left it on screen for as long as the ~500 KB bundle took to arrive — a
+    // visible flash of raw text on every load. An inline script closes that
+    // window during parsing.
+    //
+    // This is safe for the same reason the payload is emitted twice: anything
+    // stripping <script> never runs it and still reads the <pre>. So the two
+    // assertions that matter are that the text survives *and* the script is
+    // there — losing either one is a regression, in opposite directions.
+    const { html } = await render("/?b=3d7dff")
+    expect(html).toMatch(/getElementById\("agent-palette"\)/)
+    expect(html.indexOf("agent-palette")).toBeLessThan(html.lastIndexOf("agent-palette"))
+
+    // Strip every script the way an HTML-to-markdown converter would: the
+    // palette must still be legible afterwards.
+    const stripped = html.replace(/<script[\s\S]*?<\/script>/g, "")
+    expect(stripped).toContain('<div id="agent-palette">')
+    expect(stripped).toContain("RAMPS STUDIO — GENERATED COLOR PALETTE")
+    expect(stripped).toMatch(/#[0-9a-f]{6}/i)
+  })
+
   it("survives HTML-to-markdown: the values are in text, not only in script", async () => {
     const { html } = await render("/?b=3d7dff")
     // Strip every <script> the way a markdown converter would, then check the

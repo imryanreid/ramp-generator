@@ -217,10 +217,24 @@ export async function GET(request: Request): Promise<Response> {
   //
   // Deliberately carries no hiding styles. `display:none` would be the obvious
   // way to keep it away from human eyes, but readability-style extractors honour
-  // inline hiding and would skip the block — defeating the point. Instead the
-  // block ships visible and `src/main.tsx` removes it once React mounts, so
-  // only JS-less readers ever see it. It sits below the app, outside #root, so
-  // hydration never touches it.
+  // inline hiding and would skip the block — defeating the point. Instead it
+  // ships visible and is removed the moment JavaScript proves a human is
+  // looking. It sits below the app, outside #root, so hydration never touches it.
+  //
+  // Removed twice, on purpose. The inline script below runs *during parsing*,
+  // so the block never reaches the screen; `src/main.tsx` also removes it, but
+  // that lives in a ~500 KB bundle and only runs once it has downloaded and
+  // executed — a window long enough to see the raw text flash past. Neither is
+  // redundant: the inline one closes the flash, the bundle one is the fallback
+  // if this block is ever emitted without it. Don't delete either without
+  // reading the other.
+  //
+  // This is safe for exactly the reason the payload is emitted twice in the
+  // first place: agents that convert HTML to markdown strip <script> tags, so
+  // they never run this and still read the <pre>. Anything that does execute it
+  // renders the whole React app anyway. Kept ES5-plain and null-guarded — an
+  // inline script that throws would be the one thing on the page with no
+  // safety net.
   const injected = `
 <div id="agent-palette">
 <script type="application/json" id="ramps-studio-palette">
@@ -229,7 +243,8 @@ ${jsonForScript(json)}
 <pre>
 ${escapeHtml(text)}
 </pre>
-</div>`
+</div>
+<script>var e=document.getElementById("agent-palette");if(e)e.remove()</script>`
 
   // A replacer function here too, and this one matters more than the head
   // rewrites: `injected` carries the whole payload — the DTCG JSON alone
