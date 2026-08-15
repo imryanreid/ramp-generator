@@ -266,18 +266,26 @@ ${escapeHtml(text)}
       // only the first half must not outlive the second by much.
       //
       // It used to say s-maxage=31536000. A year is correct for api/palette,
-      // whose JSON really is a pure function of the URL — and wrong here, which
-      // was demonstrated rather than theorised: a request that landed during a
-      // deploy stored the previous build's HTML, and the edge then served that
-      // stale app for as long as anyone kept asking. Not a 404, because Vercel
-      // keeps old hashed assets resolvable; just the last version of the tool,
-      // indefinitely, with nothing anywhere reporting a problem.
+      // whose JSON really is a pure function of the URL — and wrong here, for
+      // a reason that is structural rather than observed.
       //
-      // 60s still absorbs a burst — a link shared to a crowd hits the function
-      // once — while capping the blast radius of a badly-timed request at a
-      // minute instead of a year. `must-revalidate` was already here and was
-      // inert: it only governs what a cache does once an entry is STALE, and
-      // nothing went stale for a year.
+      // BE CLEAR ABOUT THE EVIDENCE: no stale-HTML failure has ever been seen
+      // in production. Deploys were measured purging the edge, and every site
+      // was byte-identical to a local build when checked. This is insurance
+      // against an unbounded tail, not a fix for a live bug — an earlier draft
+      // of this comment claimed a reproduction that had not happened, which is
+      // worse than saying nothing.
+      //
+      // The tail is what makes it worth bounding anyway: HTML that names a
+      // build cannot safely outlive that build, and the only thing keeping a
+      // year-long entry honest is Vercel invalidating on deploy — real, but
+      // external, undocumented here, and not something this file can assert.
+      // 60s still absorbs a burst, so a link shared to a crowd hits the
+      // function once, while capping a badly-timed entry at a minute.
+      //
+      // `must-revalidate` was already here and was inert either way: it governs
+      // what a cache does once an entry is STALE, and nothing went stale for a
+      // year.
       "cache-control": "public, max-age=0, s-maxage=60, must-revalidate",
     },
   })
