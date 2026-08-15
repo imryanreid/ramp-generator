@@ -549,7 +549,7 @@ function AgentData({
           type="button"
           onClick={() => setAgentOpen((v) => !v)}
           aria-expanded={agentOpen}
-          aria-controls="agent-palette"
+          aria-controls="agent-palette-panel"
           className="text-ash hover:text-ink w-full cursor-pointer px-4 py-3 text-left font-mono text-xs transition-colors"
         >
           <span className="inline-flex items-center gap-1.5">
@@ -562,47 +562,61 @@ function AgentData({
             Machine-readable palette (for agents)
           </span>
         </button>
-        <AnimatePresence initial={false}>
-          {agentOpen && (
-            <motion.div
-              id="agent-palette"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: DUR.panel, ease: EASE_PANEL }}
-              // Height animation only works on a box that clips: without this
-              // the content spills past the collapsing container mid-flight.
-              className="overflow-hidden"
-            >
-              <div className="border-line border-t">
-                {/* Legend stays outside the copyable block so the copied code is valid. */}
-                <pre className="text-ash px-4 pt-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
-                  {legend}
-                </pre>
-                <div className="flex items-center justify-between gap-3 px-4 py-3">
-                  <Segmented
-                    ariaLabel="Machine-readable format"
-                    layoutId="agent-format-pill"
-                    size="sm"
-                    value={format}
-                    onChange={setFormat}
-                    options={AGENT_FORMATS}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => copy(code)}
-                    className="border-ink/20 text-ink hover:bg-ink/[0.04] inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-mono text-[11px] transition-colors"
-                  >
-                    {copied ? "Copied" : `Copy ${format.toUpperCase()}`}
-                  </button>
-                </div>
-                <pre className="border-line text-ink overflow-x-auto border-t px-4 py-3 font-mono text-[11px] leading-relaxed">
-                  {code}
-                </pre>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/*
+          Always mounted, height-animated — never unmounted.
+
+          main.tsx removes the block api/render injects the moment React takes
+          over, so once the app is running THIS is the only copy of the
+          machine-readable palette in the document. An {agentOpen && …} here
+          would delete it outright for anything that runs JavaScript and then
+          reads the DOM — which is the readership this section exists for.
+
+          A <details> kept its content in the document while collapsed, and
+          height:0 with overflow:hidden does the same: the nodes stay, they are
+          merely not painted. That property is what was being preserved, not the
+          element.
+
+          The id is deliberately NOT "agent-palette" — that one belongs to the
+          injected block main.tsx looks up by id, and reusing it here invites a
+          lookup that finds the wrong element once React has rendered.
+        */}
+        <motion.div
+          id="agent-palette-panel"
+          initial={false}
+          animate={{ height: agentOpen ? "auto" : 0, opacity: agentOpen ? 1 : 0 }}
+          transition={{ duration: DUR.panel, ease: EASE_PANEL }}
+          // Height animation only works on a box that clips: without this the
+          // content spills past the collapsing container mid-flight.
+          className="overflow-hidden"
+          aria-hidden={!agentOpen}
+        >
+          <div className="border-line border-t">
+            {/* Legend stays outside the copyable block so the copied code is valid. */}
+            <pre className="text-ash px-4 pt-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
+              {legend}
+            </pre>
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <Segmented
+                ariaLabel="Machine-readable format"
+                layoutId="agent-format-pill"
+                size="sm"
+                value={format}
+                onChange={setFormat}
+                options={AGENT_FORMATS}
+              />
+              <button
+                type="button"
+                onClick={() => copy(code)}
+                className="border-ink/20 text-ink hover:bg-ink/[0.04] inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-mono text-[11px] transition-colors"
+              >
+                {copied ? "Copied" : `Copy ${format.toUpperCase()}`}
+              </button>
+            </div>
+            <pre className="border-line text-ink overflow-x-auto border-t px-4 py-3 font-mono text-[11px] leading-relaxed">
+              {code}
+            </pre>
+          </div>
+        </motion.div>
       </div>
     </section>
   )

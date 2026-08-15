@@ -17,8 +17,12 @@ describe("the bold saturation floor", () => {
     // The chip is only honest if "would this change anything" tracks whether
     // anything changes. Assert them together rather than trusting the floor.
     for (const brand of ["#3d7dff", "#8a8580", "#ece9e0", "#b28200"]) {
-      const nat = JSON.stringify(buildPalette(brand, null, "full", "complementary", null, "natural"))
-      const bold = JSON.stringify(buildPalette(brand, null, "full", "complementary", null, "bold"))
+      const nat = JSON.stringify(
+        buildPalette(brand, null, "full", "complementary", null, "natural"),
+      )
+      const bold = JSON.stringify(
+        buildPalette(brand, null, "full", "complementary", null, "bold"),
+      )
       expect(nat !== bold, `${brand}`).toBe(boldLiftsChroma(brand))
     }
   })
