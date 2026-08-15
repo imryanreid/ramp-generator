@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react"
 import { HexColorPicker } from "react-colorful"
 import { parseColorInput, formatColor, type ColorFormat } from "../lib/color"
+import type { Vividness } from "../lib/recommend"
 import { cn } from "../shared/utils"
 import { FieldLabel } from "../shared/components/Label"
 
@@ -40,9 +41,10 @@ export function AccentField({
   autoAccent2,
   showAccent2,
   format,
+  vividness,
+  onVividnessChange,
   onAccentChange,
   onAccent2Change,
-  onReset,
 }: {
   accentOverride: string | null
   accent2Override: string | null
@@ -50,13 +52,20 @@ export function AccentField({
   autoAccent2: string
   showAccent2: boolean
   format: ColorFormat
+  vividness: Vividness
+  onVividnessChange: (v: Vividness) => void
   onAccentChange: (hex: string) => void
   onAccent2Change: (hex: string) => void
-  onReset: () => void
 }) {
   // One switch governs both accents. Splitting them would mean two more states
   // to explain for a case nobody has asked for; pinning is all-or-nothing.
   const locked = accentOverride !== null || accent2Override !== null
+
+  // Saturation floors the *derived* accents, so pinned ones have nothing to
+  // apply to — they already carry whatever chroma was typed in. The chip stays
+  // visible and explains itself rather than vanishing, so the setting doesn't
+  // look like it was lost.
+  const inert = locked || !showAccent2
 
   return (
     <div className={cn(showAccent2 ? "min-w-[300px] flex-[3]" : "min-w-[128px] flex-1")}>
@@ -64,22 +73,29 @@ export function AccentField({
         aside={
           <button
             type="button"
+            // aria-disabled rather than `disabled`: a disabled button fires no
+            // hover in most browsers, so its title would never appear — and the
+            // title is the whole point of keeping the chip visible.
+            aria-disabled={inert || undefined}
             onClick={() => {
-              if (locked) {
-                onReset()
-                return
-              }
-              onAccentChange(autoAccent)
-              if (showAccent2) onAccent2Change(autoAccent2)
+              if (inert) return
+              onVividnessChange(vividness === "bold" ? "natural" : "bold")
             }}
-            className="bg-ink/[0.06] text-ash hover:bg-ink/10 hover:text-ink rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors"
+            className={cn(
+              "bg-ink/[0.06] text-ash rounded-full px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors",
+              inert ? "cursor-not-allowed opacity-45" : "hover:bg-ink/10 hover:text-ink",
+            )}
             title={
-              locked
-                ? "Manual — click to auto-derive the accents from the brand"
-                : "Auto-derived from brand — click to set the accents manually"
+              inert
+                ? locked
+                  ? "Your accents are set by hand, so they already carry their own saturation."
+                  : "Lite scope has no accent ramps to saturate."
+                : vividness === "bold"
+                  ? "Bold — derived accents get a saturation floor. Click for natural."
+                  : "Natural — derived accents inherit the brand's saturation. Click for bold."
             }
           >
-            {locked ? "Manual" : "Auto"}
+            {vividness}
           </button>
         }
       >
