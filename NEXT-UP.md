@@ -74,6 +74,56 @@ Nothing outside the codebase is outstanding.
 
 ## Session log
 
+### 2026-08-16 — Two more opacity traps: the picker and the warning tooltip
+
+Reported as "the menu/picker issue on mobile web": on a narrow viewport the
+accent colour picker opened *underneath* the derivation dropdown and the
+format/contrast row rather than over them.
+
+One cause behind both fixes here. `opacity` below 1 creates a stacking context,
+so a popover nested under a dimmed wrapper is scoped to that box instead of to
+the page, and anything after it in DOM order paints on top.
+
+- **`ColorInput.tsx`** — each hex field's row carried `opacity-70` while the
+  accents are auto-derived, trapping the picker's `z-30`. Only the derived
+  accents are muted, which is why the brand picker looked fine and it read as
+  accent-only. Pre-existing: `opacity-70` arrived with the Figma Make migration
+  and `z-30` was added later.
+- **`SemanticTokens.tsx`** — same trap, different symptom. Excluding a token
+  dims its first cell, opacity multiplies, and the collision-warning tooltip
+  lives in that cell, so it rendered at 40% and was unreadable on exactly the
+  rows whose warning explains the collision. Paint order happened to survive
+  (it opens upward, over earlier-painting rows), so this one was legibility
+  rather than z-order.
+
+Both fixed the way `SchemeSelect` already documents: **dim the leaves, never a
+container that holds a popover.** `SwatchPicker`, `CategoryIcon`,
+`CollisionWarning` and `CopyCell` each took a `muted` prop, each with a note
+about why the wrapper is off-limits.
+
+**This is the third instance.** `dropdown-stacking` (2026-08-14) was the same
+bug in the derivation menu. Worth treating as a known failure mode of this
+codebase: a dimmed-when-inactive wrapper is a very natural thing to write, and
+it silently breaks any popover beneath it. A page-wide sweep for the shape — a
+stacking context containing an absolutely-positioned, z-indexed descendant —
+now returns empty for the rendered DOM.
+
+Verification worth repeating, because two intermediate readings were wrong:
+cumulative opacity (the product of every ancestor's, which is what the eye
+actually sees) reads glyph 0.4 / label 0.4 / tooltip 1 on an excluded row.
+Repro: `?b=808080` yields 11 collision warnings, then uncheck a warned row.
+Note that `elementFromPoint` hits fully transparent elements, so it cannot
+answer "what paints on top", and a hidden browser pane freezes rAF — computed
+values read mid-transition are start values, not settled ones. Kill transitions
+before measuring.
+
+No `src/shared/` changes, so nothing to sync to Motion or Beeps.
+
+**Gap worth knowing:** seven merges from 2026-08-14 are unlogged here
+(`vivid-accents`, `naming-rule`, `dropdown-stacking`, `manual-derivation`,
+`close-the-flash`, `polish-pass`, `bold-chip-inert`). Some came from a parallel
+session; `git log --merges` is the reliable record for that window.
+
 ### 2026-08-13 — A Donate row in the switcher
 
 `ToolSwitcher` gained a Donate row at the foot of the menu, below a rule and
