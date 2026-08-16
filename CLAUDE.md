@@ -297,9 +297,21 @@ when a domain does.
 ## Verify before calling it done
 
 ```bash
-pnpm build
+pnpm build && pnpm test
 ```
 
-That runs `tsc --noEmit` and then the Vite build. Both must be clean. For visual
-changes, actually load the page — check light _and_ dark, and check that a share
-link still round-trips.
+`build` runs `tsc --noEmit` and then the Vite build; `test` runs vitest. All
+must be clean.
+
+**`build` does not run the tests.** This section used to say `pnpm build` alone,
+which read as the whole gate and isn't — a change to `api/render.ts` passed the
+build, merged, and turned `main` red, because the suite asserts on the injected
+markup and nothing in the build touches it. Motion and Beeps have always
+documented both. If you changed `src/shared/`, add `pnpm sync:check` as well;
+this repo is upstream, so that one is about the siblings rather than about here.
+
+For visual changes, actually load the page — check light _and_ dark, and check
+that a share link still round-trips. And per the agent-consumption section
+above, anything touching `api/`, `src/lib/agent.ts` or `src/lib/params.ts` needs
+a real no-JavaScript fetch against production; a browser check proves nothing
+there.
