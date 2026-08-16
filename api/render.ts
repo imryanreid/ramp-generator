@@ -247,12 +247,22 @@ export async function GET(request: Request): Promise<Response> {
   // renders the whole React app anyway. Kept ES5-plain and null-guarded — an
   // inline script that throws would be the one thing on the page with no
   // safety net.
+  // The one style this block may carry, and it is not a hiding style. A bare
+  // <pre> is `white-space: pre`, so the payload's longest line — 290 characters
+  // of prose — lays out ~2,774px wide, seven times a phone viewport. Until the
+  // removal below runs, the document is that wide, which leaves a phone scrolled
+  // sideways into empty space. Wrapping costs the block nothing: the text stays
+  // fully present and fully extractable, which is the property the comment above
+  // is protecting. `display:none` would still be forbidden here.
+  //
+  // The app's own on-page copy of this block already wraps (`whitespace-pre-wrap`
+  // in src/App.tsx). This one just never got the same treatment.
   const injected = `
 <div id="agent-palette">
 <script type="application/json" id="ramps-studio-palette">
 ${jsonForScript(json)}
 </script>
-<pre>
+<pre style="white-space:pre-wrap;word-break:break-word">
 ${escapeHtml(text)}
 </pre>
 </div>
