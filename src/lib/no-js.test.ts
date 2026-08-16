@@ -57,7 +57,11 @@ describe("GET / — the page an agent fetches", () => {
     // so a JSON-only payload would be invisible to the tools this exists for.
     expect(html).toContain('<div id="agent-palette">')
     expect(html).toContain('<script type="application/json" id="ramps-studio-palette">')
-    expect(html).toContain("<pre>")
+    // The <pre> has to wrap. Unwrapped, the payload's longest line lays out
+    // ~2774px wide — seven times a phone viewport — for as long as the block
+    // is in the document, which leaves a phone scrolled into empty space.
+    expect(html).toContain("<pre style=")
+    expect(html).toContain("white-space:pre-wrap")
 
     const json = JSON.parse(
       html.split('id="ramps-studio-palette">')[1].split("</script>")[0].trim(),
