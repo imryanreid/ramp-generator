@@ -217,16 +217,23 @@ function Row({
   return (
     <tr className="border-line-soft border-t">
       {/* Only the content dims — the checkbox stays at full strength so an
-          excluded row is still obviously re-includable. */}
-      <td className={cn("py-2 pr-4 transition-opacity", !included && "opacity-40")}>
-        <CopyCell value={t.token}>
+          excluded row is still obviously re-includable.
+
+          This first cell dims its leaves one by one rather than dimming the
+          cell, because the collision warning's tooltip lives in here and
+          opacity multiplies: at 40% on the cell, a tooltip at its own full
+          strength still rendered at 40% and was unreadable on the excluded
+          rows. Dimming below it keeps it out of the fade. The other cells
+          hold no popover, so they dim whole. */}
+      <td className="py-2 pr-4">
+        <CopyCell value={t.token} muted={!included}>
           <span className="inline-flex items-center gap-2 font-mono text-[13px]">
             {t.warnings?.length ? (
-              <CollisionWarning token={t} />
+              <CollisionWarning token={t} muted={!included} />
             ) : (
-              <CategoryIcon category={t.category} />
+              <CategoryIcon category={t.category} muted={!included} />
             )}
-            {t.token}
+            <span className={cn("transition-opacity", !included && "opacity-40")}>{t.token}</span>
           </span>
         </CopyCell>
       </td>
@@ -258,13 +265,28 @@ function Row({
 }
 
 /** A table cell's content with a copy button that reveals on hover. */
-function CopyCell({ value, children }: { value: string; children: React.ReactNode }) {
+function CopyCell({
+  value,
+  children,
+  muted = false,
+}: {
+  value: string
+  children: React.ReactNode
+  /**
+   * Dims the copy button only. `children` are left alone because they may
+   * contain a popover, and opacity here would fade that too — see TokenRow.
+   */
+  muted?: boolean
+}) {
   return (
     <span className="group/cell inline-flex items-center gap-1.5">
       {children}
       <CopyButton
         value={value}
-        className="opacity-0 transition-opacity group-hover/cell:opacity-100 focus-visible:opacity-100"
+        className={cn(
+          "opacity-0 transition-opacity group-hover/cell:opacity-100 focus-visible:opacity-100",
+          muted && "group-hover/cell:opacity-40 focus-visible:opacity-40",
+        )}
       />
     </span>
   )
@@ -272,8 +294,12 @@ function CopyCell({ value, children }: { value: string; children: React.ReactNod
 
 /** Small usage glyph per token category. */
 /** A small glyph per token category, so the table scans by shape as well as text. */
-function CategoryIcon({ category }: { category: string }) {
-  const common = { size: 14, "aria-hidden": true, className: "shrink-0 text-ash" } as const
+function CategoryIcon({ category, muted = false }: { category: string; muted?: boolean }) {
+  const common = {
+    size: 14,
+    "aria-hidden": true,
+    className: cn("shrink-0 text-ash transition-opacity", muted && "opacity-40"),
+  } as const
   switch (category) {
     case "Background":
       return <Square {...common} weight="fill" />
@@ -374,7 +400,14 @@ function AA({ light, dark, target }: { light?: number; dark?: number; target: nu
  * squeezing a three-level text hierarchy into the few steps that clear 7:1 —
  * so the copy explains the situation rather than implying something is broken.
  */
-function CollisionWarning({ token }: { token: ResolvedToken }) {
+function CollisionWarning({
+  token,
+  muted = false,
+}: {
+  token: ResolvedToken
+  /** Dims the glyph only. Never the wrapper — it would fade the tooltip too. */
+  muted?: boolean
+}) {
   if (!token.warnings?.length) return null
   // List the clashes per mode, then give the reason once — it's the same
   // constraint in both, and repeating it doubles the tooltip for no gain.
@@ -386,7 +419,10 @@ function CollisionWarning({ token }: { token: ResolvedToken }) {
       <button
         type="button"
         aria-label={summary}
-        className="inline-flex cursor-help text-amber-500 focus-visible:outline-none"
+        className={cn(
+          "inline-flex cursor-help text-amber-500 transition-opacity focus-visible:outline-none",
+          muted && "opacity-40",
+        )}
       >
         <Warning size={14} weight="fill" aria-hidden="true" />
       </button>

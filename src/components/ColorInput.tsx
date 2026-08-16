@@ -185,8 +185,15 @@ function HexField({
   }
 
   return (
-    <div className={cn("flex min-w-0 flex-1 items-center gap-2", muted && "opacity-70")}>
+    // The dimming sits on the two children rather than on this row. `opacity`
+    // below 1 creates a stacking context, and with it here the swatch popover's
+    // z-30 was trapped inside a box the derivation dropdown paints over — the
+    // picker opened *underneath* the controls below it. Only the derived
+    // accents are muted, which is why it looked like an accent-only bug. Same
+    // trap SchemeSelect documents; the fix is the same one.
+    <div className="flex min-w-0 flex-1 items-center gap-2">
       <SwatchPicker
+        muted={muted}
         color={color}
         onChange={(hex) => {
           onCommit(hex)
@@ -198,6 +205,7 @@ function HexField({
         className={cn(
           "bg-paper flex h-9 min-w-0 flex-1 items-center rounded-md border px-2.5 font-mono text-sm",
           invalid ? "border-red-400" : "border-line",
+          muted && "opacity-70",
         )}
       >
         <input
@@ -235,7 +243,16 @@ function HexField({
  * than the app. The hex field beside it stays the precise input — this is for
  * exploring. Closes on outside click or Escape, mirroring SchemeSelect.
  */
-function SwatchPicker({ color, onChange }: { color: string; onChange: (hex: string) => void }) {
+function SwatchPicker({
+  color,
+  onChange,
+  muted = false,
+}: {
+  color: string
+  onChange: (hex: string) => void
+  /** Dims the trigger only. Never put this on the wrapper — see HexField. */
+  muted?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -262,7 +279,10 @@ function SwatchPicker({ color, onChange }: { color: string; onChange: (hex: stri
         onClick={() => setOpen((v) => !v)}
         aria-label={`Choose color, currently ${color}`}
         aria-expanded={open}
-        className="ring-ink/15 block h-9 w-9 rounded-md ring-1 transition-transform ring-inset hover:scale-[1.04]"
+        className={cn(
+          "ring-ink/15 block h-9 w-9 rounded-md ring-1 transition-transform ring-inset hover:scale-[1.04]",
+          muted && "opacity-70",
+        )}
         style={{ backgroundColor: color }}
       />
       <AnimatePresence>
