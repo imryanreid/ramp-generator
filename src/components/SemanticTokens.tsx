@@ -233,7 +233,9 @@ function Row({
             ) : (
               <CategoryIcon category={t.category} muted={!included} />
             )}
-            <span className={cn("transition-opacity", !included && "opacity-40")}>{t.token}</span>
+            <span className={cn("transition-opacity", !included && "opacity-40")}>
+              {t.token}
+            </span>
           </span>
         </CopyCell>
       </td>
