@@ -196,30 +196,25 @@ export default function App() {
     excludedRamps.size === 0 &&
     excludedTokens.size === 0
 
+  /*
+    One dependency instead of ten. Both effects below care about exactly one
+    thing — the serialized state — and hand-listing its fields had already
+    drifted: `accent2Override` was missing from both, so pinning the tertiary
+    accent updated the palette but left the address bar showing the old URL
+    until some *other* control happened to change and drag it along. Deriving
+    the dep from the encoder means a new param can never be forgotten here.
+  */
+  const encoded = encodeShareState(shareState)
+
   // Keep the address bar in sync so a copy/paste of the URL also reproduces state.
   useEffect(() => {
     try {
-      window.history.replaceState(
-        null,
-        "",
-        isDefault ? "/" : `?${encodeShareState(shareState)}`,
-      )
+      window.history.replaceState(null, "", isDefault ? "/" : `?${encoded}`)
     } catch {
       // Ignore — some browsers disallow history writes in restricted contexts.
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
-  }, [
-    brand,
-    accentOverride,
-    mode,
-    scheme,
-    compliance,
-    format,
-    vividness,
-    excludedRamps,
-    excludedTokens,
-    isDefault,
-  ])
+  }, [encoded, isDefault])
 
   // Keep document title + description in sync so agents (and link unfurlers)
   // that read the rendered head see what this specific palette is. On the
@@ -234,17 +229,7 @@ export default function App() {
     document.title = `Ramps · ${brand} · ${scheme} · ${mode} · ${compliance}`
     setMeta("name", "description", describePalette(shareState))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- shareState is rebuilt each render
-  }, [
-    brand,
-    accentOverride,
-    mode,
-    scheme,
-    compliance,
-    vividness,
-    excludedRamps,
-    excludedTokens,
-    isDefault,
-  ])
+  }, [encoded, isDefault])
 
   return (
     <ToolShell

@@ -77,7 +77,7 @@ Nothing outside the codebase is outstanding.
 ### 2026-08-16 — Two more opacity traps: the picker and the warning tooltip
 
 Reported as "the menu/picker issue on mobile web": on a narrow viewport the
-accent colour picker opened *underneath* the derivation dropdown and the
+accent colour picker opened _underneath_ the derivation dropdown and the
 format/contrast row rather than over them.
 
 One cause behind both fixes here. `opacity` below 1 creates a stacking context,
