@@ -90,20 +90,26 @@ export const TOOLS: Tool[] = [
     domain: "www.beeps.studio",
     status: "live",
   },
-  // The three unbuilt tools. Ids stay as they are — the same split motion and
-  // sound already use, where the id and the repo folder are one word and the
-  // shelf label is another. Renaming an id would mean renaming a folder and a
-  // ToolMark key for a tool that does not exist yet.
   {
-    id: "shape",
+    // Was "shape", renamed the day the build started — the last cheap moment,
+    // before llms.txt's `current=`, the ToolMark key and the repo's TOOL_ID
+    // froze it. The folder is "Depths Studio" and the id now matches it, the
+    // same one-word split motion and sound use.
+    id: "depths",
     name: "Depths",
     title: "Elevation & shadows",
     // Narrower than it was. This entry used to promise spacing steps and
     // nested radii too, which "Depths" does not cover — the name is a z-axis
     // word and the title now says only what it means.
+    //
+    // Still `soon`: the domain is registered but not yet attached to the
+    // Vercel project. Add `wordmark`/`domain` and flip to `live` in one commit
+    // once https://www.depths.studio/ actually resolves.
     blurb: "Elevation levels and a shadow ramp derived from one light source.",
     status: "soon",
   },
+  // The two unbuilt tools. Ids stay as they are — renaming an id would mean
+  // renaming a folder and a ToolMark key for a tool that does not exist yet.
   {
     id: "type",
     name: "Texts",
